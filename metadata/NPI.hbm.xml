@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+<hibernate-mapping package="org.openmrs.module.sockethl7listener.hibernateBeans">
+
+	<class name="NPI" table="sockethl7listener_npi">
+
+		<id name="Id" type="int" column="ID">
+			<generator class="assigned" />
+		</id>
+
+		<property name="providerLastName" type="java.lang.String" column="NPI_LN"
+			length="255" not-null="false" />
+		<property name="providerFirstName" type="java.lang.String" column="NPI_FN"
+			not-null="false" length="255" />
+		<property name="npi" type="java.lang.String" column="NPI"
+			not-null="false" length="255" />
+			
+		<property name="faxNumber" type="java.lang.String" column="fax_number" />
+
+	</class>
+	
+</hibernate-mapping>

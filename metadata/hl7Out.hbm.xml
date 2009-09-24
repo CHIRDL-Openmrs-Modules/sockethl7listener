@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+
+<hibernate-mapping package="org.openmrs.module.sockethl7listener.hibernateBeans">
+
+	<class name="HL7Outbound" table="sockethl7listener_hl7_out_queue">
+
+		<id name="HL7OutQueueId" type="int" column="hl7_out_queue_id">
+			<generator class="increment" />
+		</id>
+		
+		<many-to-one name="encounter" class="org.openmrs.Encounter" not-null="true">
+			<column name="encounter_id" />
+		</many-to-one>
+		
+		<property name="hl7Message" type="java.lang.String" column="hl7_data"
+			not-null="true" length="10000" />
+			
+ 		<property name="dateProcessed" type="java.util.Date" column="date_processed"
+			not-null="false" length="20" />
+
+		
+
+	</class>
+	
+</hibernate-mapping>

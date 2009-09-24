@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd" >
+
+
+<hibernate-mapping package="org.openmrs.module.sockethl7listener.hibernateBeans">
+
+	<class name="PatientMessage" table="sockethl7listener_patient_message">
+
+		<id name="message_id" type="java.lang.Integer" column="message_id">
+			<generator class="increment" />
+		</id>
+		
+		<property name="patient_id" type="java.lang.Integer" not-null="true"  
+			column="patient_id" />
+		
+		
+		<property name="encounter_id" type="java.lang.Integer" not-null="false"
+			column="encounter_id" />
+		
+		
+		<property name="hl7Message" type="java.lang.String" column="hl7message"
+			not-null="false" length="10000" />
+			
+		<property name="duplicateString" type="java.lang.Boolean" column="duplicate_string"
+			not-null="false"  />
+			
+		<property name="duplicateDatetime" type="java.lang.Boolean" column="duplicate_datetime"
+			not-null="false"  />
+			
+		<property name="dateCreated" type="java.util.Date"
+			column="date_created" not-null="true" length="19" />
+		<property name="md5" type="java.lang.String" column="md5"  />
+		<property name="hl7source" type="java.lang.String" column="hl7source"  />
+
+	</class>
+	
+</hibernate-mapping>

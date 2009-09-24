@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>"Map for CHICA Concept to RMRS Concept </comment>
+	<entry key="HEIGHT">HEIGHT_PEDS</entry>
+	<entry key="WEIGHT"">WEIGHT PEDS</entry>
+	<entry key="BMI">BMI</entry>
+</properties>	
+	

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+	<comment>Hl7</comment>
+	<entry key="image_dir">C:\\nbsproject\\ATD_PDFs\\</entry>
+	<entry key="OBX_size">500000</entry>
+	<entry key="ADD_size">30000</entry>
+	<entry key="sending_facility">NBS_SERV</entry>
+	<entry key="sending_app">NBS_ALERT</entry>
+    <entry key="receiving_app">NEWBORN</entry>
+    <entry key="receiving_facility">REGEN</entry>
+	<entry key="univ_serv_id">556</entry>
+	<entry key="univ_serv_id_name">Newborn Screening</entry>
+	<entry key="version">2.5</entry>
+	<entry key="message_type">ORU</entry>
+	<entry key="event_type_code">R01</entry>
+	<entry key="uid">NBS</entry>
+    <entry key="OBX_data_type">AP</entry>
+    <entry key="OBX_sub_data_type">PDF</entry>
+    <entry key="OBX_universal_id">NBS</entry>
+	<entry key="coding_system"></entry>
+    <entry key="test_type">Newborn Screening</entry>
+    <entry key="encoding">BASE64</entry>
+	<entry key="check_for_duplicates">true</entry>
+	<entry key="result_status">F</entry>
+	<entry key="specimen_action_code">F</entry>
+	<entry key="ATTRIBUTE_NEXT_OF_KIN">Mother's Name</entry>
+	<entry key="ATTRIBUTE_TELEPHONE">Telephone Number</entry>
+	<entry key="ATTRIBUTE_RACE">Race</entry>
+	<entry key="ATTRIBUTE_BIRTHPLACE">Birthplace</entry>
+	<entry key="PROVIDER_ID">Provider ID</entry>
+	<entry key="PROVIDER_NAME">Provider Name</entry>
+	<entry key="CITIZENSHIP">Citizenship</entry>
+	<entry key="MATCH_INFO">Other Matching Information</entry>
+	<entry key="PATIENT_IDENT_TYPE">MRN</entry>
+	
+			
+
+	
+</properties>	
+	
