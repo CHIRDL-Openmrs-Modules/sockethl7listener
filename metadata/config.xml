@@ -6,7 +6,7 @@
 	<!-- SocketHL7Listener Module Properties -->
 	<id>sockethl7listener</id>
 	<name>sockethl7listener</name>
-	<version>1.3.8</version>
+	<version>1.3.10</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley and Vibha Anand</author>
 	<description>
@@ -28,8 +28,8 @@
 	</globalProperty>	
 	<globalProperty>
 		<property>sockethl7listener.port</property>
+		<defaultValue>8765</defaultValue>
    		<description>Port to listen for messages on</description>
-   		<defaultValue>8765</defaultValue>
 	</globalProperty>	
 	<globalProperty>
 		<property>sockethl7listener.archiveHL7ErrorDirectory</property>
@@ -37,8 +37,8 @@
 	</globalProperty>	
 	<globalProperty>
 		<property>sockethl7listener.exportFileType</property>
+		<defaultValue>tif</defaultValue>
    		<description>File type for export form</description>
-   		<defaultValue>tif</defaultValue>
 	</globalProperty>	
 	
 		

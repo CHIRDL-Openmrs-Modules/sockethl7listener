@@ -54,13 +54,24 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService
 		this.dao = dao;
 	}
 	
-	public void saveMessageToDatabase(Encounter enc, String encodedMessage)
+	public Integer saveMessageToDatabase(Encounter enc, String encodedMessage, Date ackDateTime, Integer port, String host)
 	{
+		Integer hl7QueueId = null;
 		HL7Outbound hl7b = new HL7Outbound();
+		
 		hl7b.setHl7Message(encodedMessage);
 		hl7b.setEncounter(enc);
+		hl7b.setAckReceived(ackDateTime);
+		hl7b.setPort(port);
+		hl7b.setHost(host);
 		
 		getSocketHL7ListenerDAO().saveHL7Outbound(hl7b);
+		return hl7QueueId;
+	}
+	
+	public HL7Outbound saveMessageToDatabase(HL7Outbound hl7Out)
+	{
+		return getSocketHL7ListenerDAO().saveHL7Outbound(hl7Out);
 	}
 
 	public void setHl7Message(int pid, int encounter_id, String message, boolean dup_string,

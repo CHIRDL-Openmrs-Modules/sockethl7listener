@@ -14,7 +14,7 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
  */
 public interface SocketHL7ListenerDAO {
 
-	public void saveHL7Outbound(HL7Outbound hl7Outbound);
+	public HL7Outbound saveHL7Outbound(HL7Outbound hl7Outbound);
 
 	public void savePatientMessage(PatientMessage patientMessage);
 

@@ -62,7 +62,15 @@ public class HL7MessageConstructor {
 	private String receivingFacility = "";
 	private String resultStatus = "";
 	private String specimenActionCode;
+	private String ackType = "";
 	private Socket socket = null;
+	private String checkDigitScheme = "";
+	private String pid2Required = "";
+	private String assignAuthority = "";
+	private String identifierTypeCode = "";
+	private String poc = "";
+	private String app_acknowledgement_type = "";
+	private String processing_id = "";
 	private OutputStream os = null;
 	private InputStream is = null;
 	
@@ -74,10 +82,9 @@ public class HL7MessageConstructor {
 	public HL7MessageConstructor(){
 		
 		oru = new ORU_R01();
-		AdministrationService adminService = Context.getAdministrationService();
-		 String hl7ConfigFile = adminService
-			.getGlobalProperty("sockethl7listener.hl7ConfigFile");
-		prop = Util.getProps(hl7ConfigFile);
+		setProperties();
+			
+		
 	}
 	
 	/**
@@ -89,10 +96,9 @@ public class HL7MessageConstructor {
 	public PID AddSegmentPID(Patient pat){
 		PersonService personService = Context.getPersonService();
 		
-		codeSys = prop.getProperty("coding_system");
-		String pid2Required = prop.getProperty("pid_2_required");
+		
 		PID pid = oru.getPATIENT_RESULT().getPATIENT().getPID(); 
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 		Date dob = pat.getBirthdate();
 		Date dod = pat.getDeathDate();
 		String dobStr = "";
@@ -107,23 +113,38 @@ public class HL7MessageConstructor {
 			
 			//Identifiers
 			PatientIdentifier pi = pat.getPatientIdentifier();
-			String assignAuth = getAssigningAuthorityFromIdentifierType(pi);
+			String assignAuthFromIdentifierType = getAssigningAuthorityFromIdentifierType(pi);
 			
-			//Identifier PID-2 not required
-			if (Boolean.valueOf(pid2Required)){
-				String addon = "-" + assignAuth;
-				pid.getPatientID().getIDNumber().setValue(pi.getIdentifier() + addon);
+			
+			if (pi != null){
+				//Identifier PID-2 not required
+				if (pid2Required != null && Boolean.valueOf(pid2Required)){
+					String addon = "-" + assignAuthFromIdentifierType;
+					pid.getPatientID().getIDNumber().setValue(pi.getIdentifier() + addon);
+				}
 			}
 			
 			//Identifier PID-3
 			//MRN
-			pid.getPatientIdentifierList(0).getIDNumber().setValue(pi.getIdentifier());
+			if (pi != null){
+				String identString = pi.getIdentifier();
+				if (identString != null) {
+					Integer dash = identString.indexOf("-");
+					if (dash >= 0){
+						identString = identString.substring(0,dash) + identString.substring(dash + 1);
+					}
+				}
+				pid.getPatientIdentifierList(0).getIDNumber().setValue(identString);
+				pid.getPatientIdentifierList(0).getCheckDigitScheme().setValue(checkDigitScheme);
+			}
+			
 			pid.getPatientIdentifierList(0).getAssigningAuthority().getNamespaceID()
-				.setValue(assignAuth);
+				.setValue(assignAuthority);
+			pid.getPatientIdentifierList(0).getIdentifierTypeCode().setValue(identifierTypeCode);
 			
 			//Address
 			pid.getPatientAddress(0).getStreetAddress().getStreetOrMailingAddress().setValue(pat.getPersonAddress().getAddress1());
-			pid.getPatientAddress(0).getStreetAddress().getDwellingNumber().setValue(pat.getPersonAddress().getAddress2());
+			pid.getPatientAddress(0).getOtherDesignation().setValue(pat.getPersonAddress().getAddress2());
 			pid.getPatientAddress(0).getCity().setValue(pat.getPersonAddress().getCityVillage());
 			pid.getPatientAddress(0).getStateOrProvince().setValue(pat.getPersonAddress().getStateProvince());
 			pid.getPatientAddress(0).getZipOrPostalCode().setValue(pat.getPersonAddress().getPostalCode());
@@ -297,29 +318,38 @@ public class HL7MessageConstructor {
 	public PV1 AddSegmentPV1(Encounter enc) {
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
-
 		PV1 pv1 = oru.getPATIENT_RESULT().getPATIENT().getVISIT().getPV1();
-
+		
 		try {
+			pv1.getPatientClass().setValue(prop.getProperty("patient_class"));
 			pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue("");
 			pv1.getAttendingDoctor(0).getGivenName().setValue("");
 
 			Provider prov = new Provider();
 			prov.setProviderfromUser(enc.getProvider());
-			String npi = hl7ListService.getNPI(prov.getFirstName(),prov.getLastName());
-			if (npi == null){ 
-				return null;
+			String providerId = prov.getId();
+			//using npi
+			if (providerId == null || providerId.equals("")) {
+				String npi = hl7ListService.getNPI(prov.getFirstName(),prov.getLastName());
+				providerId = npi;
 			}
+			
 			pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue(prov.getLastName());
 			pv1.getAttendingDoctor(0).getGivenName().setValue(prov.getFirstName());
-			pv1.getAttendingDoctor(0).getIDNumber().setValue(npi);
+			pv1.getAttendingDoctor(0).getIDNumber().setValue(providerId);
 			
+			String visitDate = Util.convertDateToString(enc.getEncounterDatetime());
+			pv1.getAdmitDateTime().getTime().setValue(visitDate);
+			pv1.getDischargeDateTime(0).getTime().setValue(visitDate);
 			pv1.getVisitNumber().getIDNumber().setValue(enc.getPatient().getPatientIdentifier().getIdentifier());
+			pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
 			
 			PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
 			if (pocAttr != null){
-				String poc = pocAttr.getValue();
-				pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
+				poc = pocAttr.getValue();
+				if (poc != null  && !poc.equals("")){
+					pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
+				}
 			}
 			
 			PersonAttribute facAttr = enc.getProvider().getAttribute("POC_FACILITY");
@@ -359,25 +389,10 @@ public class HL7MessageConstructor {
 	public MSH AddSegmentMSH(Encounter enc){
 		
 		MSH msh = oru.getMSH();
-		//For nbs,  we are not setting the receiving facility and application
-		//Location loc = enc.getLocation();
-		//String locs = loc.getName();
-		//String locs = locationString;
-		if (prop != null){
-			ourFacility = prop.getProperty("our_facility");
-			ourApplication = prop.getProperty("our_app");
-			receivingApp = prop.getProperty("receiving_app");
-			receivingFacility = prop.getProperty("receiving_facility");
-			version = prop.getProperty("version");
-			messageType = prop.getProperty("message_type");
-			triggerEvent = prop.getProperty("event_type_code");
-			codeSys = prop.getProperty("coding_system");
-			
-		}
-		
+
 		
 		//Get current date
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmss");
 		Calendar cal = Calendar.getInstance();
 		String currentDateTime = df.format(cal.getTime());
 		
@@ -393,7 +408,10 @@ public class HL7MessageConstructor {
 			msh.getVersionID().getVersionID().setValue(version);
 			msh.getReceivingApplication().getNamespaceID().setValue(receivingApp);
 			msh.getReceivingFacility().getNamespaceID().setValue(receivingFacility);
-			
+			msh.getAcceptAcknowledgmentType().setValue(ackType);
+			msh.getApplicationAcknowledgmentType().setValue(app_acknowledgement_type);
+			msh.getProcessingID().getProcessingID().setValue(processing_id);
+			msh.getMessageControlID().setValue("CHICA-" + currentDateTime);
 		} catch (DataTypeException e) {
 			e.printStackTrace();
 		}
@@ -415,12 +433,16 @@ public class HL7MessageConstructor {
 	
 	
 	
-	public OBR AddSegmentOBR (Encounter enc, String set){
+	public OBR AddSegmentOBR (Encounter enc, String univServId, String univServIdName){
 		
 		
 		if (prop != null){
-			univServId = prop.getProperty("univ_serv_id");
-			univServIdName = prop.getProperty("univ_serv_id_name");
+			if (univServId == null){
+				univServId = prop.getProperty("univ_serv_id");
+			}
+			if (univServIdName == null){
+				univServIdName = prop.getProperty("univ_serv_id_name");
+			}
 			codeSys = prop.getProperty("coding_system");
 			resultStatus = prop.getProperty("result_status");
 			specimenActionCode = prop.getProperty("specimen_action_code");
@@ -436,7 +458,12 @@ public class HL7MessageConstructor {
 			SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 			Provider prov = new Provider();
 			prov.setProviderfromUser(enc.getProvider());
-			String npi = hl7ListService.getNPI(prov.getFirstName(),prov.getLastName());
+			String providerId = prov.getId();
+			//using npi
+			if (providerId == null || providerId.equals("")) {
+				String npi = hl7ListService.getNPI(prov.getFirstName(),prov.getLastName());
+				providerId = npi;
+			}
 			String encDateStr = "";
 			String encDateOnly = "";
 			if (encDt != null) { 
@@ -450,15 +477,15 @@ public class HL7MessageConstructor {
 			obr.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue(codeSys);
 			obr.getOrderingProvider(0).getFamilyName().getSurname().setValue(prov.getLastName());
 			obr.getOrderingProvider(0).getGivenName().setValue(prov.getFirstName());
-			obr.getOrderingProvider(0).getIDNumber().setValue(npi);
+			obr.getOrderingProvider(0).getIDNumber().setValue(providerId);
 			obr.getResultCopiesTo(0).getFamilyName().getSurname().setValue(prov.getLastName());
 			obr.getResultCopiesTo(0).getGivenName().setValue(prov.getFirstName());
-			obr.getResultCopiesTo(0).getIDNumber().setValue(npi);
+			obr.getResultCopiesTo(0).getIDNumber().setValue(providerId);
 			obr.getResultStatus().setValue(resultStatus);
 			obr.getSpecimenActionCode().setValue(specimenActionCode);
 			
 			//Accession number
-			String accessionNumber = String.valueOf(enc.getEncounterId()) + "-" + set 
+			String accessionNumber = String.valueOf(enc.getEncounterId()) + "-" + univServId 
 				+ "-" + encDateOnly;
 			obr.getFillerOrderNumber().getEntityIdentifier().setValue(accessionNumber);
 			
@@ -535,7 +562,7 @@ public class HL7MessageConstructor {
 			{
 				//okToCreateObs = processTXType(obs, message, orderRep,
 				//		obxRep);
-			} else if (hl7Abbreviation.equals("ED")){
+			} else if (hl7Abbreviation == "ED"){
 				
 				//The HL7 ED (Encapsulated Data) data type.  Consists of the following components: </p><ol>
 				 	//Source Application (HD)</li>
@@ -597,8 +624,38 @@ public class HL7MessageConstructor {
 
 	}
 	
+	private void setProperties(){
+		AdministrationService adminService = Context.getAdministrationService();
+		String hl7ConfigFile = adminService
+			.getGlobalProperty("sockethl7listener.hl7ConfigFile");
+		
+		prop = Util.getProps(hl7ConfigFile);
+		if (prop != null){
+			codeSys = prop.getProperty("coding_system");
+			checkDigitScheme = prop.getProperty("check_digit_algorithm");
+			pid2Required = prop.getProperty("pid_2_required");
+			assignAuthority = prop.getProperty("assigning_authority");
+			identifierTypeCode = prop.getProperty("identifier_type");
+			poc = prop.getProperty("point_of_care");
+			ourFacility = prop.getProperty("our_facility");
+			ourApplication = prop.getProperty("our_app");
+			receivingApp = prop.getProperty("receiving_app");
+			receivingFacility = prop.getProperty("receiving_facility");
+			version = prop.getProperty("version");
+			messageType = prop.getProperty("message_type");
+			triggerEvent = prop.getProperty("event_type_code");
+			codeSys = prop.getProperty("coding_system");
+			//Acknowlegment Type AL=always; NE=never, ER= Error only, and SU=successful
+			ackType = prop.getProperty("acknowledgement_type");
+			univServId = prop.getProperty("univ_serv_id");
+			univServIdName = prop.getProperty("univ_serv_id_name");
+			codeSys = prop.getProperty("coding_system");
+			resultStatus = prop.getProperty("result_status");
+			specimenActionCode = prop.getProperty("specimen_action_code");
+			app_acknowledgement_type = prop.getProperty("app_acknowledgement_type");
+			processing_id = prop.getProperty("msh_processing_id");
+		}
 	
-	
+	}
 
-	
 }

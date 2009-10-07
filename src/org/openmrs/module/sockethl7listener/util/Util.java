@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestException;
 import java.security.MessageDigest;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.InvalidPropertiesFormatException;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -136,6 +138,16 @@ public class Util
 			fileDirectory+="/";
 		}
 		return fileDirectory;
+	}
+	
+	public static String convertDateToString(Date date){
+		String dateStr = "";
+		
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
+		if (date != null) { 
+			dateStr = df.format(date);
+		}
+		return dateStr;
 	}
 
 }

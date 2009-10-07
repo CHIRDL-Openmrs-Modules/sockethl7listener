@@ -43,9 +43,10 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO
 		this.sessionFactory = sessionFactory;
 	}
 
-	public void saveHL7Outbound(HL7Outbound hl7Outbound)
+	public HL7Outbound saveHL7Outbound(HL7Outbound hl7Outbound)
 	{
-		this.sessionFactory.getCurrentSession().save(hl7Outbound);
+		this.sessionFactory.getCurrentSession().saveOrUpdate(hl7Outbound);
+		return hl7Outbound;
 	}
 
 	public void savePatientMessage(PatientMessage patientMessage)

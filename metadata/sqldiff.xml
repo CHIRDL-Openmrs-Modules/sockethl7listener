@@ -4,15 +4,15 @@
 <sqldiff version="1.0">
 	<help>
 		USE:
-			The diffs are ordered by datamodel version number.
-			The script can be run in a top down fashion and is
-			expected to not failor overwrite old data
-		
+		The diffs are ordered by datamodel version number.
+		The script can be run in a top down fashion and is
+		expected to not failor overwrite old data
+
 		EXPECT:
-			- "use business-database-name;" was called prior to
-			   calling this script
+		- "use business-database-name;" was called prior to
+		calling this script
 	</help>
-	
+
 	<diff>
 		<version>1.0.0</version>
 		<author>Tammy Dugan</author>
@@ -22,81 +22,91 @@
 		</description>
 		<sql>
 
-CREATE TABLE `sockethl7listener_hl7_out_queue` (
-  `hl7_out_queue_id` int(11) NOT NULL auto_increment,
-  `encounter_id` int(11) default NULL,
-  `hl7_data` mediumtext NOT NULL,
-  `date_processed` datetime default NULL,
-  PRIMARY KEY  (`hl7_out_queue_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+			CREATE TABLE `sockethl7listener_hl7_out_queue` (
+			`hl7_out_queue_id` int(11) NOT NULL auto_increment,
+			`encounter_id` int(11) default NULL,
+			`hl7_data` mediumtext NOT NULL,
+			`date_processed` datetime default NULL,
+			PRIMARY KEY (`hl7_out_queue_id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `sockethl7listener_institution_provider` (
-  `Institution_id` int(11) NOT NULL,
-  `Provider_last_name` varchar(255) NOT NULL,
-  `Provider_first_name` varchar(255) NOT NULL,
-  `Provider_id` int(11) NOT NULL,
-  PRIMARY KEY  (`Institution_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+			CREATE TABLE `sockethl7listener_institution_provider` (
+			`Institution_id` int(11) NOT NULL,
+			`Provider_last_name` varchar(255) NOT NULL,
+			`Provider_first_name` varchar(255) NOT NULL,
+			`Provider_id` int(11) NOT NULL,
+			PRIMARY KEY (`Institution_id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `sockethl7listener_npi` (
-  `id` int(11) NOT NULL,
-  `NPI_LN` varchar(255) default NULL,
-  `NPI_FN` varchar(255) default NULL,
-  `NPI` varchar(255) default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+			CREATE TABLE `sockethl7listener_npi` (
+			`id` int(11) NOT NULL,
+			`NPI_LN` varchar(255) default NULL,
+			`NPI_FN` varchar(255) default NULL,
+			`NPI` varchar(255) default NULL,
+			PRIMARY KEY (`id`)
+			) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `sockethl7listener_patient_message` (
-  `message_id` int(11) NOT NULL auto_increment,
-  `patient_id` int(11) NOT NULL,
-  `encounter_id` int(11) default NULL,
-  `hl7message` mediumtext default NULL,
-  `duplicate_string` int(1) default '0',
-  `duplicate_datetime` int(1) default '0',
-  `date_created` datetime NOT NULL,
-  PRIMARY KEY  (`message_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=45 DEFAULT CHARSET=utf8;
+			CREATE TABLE `sockethl7listener_patient_message` (
+			`message_id` int(11) NOT NULL auto_increment,
+			`patient_id` int(11) NOT NULL,
+			`encounter_id` int(11) default NULL,
+			`hl7message` mediumtext default NULL,
+			`duplicate_string` int(1) default '0',
+			`duplicate_datetime` int(1) default '0',
+			`date_created` datetime NOT NULL,
+			PRIMARY KEY (`message_id`)
+			) ENGINE=MyISAM AUTO_INCREMENT=45 DEFAULT CHARSET=utf8;
 
-INSERT INTO patient_identifier_type
-   (`name`, `description`, `check_digit`, `creator`, `date_created`,  `validator`)
-select 'MRN_OTHER', 'other medical record number', 1, 1, NOW(), 
-'org.openmrs.patient.impl.LuhnIdentifierValidator' from 
-(select count(*) as cnt from patient_identifier_type where name='MRN_OTHER') a
-where a.cnt=0;
+			INSERT INTO patient_identifier_type
+			(`name`, `description`, `check_digit`, `creator`, `date_created`,
+			`validator`)
+			select 'MRN_OTHER', 'other medical record number', 1, 1, NOW(),
+			'org.openmrs.patient.impl.LuhnIdentifierValidator' from
+			(select count(*) as cnt from patient_identifier_type where name='MRN_OTHER')
+			a
+			where a.cnt=0;
 
-INSERT INTO person_attribute_type
-   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-select 'Telephone Number', 'Telephone Number', 'java.lang.String', 0, 1, NOW() from (
-select count(*) as cnt from person_attribute_type where name='Telephone Number') a
-where a.cnt=0;
+			INSERT INTO person_attribute_type
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			select 'Telephone Number', 'Telephone Number', 'java.lang.String', 0,
+			1, NOW() from (
+			select count(*) as cnt from person_attribute_type where name='Telephone
+			Number') a
+			where a.cnt=0;
 
-INSERT INTO person_attribute_type
-   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-select 'Other Matching Information', 'Other Matching Information', 'java.lang.String',0, 1,NOW() from (
-select count(*) as cnt from person_attribute_type where name='Other Matching Information') a
-where a.cnt=0;
+			INSERT INTO person_attribute_type
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			select 'Other Matching Information', 'Other Matching Information',
+			'java.lang.String',0, 1,NOW() from (
+			select count(*) as cnt from person_attribute_type where name='Other
+			Matching Information') a
+			where a.cnt=0;
 
-INSERT INTO person_attribute_type
-   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-select 'Race', 'Race', 'java.lang.String', 1, 1, NOW() from (
-select count(*) as cnt from person_attribute_type where name='Race') a
-where a.cnt=0;
+			INSERT INTO person_attribute_type
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			select 'Race', 'Race', 'java.lang.String', 1, 1, NOW() from (
+			select count(*) as cnt from person_attribute_type where name='Race') a
+			where a.cnt=0;
 
-INSERT INTO person_attribute_type
-   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-select 'Provider ID', 'provider ID', 'java.lang.String', 1, 1, NOW() from (
-select count(*) as cnt from person_attribute_type where name='Provider ID') a
-where a.cnt=0;
+			INSERT INTO person_attribute_type
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			select 'Provider ID', 'provider ID', 'java.lang.String', 1, 1, NOW()
+			from (
+			select count(*) as cnt from person_attribute_type where name='Provider ID')
+			a
+			where a.cnt=0;
 
-INSERT INTO person_attribute_type
-   (`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-select 'Mother\'s Name', 'First or last name of this person\'s mother', 'java.lang.String', 1, 1, NOW() from (
-select count(*) as cnt from person_attribute_type where name='Mother\'s Name') a
-where a.cnt=0;
+			INSERT INTO person_attribute_type
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			select 'Mother\'s Name', 'First or last name of this person\'s
+			mother', 'java.lang.String', 1, 1, NOW() from (
+			select count(*) as cnt from person_attribute_type where name='Mother\'s
+			Name') a
+			where a.cnt=0;
 
 			</sql>
 	</diff>
-	
+
 	<diff>
 		<version>1.0.1</version>
 		<author>Tammy Dugan</author>
@@ -108,7 +118,7 @@ where a.cnt=0;
 			alter table person_attribute modify value varchar(300);
 		</sql>
 	</diff>
-	
+
 	<diff>
 		<version>1.0.2</version>
 		<author>Tammy Dugan</author>
@@ -128,8 +138,10 @@ where a.cnt=0;
 			Added md5 column to patient_message
 		</description>
 		<sql>
-			alter table sockethl7listener_patient_message add md5 varchar(200);
-			alter table sockethl7listener_patient_message add KEY pat_message_md_idx (md5);
+			alter table sockethl7listener_patient_message add md5
+			varchar(200);
+			alter table sockethl7listener_patient_message add KEY
+			pat_message_md_idx (md5);
 		</sql>
 	</diff>
 	<diff>
@@ -137,11 +149,13 @@ where a.cnt=0;
 		<author>Vibha Anand</author>
 		<date>Mar 11 2009</date>
 		<description>
-			Make retired = 0 for Patient identifier types MRN_OTHER and SSN added in this script
+			Make retired = 0 for Patient identifier types MRN_OTHER
+			and SSN added in this script
 		</description>
 		<sql>
 			UPDATE `patient_identifier_type`
-			set retired = 0 where name='MRN_OTHER' or name = 'SSN'
+			set retired = 0 where
+			name='MRN_OTHER' or name = 'SSN'
 
 
 			
@@ -149,95 +163,79 @@ where a.cnt=0;
 	</diff>
 	<diff>
 		<version>1.0.5</version>
-		<author>Meena Shelley</author>
+		<author>Meena Sheley</author>
 		<date>Sep 8 2009</date>
 		<description>
 			Add hl7source column to sockethl7listener_patient_message
 		</description>
 		<sql>
-			alter table sockethl7listener_patient_message add column hl7source varchar(20);
-			
-INSERT INTO person_attribute_type
+			alter table sockethl7listener_patient_message add column
+				hl7source varchar(20);
 
-                                    (`name`, `description`, `format`, `searchable`, 
+			INSERT INTO person_attribute_type
+				(`name`, `description`, `format`, `searchable`,
+				`creator`, `date_created`)
+				select 'POC', 'Provider Point of Care',
+				'java.lang.String', 1, 1, NOW() from (
+				select count(*) as cnt from person_attribute_type
+				where name='POC') a
+				where a.cnt=0;
 
-`creator`, `date_created`)
+			INSERT INTO person_attribute_type
+				(`name`, `description`, `format`, `searchable`,
+				`creator`, `date_created`)
+				select 'POC_FACILITY', 'Provider Point of Care
+				Facility', 'java.lang.String', 1, 1, NOW() from (
+				select count(*) as cnt from person_attribute_type
+				where name='POC_FACILITY') a
+				where a.cnt=0;
 
-                                    select 'POC', 'Provider Point of Care', 
+			INSERT INTO person_attribute_type
+				(`name`, `description`, `format`, `searchable`,
+				`creator`, `date_created`)
+				select 'POC_ROOM', 'Provider Point of Care Room',
+				'java.lang.String', 1, 1, NOW() from (
+				select count(*) as cnt from person_attribute_type
+				where name='POC_ROOM') a
+				where a.cnt=0;
 
-'java.lang.String', 1, 1, NOW() from (
+			INSERT INTO person_attribute_type
+				(`name`, `description`, `format`, `searchable`,
+				`creator`, `date_created`)
+				select 'POC_BED', 'Provider Point of Care Bed
+				Number', 'java.lang.String', 1, 1, NOW() from (
+				select count(*) as cnt from person_attribute_type
+				where name='POC_BED') a
+				where a.cnt=0;
 
-                                    select count(*) as cnt from person_attribute_type 
-
-where name='POC') a
-
-                                    where a.cnt=0;
-
-                                    INSERT INTO person_attribute_type
-
-                                    (`name`, `description`, `format`, `searchable`, 
-
-`creator`, `date_created`)
-
-                                    select 'POC_FACILITY', 'Provider Point of Care 
-
-Facility', 'java.lang.String', 1, 1, NOW() from (
-
-                                    select count(*) as cnt from person_attribute_type 
-
-where name='POC_FACILITY') a
-
-                                    where a.cnt=0;
-
-                                    INSERT INTO person_attribute_type
-
-                                    (`name`, `description`, `format`, `searchable`, 
-
-`creator`, `date_created`)
-
-                                    select 'POC_ROOM', 'Provider Point of Care Room', 
-
-'java.lang.String', 1, 1, NOW() from (
-
-                                    select count(*) as cnt from person_attribute_type 
-
-where name='POC_ROOM') a
-
-                                    where a.cnt=0;
-
-                                    INSERT INTO person_attribute_type
-
-                                    (`name`, `description`, `format`, `searchable`, 
-
-`creator`, `date_created`)
-
-                                    select 'POC_BED', 'Provider Point of Care Bed 
-
-Number', 'java.lang.String', 1, 1, NOW() from (
-
-                                    select count(*) as cnt from person_attribute_type 
-
-where name='POC_BED') a
-
-                                    where a.cnt=0;
-
-                                    INSERT INTO person_attribute_type
-
-                                    (`name`, `description`, `format`, `searchable`, 
-
-`creator`, `date_created`)
-
-                                    select 'ADMIT_SOURCE', 'Provider source of 
-
-admission', 'java.lang.String', 1, 1, NOW() from (
-
-                                    select count(*) as cnt from person_attribute_type 
-
-where name='ADMIT_SOURCE') a
-
-                                    where a.cnt=0;
+			INSERT INTO person_attribute_type
+				(`name`, `description`, `format`, `searchable`,
+				`creator`, `date_created`)
+				select 'ADMIT_SOURCE', 'Provider source of
+				admission', 'java.lang.String', 1, 1, NOW() from (
+				select count(*) as cnt from person_attribute_type
+				where name='ADMIT_SOURCE') a
+				where a.cnt=0;
 		</sql>
 	</diff>
+	<diff>
+		<version>1.0.6</version>
+		<author>Meena Sheley</author>
+		<date>Oct 5, 2009</date>
+		<description>
+			Add columns to sockethl7listener_hl7_out_queue
+		</description>
+		<sql>
+			alter ignore table sockethl7listener_hl7_out_queue
+			add column ack_received datetime  after date_processed;
 	
+			alter ignore table sockethl7listener_hl7_out_queue
+			add column port varchar(10) DEFAULT NULL; 
 	
+			alter ignore table sockethl7listener_hl7_out_queue
+			add column host varchar(25) DEFAULT NULL; 
+		</sql>
+	</diff>
+
+
 </sqldiff>

@@ -44,6 +44,7 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
 
@@ -707,6 +708,7 @@ public class HL7SocketHandler implements Application {
 	 * @throws DataTypeException
 	 *             if there is a problem setting ACK values
 	 */
+	@SuppressWarnings("unchecked")
 	public static Message makeACK(Segment inboundHeader) throws HL7Exception,
 	IOException {
 		if (!inboundHeader.getName().equals("MSH"))
@@ -1242,11 +1244,15 @@ public class HL7SocketHandler implements Application {
 	 * @param message
 	 * @throws IOException
 	 */
-	public void sendMessage(String host, Integer port, String message) throws IOException{
+	public Date sendMessage(Encounter encounter , String host, Integer port, 
+			String message, Integer timeoutSec) throws IOException{
+		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
 		
-		openSocket(host,port);
 		String Hl7StartMessage = "\u000b";
 		String Hl7EndMessage = "\u001c";
+		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
+		
+		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
 		if (os != null){
 			os.write( Hl7StartMessage.getBytes() );
 			os.write(message.getBytes());
@@ -1254,8 +1260,46 @@ public class HL7SocketHandler implements Application {
 	        os.write(13);
 	        os.flush();
 		}
-        closeSocket();
+		socket.setSoTimeout(timeoutSec * 1000);
+		String result = readAck();
+		logger.error("Read ACK: " + result);
+		Date ackDate = null;
+		if (result != null){ 
+			ackDate = new Date();
+			hl7ListService.saveMessageToDatabase(encounter, message, ackDate, port, host);
+		}
+
+        return ackDate;
 	}
+	
+	public HL7Outbound sendMessage(HL7Outbound hl7Out, Integer timeoutSec) throws IOException{
+		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
+		String Hl7StartMessage = "\u000b";
+		String Hl7EndMessage = "\u001c";
+		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
+		
+		 hl7Out = hl7ListService.saveMessageToDatabase(hl7Out);
+		 if (os != null){
+			os.write( Hl7StartMessage.getBytes() );
+			os.write( hl7Out.getHl7Message().getBytes());
+	        os.write( Hl7EndMessage.getBytes() );
+	        os.write(13);
+	        os.flush();
+		}
+		
+		socket.setSoTimeout(timeoutSec * 1000);
+		String result = readAck();
+		logger.error("Read ACK: " + result);
+		Date ackDate = null;
+		if (result != null){ 
+			ackDate = new Date();
+			hl7Out.setAckReceived(ackDate);
+			hl7ListService.saveMessageToDatabase(hl7Out);
+			}
+
+        return hl7Out;
+	}
+	
 	
 	public void openSocket(String host, Integer port) throws IOException{
         try {
@@ -1266,8 +1310,7 @@ public class HL7SocketHandler implements Application {
 			is = socket.getInputStream();
 			
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error("Open socket failed: " + e.getMessage());
 		}
     } 
 	
@@ -1284,6 +1327,35 @@ public class HL7SocketHandler implements Application {
 	            
 	        }
 	    }
+	 
+	 private String readAck() throws IOException
+		{
+			StringBuffer stringbuffer = new StringBuffer();
+			int i = 0;
+			do {
+				i = is.read();
+				if (i == -1)
+					return null;
+	            
+				stringbuffer.append((char) i);
+			}
+			while (i != 28);        
+			return stringbuffer.toString();
+		}
+
+	/**
+	 * @return the socket
+	 */
+	public Socket getSocket() {
+		return socket;
+	}
+
+	/**
+	 * @param socket the socket to set
+	 */
+	public void setSocket(Socket socket) {
+		this.socket = socket;
+	}
 
 	
 }

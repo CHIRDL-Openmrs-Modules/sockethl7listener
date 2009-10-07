@@ -21,6 +21,15 @@
 			
  		<property name="dateProcessed" type="java.util.Date" column="date_processed"
 			not-null="false" length="20" />
+			
+		<property name="ackReceived" type="java.util.Date" column="ack_received" 
+			length="20" />
+
+		<property name="port" type="java.lang.Integer" column="port"
+			length="10" />
+
+		<property name="host" type="java.lang.String" column="host"
+			length="25" />
 
 		
 

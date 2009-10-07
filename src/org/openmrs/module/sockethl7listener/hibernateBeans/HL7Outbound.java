@@ -14,10 +14,11 @@ public class HL7Outbound implements Serializable {
 	private String hl7Message;
 	private Date dateProcessed;
 	private Encounter encounter;
+	private Date ackReceived;
+	private Integer port;
 	
-	public Date getDateProcessed() {
-		return dateProcessed;
-	}
+	private String host;
+	
 	
 	public Integer getHL7OutQueueId() {
 		return HL7OutQueueId;
@@ -41,6 +42,35 @@ public class HL7Outbound implements Serializable {
 
 	public void setDateProcessed(Date dateProcessed) {
 		this.dateProcessed = dateProcessed;
+	}
+
+	public Date getAckReceived() {
+		return ackReceived;
+	}
+
+	public void setAckReceived(Date ackReceived) {
+		this.ackReceived = ackReceived;
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
+
+	public void setPort(Integer port) {
+		this.port = port;
+	}
+	
+	public Integer getPort() {
+		return port;
+	}
+
+
+	public Date getDateProcessed() {
+		return dateProcessed;
 	}
 	
 	
