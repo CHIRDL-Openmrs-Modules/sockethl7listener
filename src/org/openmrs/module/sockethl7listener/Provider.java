@@ -152,6 +152,7 @@ public class Provider {
 		User savedProviderUser = null;
 		String password = null;
 		boolean changed = false;
+		PersonService personService = Context.getPersonService();
 
 		try {
 			
@@ -220,64 +221,90 @@ public class Provider {
 				PersonAttribute pattr = new PersonAttribute();
 				if (ps.getPersonAttributeTypeByName(PROVIDER_ID) != null&&
 						provider.id!=null&&provider.id.length()>0){
-					pattr.setAttributeType(ps.getPersonAttributeTypeByName(PROVIDER_ID));
-					pattr.setValue(provider.id);
-					pattr.setCreator(Context.getAuthenticatedUser());
-					pattr.setDateCreated(new Date());
-					providerUser.addAttribute(pattr);
-					changed = true;
+					PersonAttribute attr = providerUser.getAttribute(
+						ps.getPersonAttributeTypeByName(PROVIDER_ID));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(provider.id)) {
+						pattr.setAttributeType(ps.getPersonAttributeTypeByName(PROVIDER_ID));
+						pattr.setValue(provider.id);
+						pattr.setCreator(Context.getAuthenticatedUser());
+						pattr.setDateCreated(new Date());
+						providerUser.addAttribute(pattr);
+						changed = true;
+					}
 				}
 
 
 				PersonAttribute posFacAttr = new PersonAttribute();
 				if (pocFacility != null && ps.getPersonAttributeTypeByName("POC_FACILITY") != null){
-					posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
-					posFacAttr.setValue(pocFacility);
-					posFacAttr.setCreator(Context.getAuthenticatedUser());
-					posFacAttr.setDateCreated(new Date());
-					providerUser.addAttribute(posFacAttr);
-					changed = true;
+					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(pocFacility)) {
+						posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
+						posFacAttr.setValue(pocFacility);
+						posFacAttr.setCreator(Context.getAuthenticatedUser());
+						posFacAttr.setDateCreated(new Date());
+						providerUser.addAttribute(posFacAttr);
+						changed = true;
+					}
 				}
 
 				PersonAttribute posBedAttr = new PersonAttribute();
 				if (pocBed != null && ps.getPersonAttributeTypeByName("POC_BED") != null){
-					posBedAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_BED"));
-					posBedAttr.setValue(pocBed);
-					posBedAttr.setCreator(Context.getAuthenticatedUser());
-					posBedAttr.setDateCreated(new Date());
-					providerUser.addAttribute(posBedAttr);
-					changed = true;
+					PersonAttribute attr = providerUser.getAttribute(
+						ps.getPersonAttributeTypeByName("POC_BED"));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(pocBed)) {
+						posBedAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_BED"));
+						posBedAttr.setValue(pocBed);
+						posBedAttr.setCreator(Context.getAuthenticatedUser());
+						posBedAttr.setDateCreated(new Date());
+						providerUser.addAttribute(posBedAttr);
+						changed = true;
+					}
 				}
 
 				PersonAttribute posAttr = new PersonAttribute();
-				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null){
-					posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
-					posAttr.setValue(poc);
-					posAttr.setCreator(Context.getAuthenticatedUser());
-					posAttr.setDateCreated(new Date());
-					providerUser.addAttribute(posAttr);
-					changed = true;
+				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null) {
+					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC"));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(poc)) {
+						posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
+						posAttr.setValue(poc);
+						posAttr.setCreator(Context.getAuthenticatedUser());
+						posAttr.setDateCreated(new Date());
+						providerUser.addAttribute(posAttr);
+						changed = true;
+					}
 				}
 
 				PersonAttribute posRoomAttr = new PersonAttribute();
-				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null){
-					posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
-					posRoomAttr.setValue(pocRoom);
-					posRoomAttr.setCreator(Context.getAuthenticatedUser());
-					posRoomAttr.setDateCreated(new Date());
-					providerUser.addAttribute(posRoomAttr);
-					changed = true;
+				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null) {
+					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(pocRoom)) {
+						posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
+						posRoomAttr.setValue(pocRoom);
+						posRoomAttr.setCreator(Context.getAuthenticatedUser());
+						posRoomAttr.setDateCreated(new Date());
+						providerUser.addAttribute(posRoomAttr);
+						changed = true;
+					}
 				}
 
 
 				PersonAttribute adminSourceAttr = new PersonAttribute();
-				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null){
-					adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
-					adminSourceAttr.setValue(admitSource);
-					adminSourceAttr.setCreator(Context.getAuthenticatedUser());
-					adminSourceAttr.setDateCreated(new Date());
-					providerUser.addAttribute(adminSourceAttr);
-					changed = true;
+				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null) {
+					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
+					//only update if this is truly a new attribute value
+					if (attr != null && !attr.getValue().equals(admitSource)) {
+						adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
+						adminSourceAttr.setValue(admitSource);
+						adminSourceAttr.setCreator(Context.getAuthenticatedUser());
+						adminSourceAttr.setDateCreated(new Date());
+						providerUser.addAttribute(adminSourceAttr);
+						changed = true;
+					}
 				}
 
 				if(changed){
