@@ -74,7 +74,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService
 		return getSocketHL7ListenerDAO().saveHL7Outbound(hl7Out);
 	}
 
-	public void setHl7Message(int pid, int encounter_id, String message, boolean dup_string,
+	public void setHl7Message(Integer pid, Integer encounter_id, String message, boolean dup_string,
 			boolean dup_enc, Integer port)
 	{
 		if(message == null){

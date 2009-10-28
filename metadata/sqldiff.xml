@@ -216,9 +216,10 @@
 				select count(*) as cnt from person_attribute_type
 				where name='ADMIT_SOURCE') a
 				where a.cnt=0;
+                                   
 		</sql>
 	</diff>
-	<diff>
+		<diff>
 		<version>1.0.6</version>
 		<author>Meena Sheley</author>
 		<date>Oct 5, 2009</date>
@@ -231,11 +232,40 @@
 	
 			alter ignore table sockethl7listener_hl7_out_queue
 			add column port varchar(10) DEFAULT NULL; 
-	
+			
 			alter ignore table sockethl7listener_hl7_out_queue
 			add column host varchar(25) DEFAULT NULL; 
 		</sql>
 	</diff>
+	<diff>
+		<version>1.0.7</version>
+		<author>Tammy Dugan</author>
+		<date>Oct 6 2009</date>
+		<description>
+			Add hl7source column to sockethl7listener_patient_message
+		</description>
+		<sql>
+	 alter table sockethl7listener_hl7_out_queue add constraint  socket_hl7_out_fk_encounter foreign key(encounter_id) 
+references encounter(encounter_id);
 
+ALTER table sockethl7listener_patient_message modify column patient_id int null;
 
+update sockethl7listener_patient_message
+set patient_id = null
+where patient_id=0;
+
+update sockethl7listener_patient_message
+set encounter_id = null
+where encounter_id=0;
+
+alter table sockethl7listener_patient_message add constraint socket_hl7_message_fk_encounter foreign
+key(encounter_id)
+references encounter(encounter_id);
+
+alter table sockethl7listener_patient_message add constraint socket_hl7_message_fk_patient foreign
+key(patient_id)
+references patient(patient_id);
+
+	</sql>
+	</diff>
 </sqldiff>

@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -122,13 +123,7 @@ public class HL7SocketHandler implements Application {
 		return message != null && "ORU_R01".equals(message.getName());
 	}
 
-	/**
-	 * Processes an ORU R01 event message
-	 * 
-	 * @throws ContextAuthenticationException
-	 */
-	public synchronized Message processMessage(Message message) throws ApplicationException {
-		
+	protected Message processMessage(Message message,HashMap<String,Object> parameters) throws ApplicationException{
 		HL7Service hl7Service = Context.getHL7Service();
 		AdministrationService adminService = Context.getAdministrationService();
 		Context.openSession();
@@ -204,7 +199,7 @@ public class HL7SocketHandler implements Application {
 			}
 			boolean error = false;
 			if(!ignoreMessage){
-				error = processMessageSegments(message, incomingMessageString);
+				error = processMessageSegments(message, incomingMessageString,parameters);
 			}
 			try {
 				MSH msh = HL7ObsHandler25.getMSH(message);
@@ -241,13 +236,23 @@ public class HL7SocketHandler implements Application {
 		}
 
 		return response;
-
+	}
+	
+	/**
+	 * Processes an ORU R01 event message
+	 * 
+	 * @throws ContextAuthenticationException
+	 */
+	public synchronized Message processMessage(Message message) throws ApplicationException {
+		
+		HashMap<String,Object> parameters = new HashMap<String,Object>();
+		return this.processMessage(message, parameters);
 	}
 
 	public Encounter checkin(Provider provider,Patient patient,Date encounterDate,
 			Message message,
 			String incomingMessageString,
-			Encounter newEncounter){
+			Encounter newEncounter,HashMap<String,Object> parameters){
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
@@ -258,7 +263,7 @@ public class HL7SocketHandler implements Application {
 			return null;
 		}
 		 
-		Patient resultPatient = findPatient(patient,encounterDate);	
+		Patient resultPatient = findPatient(patient,encounterDate,parameters);	
 		if (resultPatient == null || resultPatient.getPatientId() == null){
 			hl7ListService.setHl7Message(0, 0, incomingMessageString, false, false, this.port);
 			return null;
@@ -267,7 +272,7 @@ public class HL7SocketHandler implements Application {
 		Patient pat = patientService.getPatient(resultPatient.getPatientId());
 		
 		Encounter encounter = processEncounter(incomingMessageString,pat,
-					encounterDate, newEncounter, provider);
+					encounterDate, newEncounter, provider,parameters);
 		
 		if (encounter == null) return null;
 		
@@ -288,7 +293,7 @@ public class HL7SocketHandler implements Application {
 		return encounter;
 	}
 
-	private boolean processMessageSegments(Message message,String incomingMessageString) throws HL7Exception {
+	private boolean processMessageSegments(Message message,String incomingMessageString,HashMap<String,Object> parameters) throws HL7Exception {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		EncounterService encounterService = Context.getEncounterService();
@@ -314,14 +319,12 @@ public class HL7SocketHandler implements Application {
 			//with pid and encounter id from the matched message entry
 			//with duplicate flag indicated
 			boolean isDuplicateHL7 = false;
-			 String hl7ConfigFile = adminService
-				.getGlobalProperty("sockethl7listener.hl7ConfigFile");
-			Properties prop = Util.getProps(hl7ConfigFile);
-			String checkDuplicates = prop.getProperty("check_for_duplicates");
+			 String checkDuplicates = adminService
+				.getGlobalProperty("sockethl7listener.checkForDuplicates");
 			if (checkDuplicates != null && Boolean.valueOf(checkDuplicates)){
 				isDuplicateHL7 = hl7ListService.checkMD5(incomingMessageString, this.port);
 			}
-			
+		
 			//If duplicate message string, do not process 
 			if (! isDuplicateHL7){
 				
@@ -355,7 +358,7 @@ public class HL7SocketHandler implements Application {
 					newEncounter.setEncounterType(encType);
 		
 					checkin(provider, hl7Patient, encounterDate,
-							message, incomingMessageString, newEncounter);
+							message, incomingMessageString, newEncounter,parameters);
 				} else error = true;
 			}
 				
@@ -380,7 +383,7 @@ public class HL7SocketHandler implements Application {
 
 	@SuppressWarnings("deprecation")
 	protected Patient findPatient(Patient hl7Patient
-			,Date encounterDate
+			,Date encounterDate,HashMap<String,Object> parameters
 			) {
 
 		PatientService patientService = Context.getPatientService();
@@ -417,7 +420,8 @@ public class HL7SocketHandler implements Application {
 	 */
 
 	protected Encounter createEncounter(Patient resultPatient,
-			Encounter newEncounter,Provider provider)
+			Encounter newEncounter,Provider provider,
+			HashMap<String,Object> parameters)
 	{
 
 		EncounterService es = Context.getEncounterService();
@@ -561,7 +565,9 @@ public class HL7SocketHandler implements Application {
 		   if (enc == null && isNTE(message,orderRep, obxRep)){
 			   obsDateTime = new Date();
 		   }else {
+		   if(enc != null){
 			obsDateTime = enc.getEncounterDatetime();
+			}
 		   }
 		}
 		obs.setObsDatetime(obsDateTime);
@@ -896,8 +902,9 @@ public class HL7SocketHandler implements Application {
 		return loc;
 	}
 	
-	private Encounter processEncounter(String incomingMessageString, Patient p, 
-			Date encDate, Encounter newEncounter , Provider provider){
+	protected Encounter processEncounter(String incomingMessageString, Patient p, 
+			Date encDate, Encounter newEncounter , Provider provider,
+			HashMap<String,Object> parameters){
 		
 		SocketHL7ListenerService hl7ListService = 
 			Context.getService(SocketHL7ListenerService.class);
@@ -917,7 +924,7 @@ public class HL7SocketHandler implements Application {
 				isDuplicateDateTime = true;
 				encid = enc.getEncounterId();
 			}else {
-				enc = createEncounter(p,newEncounter,provider);
+				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
 					User providerUser = provider.getUserForProvider(provider);

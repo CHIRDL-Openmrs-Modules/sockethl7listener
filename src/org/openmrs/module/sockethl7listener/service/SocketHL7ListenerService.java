@@ -19,7 +19,7 @@ public interface SocketHL7ListenerService
 	
 	public HL7Outbound saveMessageToDatabase(HL7Outbound hl7Out);
 
-	public void setHl7Message(int pid, int encounter_id,  String message, boolean dup_string,
+	public void setHl7Message(Integer pid, Integer encounter_id,  String message, boolean dup_string,
 			boolean dup_enc, Integer port);
 
 	public String getNPI(String firstName, String lastName);

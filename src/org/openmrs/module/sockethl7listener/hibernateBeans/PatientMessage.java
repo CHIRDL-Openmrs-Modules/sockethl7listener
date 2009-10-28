@@ -15,8 +15,8 @@ public class PatientMessage {
 	private Boolean duplicateString = false;
 	private Boolean duplicateDatetime = false;
 	private Date dateCreated = new Date();
-	private Integer patient_id;
-	private Integer encounter_id;
+	private Integer patient_id = null;
+	private Integer encounter_id = null;
 	private String hl7Message = "";
 	private String md5 = null;
 	private String hl7source = "";

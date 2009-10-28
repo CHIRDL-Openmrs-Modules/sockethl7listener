@@ -143,7 +143,7 @@ public class Util
 	public static String convertDateToString(Date date){
 		String dateStr = "";
 		
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
+		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
 		if (date != null) { 
 			dateStr = df.format(date);
 		}

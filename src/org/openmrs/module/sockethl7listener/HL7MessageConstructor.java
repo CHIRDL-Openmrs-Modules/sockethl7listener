@@ -42,6 +42,10 @@ import ca.uhn.hl7v2.parser.PipeParser;
  * @author msheley
  *
  */
+/**
+ * @author msheley
+ *
+ */
 public class HL7MessageConstructor {
 	
 	private ORU_R01 oru;
@@ -71,18 +75,28 @@ public class HL7MessageConstructor {
 	private String poc = "";
 	private String app_acknowledgement_type = "";
 	private String processing_id = "";
-	private OutputStream os = null;
-	private InputStream is = null;
+	private String obsLocation = "";
+	private String encoding = "";
+	private String obxSubDataType = "";
+	private String OBXUniversalId = "";
+	private String obxDataType = "";
+	private String patientClass = "";
 	
 
 	
-	
-           
-
 	public HL7MessageConstructor(){
 		
 		oru = new ORU_R01();
-		setProperties();
+		
+	}
+	
+	/** Set the properties from xml in hl7configFileLoaction
+	 * @param hl7configFileLocation
+	 */
+	public HL7MessageConstructor(String hl7configFileLocation){
+		
+		oru = new ORU_R01();
+		setProperties(hl7configFileLocation);
 			
 		
 	}
@@ -196,71 +210,11 @@ public class HL7MessageConstructor {
 		}
 		
 	}
-	/**Constructs the entire outgoing hl7 message resulting from an abnormal newborn
-	 * screen.
-	 * @param enc_id
-	 * @param mrn
-	 * @param a --the alert message from nbs_alert table. 
-	 * @return
-	 */
-	/*public String createHl7Message( int encounter_id, String mrn, ArrayList<Hl7Obs> hl7ObsList) {
-
-		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
-		PatientService patientService = Context.getPatientService();
-		EncounterService es = Context.getEncounterService();
-		AdministrationService adminService = Context.getAdministrationService();
-		ObsService obsService = Context.getObsService();
-		
-		
-		String hl7Message = "";
-		
-		
-		
-		try {
-			
-			Encounter enc = es.getEncounter(encounter_id);
-			if (enc == null){
-				Log.error("Encounter not found for encounter_id = '" + encounter_id + "'.");
-				return null;
-			}
-			Patient pat = patientService.getPatient(enc.getPatient().getPatientId());
-			MSH msh = createMSH(enc);
-			PID pid = createPID(pat);
-			PV1 pv1 = createPV1(enc);
-			if (pv1 == null){
-				Log.error("Unable to create PV1 segment for encounter_id = '" + encounter_id + "'.");
-				return null;
-			}
-		
-			OBR obr = createOBR(enc);
-	        Parser pipeParser;
-			pipeParser = new PipeParser();
-			OBX obx = null;
-			int rep = 0;
-			for (Hl7Obs hl7obs : hl7ObsList){
-				rep++;
-				obx = createOBX(hl7obs, rep);
-			}
-			hl7Message = pipeParser.encode(oru);
-			hl7ListService.saveMessageToDatabase(enc, hl7Message);
-			
-		} catch (HL7Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-
-
-		} catch (RuntimeException e){
-			logger.error( e.getMessage());
-		}
-	
-		return hl7Message;
-
-	}*/
 	
 	/**Creates the NK1 segment for hl7 message.
 	 * For newborn screen, NK1 will not be included in outgoing message
 	 * @param pat
-	 * @return
+	 * @return NK1 - next of kin segment
 	 */
 	public NK1 AddSegmentNK1(Patient pat) {
 		NK1 nk1 = oru.getPATIENT_RESULT().getPATIENT().getNK1();
@@ -286,10 +240,6 @@ public class HL7MessageConstructor {
 						
 			nk1.getNKName(0).getFamilyName().getSurname().setValue(ln);
 			nk1.getNKName(0).getGivenName().setValue(fn);
-		
-			// NBS temporarily set to mother
-			// Original openmrs data model only collects mother's name
-			// Need to update
 			nk1.getRelationship().getIdentifier().setValue(
 					attributeNextOfKin);
 			if (pat != null) {
@@ -321,7 +271,7 @@ public class HL7MessageConstructor {
 		PV1 pv1 = oru.getPATIENT_RESULT().getPATIENT().getVISIT().getPV1();
 		
 		try {
-			pv1.getPatientClass().setValue(prop.getProperty("patient_class"));
+			pv1.getPatientClass().setValue(patientClass);
 			pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue("");
 			pv1.getAttendingDoctor(0).getGivenName().setValue("");
 
@@ -342,14 +292,21 @@ public class HL7MessageConstructor {
 			pv1.getAdmitDateTime().getTime().setValue(visitDate);
 			pv1.getDischargeDateTime(0).getTime().setValue(visitDate);
 			pv1.getVisitNumber().getIDNumber().setValue(enc.getPatient().getPatientIdentifier().getIdentifier());
-			pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
 			
-			PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
-			if (pocAttr != null){
-				poc = pocAttr.getValue();
-				if (poc != null  && !poc.equals("")){
-					pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
+			
+			if (poc == null || poc.equals("")){
+				PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
+				if (pocAttr != null){
+					poc = pocAttr.getValue();
+					if (poc != null  && !poc.equals("")){
+						pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
+						pv1.getAssignedPatientLocation().getFacility().getNamespaceID().setValue(poc);
+					}
 				}
+			} 
+			if (poc != null){
+				pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
+				pv1.getAssignedPatientLocation().getFacility().getNamespaceID().setValue(poc);
 			}
 			
 			PersonAttribute facAttr = enc.getProvider().getAttribute("POC_FACILITY");
@@ -392,14 +349,14 @@ public class HL7MessageConstructor {
 
 		
 		//Get current date
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmss");
-		Calendar cal = Calendar.getInstance();
-		String currentDateTime = df.format(cal.getTime());
+		String dateFormat = "yyyyMMddHHmmss";
+		SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
+		String formattedDate = formatter.format(new Date());
 		
 		try {
 			msh.getFieldSeparator().setValue("|");
 			msh.getEncodingCharacters().setValue("^~\\&");
-			msh.getDateTimeOfMessage().getTime().setValue(currentDateTime);
+			msh.getDateTimeOfMessage().getTime().setValue(formattedDate);
 			msh.getSendingApplication().getNamespaceID().setValue(ourApplication);
 			msh.getSendingFacility().getNamespaceID().setValue(ourFacility);
 			msh.getMessageType().getMessageCode().setValue(messageType);
@@ -411,7 +368,7 @@ public class HL7MessageConstructor {
 			msh.getAcceptAcknowledgmentType().setValue(ackType);
 			msh.getApplicationAcknowledgmentType().setValue(app_acknowledgement_type);
 			msh.getProcessingID().getProcessingID().setValue(processing_id);
-			msh.getMessageControlID().setValue("CHICA-" + currentDateTime);
+			msh.getMessageControlID().setValue("CHICA-" + formattedDate);
 		} catch (DataTypeException e) {
 			e.printStackTrace();
 		}
@@ -433,28 +390,23 @@ public class HL7MessageConstructor {
 	
 	
 	
-	public OBR AddSegmentOBR (Encounter enc, String univServId, String univServIdName){
+	public OBR AddSegmentOBR (Encounter enc, String univServiceId, String univServIdName){
 		
 		
-		if (prop != null){
-			if (univServId == null){
-				univServId = prop.getProperty("univ_serv_id");
-			}
-			if (univServIdName == null){
-				univServIdName = prop.getProperty("univ_serv_id_name");
-			}
-			codeSys = prop.getProperty("coding_system");
-			resultStatus = prop.getProperty("result_status");
-			specimenActionCode = prop.getProperty("specimen_action_code");
+		if (univServiceId == null){
+			univServiceId = this.univServId;
 		}
+		if (univServIdName == null){
+			univServIdName = this.univServIdName;
+		}
+			
 		
 		OBR obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBR();
 
 		try {
 			SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 			Date encDt = enc.getEncounterDatetime();
-			Calendar cal = Calendar.getInstance();
-			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmm");
+			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
 			SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 			Provider prov = new Provider();
 			prov.setProviderfromUser(enc.getProvider());
@@ -472,7 +424,7 @@ public class HL7MessageConstructor {
 			}
 			obr.getObservationDateTime().getTime().setValue(encDateStr);
 			obr.getSetIDOBR().setValue("1");
-			obr.getUniversalServiceIdentifier().getIdentifier().setValue(univServId);
+			obr.getUniversalServiceIdentifier().getIdentifier().setValue(univServiceId);
 			obr.getUniversalServiceIdentifier().getText().setValue(univServIdName);
 			obr.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue(codeSys);
 			obr.getOrderingProvider(0).getFamilyName().getSurname().setValue(prov.getLastName());
@@ -508,30 +460,24 @@ public class HL7MessageConstructor {
 		if (obsId == null){
 			return null;
 		}
-		String encoding = prop.getProperty("encoding");
-		String obsloc = prop.getProperty("obs_location");
-		String codingSystem = prop.getProperty("coding_system");
 		
 		try {
 			obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBSERVATION(rep-1).getOBX();
 			obx.getSetIDOBX().setValue(String.valueOf(rep));
 			obx.getValueType().setValue(hl7Abbreviation);
-			obx.getUnits().getText().setValue(units);
+			obx.getUnits().getIdentifier().setValue(units);
+			//obx.getUnits().getText().setValue(units);
 			obx.getObservationIdentifier().getIdentifier().setValue(obsId);
 			obx.getObservationIdentifier().getText().setValue(name);
 			obx.getObservationIdentifier().getNameOfCodingSystem().setValue(encoding);
 			obx.getObservationSubID().setValue(obsSubId);
-			obx.getObservationIdentifier().getNameOfCodingSystem().setValue(codingSystem);
+			obx.getObservationIdentifier().getNameOfCodingSystem().setValue(codeSys);
 			String dateFormat = "yyyyMMddHHmmss";
 			SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
 			String formattedDate = formatter.format(datetime);
 			obx.getDateTimeOfTheObservation().getTime().setValue(formattedDate);
 			obx.getObservationResultStatus().setValue("F");
-			obx.getProducerSID().getText().setValue(obsloc);
-			
-			
-			
-			
+			obx.getProducerSID().getText().setValue(obsLocation);
 			
 			if (hl7Abbreviation.equals("CWE"))
 			{
@@ -571,12 +517,6 @@ public class HL7MessageConstructor {
 					//Encoding (ID)</li>
 					//Data (TX)</li>
 				 
-				String obxValueType = prop.getProperty("OBX_value_type");
-				String obxSubDataType = prop.getProperty("OBX_sub_data_type");
-				
-				String OBXUniversalId = prop.getProperty("OBX_universal_id");
-				String obxDataType = prop.getProperty("OBX_data_type");
-				String specimenActionCode = prop.getProperty("specimen_action_code");
 				ED ed = new ED(oru);
 				ed.getSourceApplication().getUniversalID().setValue(OBXUniversalId);
 				ed.getTypeOfData().setValue(obxDataType);
@@ -624,11 +564,9 @@ public class HL7MessageConstructor {
 
 	}
 	
-	private void setProperties(){
-		AdministrationService adminService = Context.getAdministrationService();
-		String hl7ConfigFile = adminService
-			.getGlobalProperty("sockethl7listener.hl7ConfigFile");
+	private void setProperties(String hl7ConfigFile){
 		
+	
 		prop = Util.getProps(hl7ConfigFile);
 		if (prop != null){
 			codeSys = prop.getProperty("coding_system");
@@ -644,7 +582,6 @@ public class HL7MessageConstructor {
 			version = prop.getProperty("version");
 			messageType = prop.getProperty("message_type");
 			triggerEvent = prop.getProperty("event_type_code");
-			codeSys = prop.getProperty("coding_system");
 			//Acknowlegment Type AL=always; NE=never, ER= Error only, and SU=successful
 			ackType = prop.getProperty("acknowledgement_type");
 			univServId = prop.getProperty("univ_serv_id");
@@ -654,6 +591,12 @@ public class HL7MessageConstructor {
 			specimenActionCode = prop.getProperty("specimen_action_code");
 			app_acknowledgement_type = prop.getProperty("app_acknowledgement_type");
 			processing_id = prop.getProperty("msh_processing_id");
+			obsLocation = prop.getProperty("obs_location");
+			encoding = prop.getProperty("encoding");
+			obxSubDataType = prop.getProperty("OBX_sub_data_type");
+			OBXUniversalId = prop.getProperty("OBX_universal_id");
+			obxDataType = prop.getProperty("OBX_data_type");
+			patientClass = prop.getProperty("patient_class");
 		}
 	
 	}
