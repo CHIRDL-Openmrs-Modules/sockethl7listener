@@ -180,4 +180,9 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService
 	public void messageProcessed(Encounter encounter) {
 		// nothing is done here.  Modules override/hook on this method
 	}
+	
+	public PatientMessage getPatientMessageByEncounter(Integer encounterId){
+		return getSocketHL7ListenerDAO().getPatientMessageByEncounter(encounterId);
+	}
+
 }

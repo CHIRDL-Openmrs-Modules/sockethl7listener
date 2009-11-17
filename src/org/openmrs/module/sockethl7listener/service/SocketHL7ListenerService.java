@@ -4,6 +4,7 @@ import java.util.Date;
 
 import org.openmrs.Encounter;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
+import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 
 
 /**
@@ -29,4 +30,6 @@ public interface SocketHL7ListenerService
 	public void messageProcessed(Encounter encounter);
 	
 	public String getFaxNumber(String firstName, String lastName);
+
+	public PatientMessage getPatientMessageByEncounter(Integer encounterId);
 }

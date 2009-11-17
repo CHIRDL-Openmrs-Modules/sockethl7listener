@@ -92,4 +92,23 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO
 		}
 		return null;
 	}
+	
+	public PatientMessage getPatientMessageByEncounter(Integer encounterId)
+	{
+		String sqlSelect = "SELECT * from sockethl7listener_patient_message "
+		+ " where encounter_id  = ? and duplicate_string=0 and duplicate_datetime=0"; 
+		
+		try
+		{
+			SQLQuery query = this.sessionFactory.getCurrentSession()
+					.createSQLQuery(sqlSelect);
+			query.setInteger(0, encounterId);
+			query.addEntity(PatientMessage.class);
+			return (PatientMessage) query.uniqueResult();
+		} catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

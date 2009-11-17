@@ -21,4 +21,6 @@ public interface SocketHL7ListenerDAO {
 	public List<NPI> getNPIByName(String firstName, String lastName);
 	
 	public List<PatientMessage> checkMD5(String incoming);
+	
+	public PatientMessage getPatientMessageByEncounter(Integer encounterId);
 }
