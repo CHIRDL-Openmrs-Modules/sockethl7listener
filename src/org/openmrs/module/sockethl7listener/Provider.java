@@ -224,7 +224,7 @@ public class Provider {
 					PersonAttribute attr = providerUser.getAttribute(
 						ps.getPersonAttributeTypeByName(PROVIDER_ID));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(provider.id)) {
+					if (attr == null || !attr.getValue().equals(provider.id)) {
 						pattr.setAttributeType(ps.getPersonAttributeTypeByName(PROVIDER_ID));
 						pattr.setValue(provider.id);
 						pattr.setCreator(Context.getAuthenticatedUser());
@@ -239,7 +239,7 @@ public class Provider {
 				if (pocFacility != null && ps.getPersonAttributeTypeByName("POC_FACILITY") != null){
 					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(pocFacility)) {
+					if (attr == null || !attr.getValue().equals(pocFacility)) {
 						posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
 						posFacAttr.setValue(pocFacility);
 						posFacAttr.setCreator(Context.getAuthenticatedUser());
@@ -254,7 +254,7 @@ public class Provider {
 					PersonAttribute attr = providerUser.getAttribute(
 						ps.getPersonAttributeTypeByName("POC_BED"));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(pocBed)) {
+					if (attr == null || !attr.getValue().equals(pocBed)) {
 						posBedAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_BED"));
 						posBedAttr.setValue(pocBed);
 						posBedAttr.setCreator(Context.getAuthenticatedUser());
@@ -268,7 +268,7 @@ public class Provider {
 				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null) {
 					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC"));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(poc)) {
+					if (attr == null || !attr.getValue().equals(poc)) {
 						posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
 						posAttr.setValue(poc);
 						posAttr.setCreator(Context.getAuthenticatedUser());
@@ -282,7 +282,7 @@ public class Provider {
 				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null) {
 					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(pocRoom)) {
+					if (attr == null || !attr.getValue().equals(pocRoom)) {
 						posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
 						posRoomAttr.setValue(pocRoom);
 						posRoomAttr.setCreator(Context.getAuthenticatedUser());
@@ -297,7 +297,7 @@ public class Provider {
 				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null) {
 					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
 					//only update if this is truly a new attribute value
-					if (attr != null && !attr.getValue().equals(admitSource)) {
+					if (attr == null || !attr.getValue().equals(admitSource)) {
 						adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
 						adminSourceAttr.setValue(admitSource);
 						adminSourceAttr.setCreator(Context.getAuthenticatedUser());
