@@ -14,7 +14,9 @@
 	</description>
 
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
-		
+	<require_modules>
+		<require_module version="1.0.4">org.openmrs.module.chirdlutil</require_module>
+	</require_modules>
 	<extension>
 		<point>org.openmrs.admin.list</point>
 		<class>org.openmrs.module.sockethl7listener.extension.html.AdminList</class>
