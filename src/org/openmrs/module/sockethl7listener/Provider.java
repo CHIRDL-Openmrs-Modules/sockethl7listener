@@ -143,7 +143,6 @@ public class Provider {
 	/** CreateUserForProvider
 	 * @param provider
 	 * @return
-	 * @throws Exception 
 	 */
 	public User createUserForProvider(Provider provider)  {
 
