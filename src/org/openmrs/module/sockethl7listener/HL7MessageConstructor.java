@@ -25,7 +25,11 @@ import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.v22.datatype.ST;
 import ca.uhn.hl7v2.model.v231.datatype.NM;
+import ca.uhn.hl7v2.model.v25.datatype.CE;
+import ca.uhn.hl7v2.model.v25.datatype.CWE;
 import ca.uhn.hl7v2.model.v25.datatype.ED;
+import ca.uhn.hl7v2.model.v25.group.ORU_R01_OBSERVATION;
+import ca.uhn.hl7v2.model.v25.group.ORU_R01_ORDER_OBSERVATION;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.NK1;
@@ -390,7 +394,8 @@ public class HL7MessageConstructor {
 	
 	
 	
-	public OBR AddSegmentOBR (Encounter enc, String univServiceId, String univServIdName){
+	public OBR AddSegmentOBR (Encounter enc, String univServiceId, 
+			String univServIdName, int orderRep){
 		
 		
 		if (univServiceId == null){
@@ -399,11 +404,12 @@ public class HL7MessageConstructor {
 		if (univServIdName == null){
 			univServIdName = this.univServIdName;
 		}
-			
-		
-		OBR obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBR();
+		OBR obr = null; 
+		int orderObsCount = 0;
 
 		try {
+			obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep).getOBR();
+			int reps = oru.getPATIENT_RESULT().getORDER_OBSERVATIONReps();
 			SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 			Date encDt = enc.getEncounterDatetime();
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
@@ -423,7 +429,7 @@ public class HL7MessageConstructor {
 				encDateOnly = dayFormat.format(encDt);
 			}
 			obr.getObservationDateTime().getTime().setValue(encDateStr);
-			obr.getSetIDOBR().setValue("1");
+			obr.getSetIDOBR().setValue(String.valueOf(reps));
 			obr.getUniversalServiceIdentifier().getIdentifier().setValue(univServiceId);
 			obr.getUniversalServiceIdentifier().getText().setValue(univServIdName);
 			obr.getUniversalServiceIdentifier().getNameOfCodingSystem().setValue(codeSys);
@@ -437,7 +443,7 @@ public class HL7MessageConstructor {
 			obr.getSpecimenActionCode().setValue(specimenActionCode);
 			
 			//Accession number
-			String accessionNumber = String.valueOf(enc.getEncounterId()) + "-" + univServId 
+			String accessionNumber = String.valueOf(enc.getEncounterId()) + "-" + univServiceId 
 				+ "-" + encDateOnly;
 			obr.getFillerOrderNumber().getEntityIdentifier().setValue(accessionNumber);
 			
@@ -446,6 +452,8 @@ public class HL7MessageConstructor {
 		} catch (HL7Exception e) {
 			Log.error("The values are the correct data type, but" 
 					+ " there was an error saving values to the OBS field.", e);
+		}catch (Exception e){
+			Log.error(e.getMessage());
 		}
 		
 		return obr;
@@ -454,22 +462,27 @@ public class HL7MessageConstructor {
 	}
 	
 	
-	public OBX AddSegmentOBX (String name, String obsId, String obsSubId, String value, String units, Date datetime,  String hl7Abbreviation, int rep ){
+	public OBX AddSegmentOBX (String name, 
+			String obsId, String obsSubId, String valueCode, String value, String units, 
+			Date datetime,  String hl7Abbreviation, int orderRep, int obsRep ){
 		//Observation for alert string.
 		OBX obx = null;
 		if (obsId == null){
 			return null;
 		}
 		
+		int obxCount = 0;
+		
 		try {
-			obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION().getOBSERVATION(rep-1).getOBX();
-			obx.getSetIDOBX().setValue(String.valueOf(rep));
+			//Add OBX to newest OBR
+			obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
+				.getOBSERVATION(obsRep).getOBX();
+			//.getOBSERVATION() zero based, but OBX id field is not
+			obx.getSetIDOBX().setValue(String.valueOf(obsRep + 1));
 			obx.getValueType().setValue(hl7Abbreviation);
 			obx.getUnits().getIdentifier().setValue(units);
-			//obx.getUnits().getText().setValue(units);
 			obx.getObservationIdentifier().getIdentifier().setValue(obsId);
 			obx.getObservationIdentifier().getText().setValue(name);
-			obx.getObservationIdentifier().getNameOfCodingSystem().setValue(encoding);
 			obx.getObservationSubID().setValue(obsSubId);
 			obx.getObservationIdentifier().getNameOfCodingSystem().setValue(codeSys);
 			String dateFormat = "yyyyMMddHHmmss";
@@ -481,11 +494,23 @@ public class HL7MessageConstructor {
 			
 			if (hl7Abbreviation.equals("CWE"))
 			{
-				//processCWEType(obs, message, orderRep,
-				//		obxRep, pIdentifierString, stConceptId,
-				//		obsValueType);
+				//CWE cwe = new CWE(oru);
+				//RMRS uses CE not CWE, so we use CE for export
+				//Leaving it separated for possible future deviation. 
+				CE ce = new CE(oru);
+				obx.getValueType().setValue("CE");
+				ce.getText().setValue(value);
+				ce.getIdentifier().setValue(valueCode);
+				ce.getNameOfCodingSystem().setValue(codeSys);
+				obx.getObservationValue(0).setData(ce);
+				
 			} else if (hl7Abbreviation.equals("CE"))
 			{
+				CE ce = new CE(oru);
+				obx.getValueType().setValue("CE");
+				ce.getText().setValue(value);
+				ce.getIdentifier().setValue(valueCode);
+				obx.getObservationValue(0).setData(ce);
 				
 			} else if (hl7Abbreviation.equals("NM"))
 			{
@@ -508,7 +533,7 @@ public class HL7MessageConstructor {
 			{
 				//okToCreateObs = processTXType(obs, message, orderRep,
 				//		obxRep);
-			} else if (hl7Abbreviation == "ED"){
+			} else if (hl7Abbreviation.equals("ED")){
 				
 				//The HL7 ED (Encapsulated Data) data type.  Consists of the following components: </p><ol>
 				 	//Source Application (HD)</li>
@@ -600,5 +625,15 @@ public class HL7MessageConstructor {
 		}
 	
 	}
+	
+	public ORU_R01 getOru() {
+		return oru;
+	}
+
+	public void setOru(ORU_R01 oru) {
+		this.oru = oru;
+	}
+
+	
 
 }

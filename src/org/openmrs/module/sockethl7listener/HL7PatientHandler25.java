@@ -16,7 +16,6 @@ import org.openmrs.PersonAddress;
 import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.sockethl7listener.util.Util;
 
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
@@ -211,7 +210,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 			if (FNln != null && FNln.getSurname() != null)
 			{
-				String lnvalue = Util
+				String lnvalue = org.openmrs.module.chirdlutil.util.Util
 						.toProperCase(FNln.getSurname().getValue());
 				if (lnvalue != null)
 					ln = lnvalue;
@@ -219,14 +218,14 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 			if (STfn != null)
 			{
-				String fnvalue = Util.toProperCase(STfn.getValue());
+				String fnvalue = org.openmrs.module.chirdlutil.util.Util.toProperCase(STfn.getValue());
 				if (fnvalue != null)
 					fn = fnvalue;
 			}
 
 			if (STmn != null)
 			{
-				String mnvalue = Util.toProperCase(STmn.getValue());
+				String mnvalue = org.openmrs.module.chirdlutil.util.Util.toProperCase(STmn.getValue());
 				if (mnvalue != null)
 					mn = mnvalue;
 			}
@@ -441,9 +440,9 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			{
 				for (XPN identifier : mnList)
 				{
-					nkln = Util.toProperCase(identifier.getFamilyName()
+					nkln = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getFamilyName()
 							.getSurname().getValue());
-					nkfn = Util.toProperCase(identifier.getGivenName()
+					nkfn = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getGivenName()
 							.getValue());
 
 				}

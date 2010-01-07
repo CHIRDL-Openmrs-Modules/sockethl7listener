@@ -7,6 +7,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -17,12 +20,18 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import ca.uhn.hl7v2.app.HL7ServerTestHelper;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.FileReader;
 
 
 public class DialogBox 
 {
 
-
+	private static Socket socket = null;
+	private static OutputStream os = null;
+	private static InputStream is = null;
+	
 	public static void main(String[] args)
 	{
 		final JFrame fcframe = new JFrame(); 
@@ -90,47 +99,91 @@ public class DialogBox
 				
 				int port = Integer.parseInt(t3.getText());
 				
-			//	System.out.println("port = " + port);
-			//	System.out.println("host = " + host);
-				
 				if(b.getText().equals("Run"))
 				{		
-					HL7ServerTestHelper serverTest = new HL7ServerTestHelper( host, port );
+				
 					try{ 
-						serverTest.openSocket();
-						File f = new File(t1.getText());
-						FileInputStream msgInputStream;
 						
-					    if (f.isDirectory()) {
+						File f = new File(t1.getText());
+						
+						if (f.isDirectory()) {
 							//	prefix = f.getAbsolutePath() + "\\";
 					    	File [] myFiles = f.listFiles();	
 					    	for(int i=0; i < myFiles.length; i++){
-								
-								msgInputStream = new FileInputStream(myFiles[i]);
-								serverTest.process( msgInputStream );
-								msgInputStream.close();
-							}
+					    		process(myFiles[i], host, port);
+					    	}
 						}
 					    else {
-					    	msgInputStream = new FileInputStream(f);
-							serverTest.process( msgInputStream );
-							msgInputStream.close();
+					    	
+					    	File file = new File(t1.getText());
+					    	process(file, host, port);
+					    	
 					    }
 				   	
-					} catch (FileNotFoundException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					
 					} catch (Exception e){
 						e.printStackTrace();
-					}finally {
-						serverTest.closeSocket();
 					}
 
 				}
 			}
+			
+			public void process(File file, String host, Integer port){
+				
+				String outputString = null;
+				StringBuffer fileData = new StringBuffer(1000);
+				
+				try {
+					openSocket(host,port);
+					BufferedInputStream in = 
+						new BufferedInputStream(new FileInputStream(file));
+
+					BufferedReader reader = new BufferedReader(
+					        new FileReader(file.getAbsolutePath()));
+					char[] buf = new char[1024];
+					String readData = null;
+					int numRead=0;
+					while((numRead=reader.read(buf)) != -1){
+					    readData = String.valueOf(buf, 0, numRead);
+					    fileData.append(readData);
+					    buf = new char[1024];
+					}
+					reader.close();
+					
+					String[] messages = HL7ServerTestHelper.getHL7Messages(fileData.toString());
+			    	for (int i = 0; i < messages.length; i++) {
+						sendMessage(messages[i]);
+			    	}
+					
+					
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} finally {
+					closeSocket();
+				}
+				
+				
+		        
+				
+			}
+			
+			 private void sendMessage(String theMessage) throws IOException
+			    {
+				 
+				 	String Hl7StartMessage = "\u000b";
+					String Hl7EndMessage = "\u001c";
+			        os.write( Hl7StartMessage.getBytes() );
+			        os.write( theMessage.getBytes() );
+			        os.write( Hl7EndMessage.getBytes() );
+			        os.write(13);
+			        os.flush();
+			        
+			    }
+			     
 		}
 			
 
@@ -168,6 +221,34 @@ public class DialogBox
 			
 			
 	}
+	
+	
+	public static void openSocket(String host, Integer port) throws IOException{
+        try {
+        	socket = new Socket(host, port);
+			socket.setSoLinger(true, 10000);
+			
+			os = socket.getOutputStream();
+			is = socket.getInputStream();
+			
+		} catch (Exception e) {
+			
+		}
+    } 
+	
+	 public static void closeSocket() {
+	        try {
+	            Socket sckt = socket;
+	            socket = null;
+	            if (sckt != null)
+	                sckt.close();
+	            os.close();
+	            is.close();
+	        }
+	        catch (Exception e) {
+	            
+	        }
+	   }
 		
 
 }

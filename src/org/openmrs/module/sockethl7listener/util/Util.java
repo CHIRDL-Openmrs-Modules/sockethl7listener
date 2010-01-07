@@ -65,39 +65,6 @@ public class Util
 		return concept;
 	}
 	
-	public static String toProperCase(String str)
-	{
-		if(str == null || str.length()<1)
-		{
-			return str;
-		}
-		
-		StringBuffer resultString = new StringBuffer();
-		String delimiter = " ";
-		
-		StringTokenizer tokenizer = new StringTokenizer(str,delimiter,true);
-		
-		String currToken = null;
-		
-		while(tokenizer.hasMoreTokens())
-		{
-			currToken = tokenizer.nextToken();
-			
-			if(!currToken.equals(delimiter))
-			{
-				if(currToken.length()>0)
-				{
-					currToken = currToken.substring(0, 1).toUpperCase()
-						+ currToken.substring(1).toLowerCase();
-				}
-			}
-			
-			resultString.append(currToken);
-		}
-		
-		return resultString.toString();
-	}
-	
 	public static String computeMD5(String strToMD5) throws DigestException
 	{
 		try

@@ -15,7 +15,6 @@ import org.openmrs.api.AdministrationService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.sockethl7listener.util.Util;
 
 
 /**
@@ -63,7 +62,7 @@ public class Provider {
 		return firstName;
 	}
 	public void setFirstName(String firstName) {
-		this.firstName =Util.toProperCase(firstName);
+		this.firstName = org.openmrs.module.chirdlutil.util.Util.toProperCase(firstName);
 		
 	}
 	public String getId() {
@@ -76,7 +75,7 @@ public class Provider {
 		return lastName;
 	}
 	public void setLastName(String lastName) {
-		this.lastName =Util.toProperCase(lastName);
+		this.lastName = org.openmrs.module.chirdlutil.util.Util.toProperCase(lastName);
 	}
 	public Integer getUserId (){
 		return userid;
