@@ -23,7 +23,10 @@ import org.openmrs.module.sockethl7listener.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.DataTypeException;
-import ca.uhn.hl7v2.model.v22.datatype.ST;
+import ca.uhn.hl7v2.model.ExtraComponents;
+import ca.uhn.hl7v2.model.Type;
+import ca.uhn.hl7v2.model.Varies;
+import ca.uhn.hl7v2.model.v25.datatype.ST;
 import ca.uhn.hl7v2.model.v231.datatype.NM;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
 import ca.uhn.hl7v2.model.v25.datatype.CWE;
@@ -85,9 +88,18 @@ public class HL7MessageConstructor {
 	private String OBXUniversalId = "";
 	private String obxDataType = "";
 	private String patientClass = "";
+	private boolean image = false;
 	
 
 	
+	public boolean isImage() {
+		return image;
+	}
+
+	public void setImage(boolean image) {
+		this.image = image;
+	}
+
 	public HL7MessageConstructor(){
 		
 		oru = new ORU_R01();
@@ -361,6 +373,9 @@ public class HL7MessageConstructor {
 			msh.getFieldSeparator().setValue("|");
 			msh.getEncodingCharacters().setValue("^~\\&");
 			msh.getDateTimeOfMessage().getTime().setValue(formattedDate);
+			if(isImage()){
+				ourApplication = prop.getProperty("our_image_app");
+			}
 			msh.getSendingApplication().getNamespaceID().setValue(ourApplication);
 			msh.getSendingFacility().getNamespaceID().setValue(ourFacility);
 			msh.getMessageType().getMessageCode().setValue(messageType);
@@ -543,7 +558,7 @@ public class HL7MessageConstructor {
 					//Data (TX)</li>
 				 
 				ED ed = new ED(oru);
-				ed.getSourceApplication().getUniversalID().setValue(OBXUniversalId);
+				ed.getSourceApplication().getNamespaceID().setValue(OBXUniversalId);
 				ed.getTypeOfData().setValue(obxDataType);
 				ed.getDataSubtype().setValue(obxSubDataType);
 				ed.getEncoding().setValue(encoding);
