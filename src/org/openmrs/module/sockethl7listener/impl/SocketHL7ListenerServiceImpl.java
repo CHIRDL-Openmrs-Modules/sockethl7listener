@@ -14,7 +14,6 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Defines implementations of services used by this module
@@ -22,9 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Meena Sheley and Tammy Dugan
  *
  */
-@Transactional
-public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService
-{
+public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 	private static final Logger socketHandlerLogger = Logger.getLogger("SocketHandlerLogger");
 
 	private SocketHL7ListenerDAO dao;

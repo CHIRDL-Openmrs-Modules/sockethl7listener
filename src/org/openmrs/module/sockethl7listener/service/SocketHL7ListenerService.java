@@ -5,6 +5,7 @@ import java.util.Date;
 import org.openmrs.Encounter;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
+import org.springframework.transaction.annotation.Transactional;
 
 
 /**
@@ -13,6 +14,7 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
  * @author Tammy Dugan
  *
  */
+@Transactional
 public interface SocketHL7ListenerService
 {
 	public Integer saveMessageToDatabase(Encounter enc, String encodedMessage, 
