@@ -21,17 +21,11 @@ import org.openmrs.api.context.Context;
  */
 public class MatchHandler {
 	
-	private static final String PROVIDER_ID = "Provider ID";
-	private static final String PROVIDER_NAME = "Provider Name";
-	private static final String MATCH_INFO = "Other Matching Information";
 	public static final String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
 	public static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
 	public static final String ATTRIBUTE_RACE = "Race";
 	public static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
-	private static final String PATIENT_IDENT_TYPE = "MRN";
 	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
-	private static final Logger matchLogger = Logger.getLogger("MatchResultsLogger");
-	private static final Logger matchStatsLogger = Logger.getLogger("MatchStatsLogger");
 	protected PatientIdentifier bestIdentifier;
 	protected PersonName bestName;
 	protected String correctGender;
@@ -94,16 +88,19 @@ public class MatchHandler {
 		resolvedPatient.setBirthdate(DOB);
 
 
+		
 		bestAddress = getBestAddress(hl7Patient, resolvedPatient,
 				encounterDate);
-		if (bestAddress != null)
+		
+		if (hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
+		    resolvedPatient.getPersonAddress().setDateCreated(encounterDate);
+		}
+		else if (bestAddress != null)
 		{
 			resolvedPatient.getPersonAddress().setPreferred(false);
 			resolvedPatient.addAddress(bestAddress);
-		} else
-		{
-			bestAddress = resolvedPatient.getPersonAddress();
-		}
+		} 
+		
 
 		bestNKAttribute = getBestNK(hl7Patient,
 				resolvedPatient, encounterDate);
@@ -201,8 +198,11 @@ public class MatchHandler {
 		PIDCounty = hl7Address.getCountyDistrict();
 
 		// Check if identical
-
-		if (compare(existingPrefAddr1, PIDAddr1)
+		boolean isEqual = hl7Address.equalsContent(existingPreferredAddr);
+		if (isEqual){
+			return existingPreferredAddr;
+		}
+		/*if (compare(existingPrefAddr1, PIDAddr1)
 				&& compare(existingPrefAddr2, PIDAddr2)
 				&& compare(existingPrefCity, PIDCity)
 				&& compare(existingPrefCountry, PIDCountry)
@@ -212,9 +212,10 @@ public class MatchHandler {
 		{
 			bestAddress = existingPreferredAddr;
 
-		}
+		}*/
+		
 
-		else if (!existingPreferredAddr.getDateCreated().after(
+		if (!existingPreferredAddr.getDateCreated().after(
 				hl7Address.getDateCreated()))
 		{
 			// PID is newer or the same date

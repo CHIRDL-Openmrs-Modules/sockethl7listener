@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -27,6 +28,7 @@ import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.PatientIdentifier;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
@@ -45,6 +47,8 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.Module;
+import org.openmrs.module.ModuleFactory;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -1275,6 +1279,44 @@ public class HL7SocketHandler implements Application {
 			ackDate = new Date();
 			hl7ListService.saveMessageToDatabase(encounter, message, ackDate, port, host);
 		}
+
+        return ackDate;
+	}
+	
+	/**
+	 * Prepares message and sends message on designated port
+	 * @param host
+	 * @param port
+	 * @param message
+	 * @throws IOException
+	 */
+	public Date sendMessage(Encounter encounter , String host, Integer port, 
+			String message, Integer timeoutSec, boolean readAck) throws IOException{
+		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
+		
+		String Hl7StartMessage = "\u000b";
+		String Hl7EndMessage = "\u001c";
+		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
+		
+		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
+		if (os != null){
+			os.write( Hl7StartMessage.getBytes() );
+			os.write(message.getBytes());
+	        os.write( Hl7EndMessage.getBytes() );
+	        os.write(13);
+	        os.flush();
+		}
+		String result = null;
+		if (readAck) {
+			socket.setSoTimeout(timeoutSec * 1000);
+			result = readAck();
+			logger.info("Read ACK: " + result);
+		}
+		Date ackDate = null;
+		if (result != null){ 
+			ackDate = new Date();
+		}
+		hl7ListService.saveMessageToDatabase(encounter, message, ackDate, port, host);
 
         return ackDate;
 	}
