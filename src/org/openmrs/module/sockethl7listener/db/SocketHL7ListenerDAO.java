@@ -16,7 +16,7 @@ public interface SocketHL7ListenerDAO {
 
 	public HL7Outbound saveHL7Outbound(HL7Outbound hl7Outbound);
 
-	public void savePatientMessage(PatientMessage patientMessage);
+	public PatientMessage savePatientMessage(PatientMessage patientMessage);
 
 	public List<NPI> getNPIByName(String firstName, String lastName);
 	

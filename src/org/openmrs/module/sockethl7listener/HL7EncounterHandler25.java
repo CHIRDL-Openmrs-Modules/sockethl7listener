@@ -154,13 +154,13 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 				if (pv1 != null)
 					timeStamp = pv1.getAdmitDateTime();
 			}
-			 if (timeStamp == null){
+			 if (timeStamp == null || timeStamp.getTime()== null || timeStamp.getTime().getValue() == null){
 				 if (msh != null){
 					 timeStamp = msh.getDateTimeOfMessage();
 			 	}
 			 }
 			
-			if (timeStamp != null) { 
+			if (timeStamp != null && timeStamp.getTime()!= null) { 
 				datetime = TranslateDate(timeStamp);
 			}else {
 				logger.error("A valid encounter date time stamp could not be " +

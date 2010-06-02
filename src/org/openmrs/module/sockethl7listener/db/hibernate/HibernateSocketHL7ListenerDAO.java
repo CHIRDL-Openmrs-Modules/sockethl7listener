@@ -49,9 +49,10 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO
 		return hl7Outbound;
 	}
 
-	public void savePatientMessage(PatientMessage patientMessage)
+	public PatientMessage savePatientMessage(PatientMessage patientMessage)
 	{
 		this.sessionFactory.getCurrentSession().save(patientMessage);
+		return patientMessage;
 	}
 
 	public List<NPI> getNPIByName(String firstName, String lastName)

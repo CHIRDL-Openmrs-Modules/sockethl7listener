@@ -74,13 +74,13 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 	public void setHl7Message(Integer pid, Integer encounter_id, String message, boolean dup_string,
 			boolean dup_enc, Integer port)
 	{
+		PatientMessage pm = new PatientMessage();
 		if(message == null){
 			return;
 		}
 		try
 		{
 
-			PatientMessage pm = new PatientMessage();
 			pm.setDuplicateDatetime(dup_enc);
 			pm.setDuplicateString(dup_string);
 			pm.setHl7Message(message);
@@ -98,11 +98,14 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			} catch (DigestException e)
 			{
 			}
-			getSocketHL7ListenerDAO().savePatientMessage(pm);
+			pm = getSocketHL7ListenerDAO().savePatientMessage(pm);
+			
 		} catch (HibernateException e)
 		{
 			socketHandlerLogger.error("Exception inserting hl7message. ", e);
 		}
+		
+		return;
 	}
 
 	public String getNPI(String firstName, String lastName)

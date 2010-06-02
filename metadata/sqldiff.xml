@@ -268,4 +268,22 @@ references patient(patient_id);
 
 	</sql>
 	</diff>
+	
+	<diff>
+		<version>1.0.8</version>
+		<author>Meena Sheley</author>
+		<date>Mar 25, 2010</date>
+		<description>
+			Change storage engine to InnoDB
+		</description>
+		<sql>
+	ALTER TABLE sockethl7listener_patient_message ENGINE=InnoDB ;
+	ALTER TABLE sockethl7listener_institution_provider ENGINE=InnoDB ;
+	ALTER TABLE sockethl7listener_npi ENGINE=InnoDB ;
+	ALTER TABLE sockethl7listener_hl7_out_queue ENGINE=InnoDB ;
+	ALTER TABLE sockethl7listener_patient_message ENGINE=InnoDB ;
+
+
+	</sql>
+	</diff>
 </sqldiff>

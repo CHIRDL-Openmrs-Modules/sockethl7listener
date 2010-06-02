@@ -17,8 +17,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
 
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
@@ -28,7 +26,6 @@ import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
-import org.openmrs.PatientIdentifier;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
@@ -47,8 +44,6 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
-import org.openmrs.module.Module;
-import org.openmrs.module.ModuleFactory;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -56,6 +51,7 @@ import org.openmrs.module.sockethl7listener.util.Util;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
 import ca.uhn.hl7v2.app.ApplicationException;
+import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
@@ -81,7 +77,6 @@ public class HL7SocketHandler implements Application {
 	protected HL7ObsHandler hl7ObsHandler = null;
 	protected HL7EncounterHandler hl7EncounterHandler = null;
 	protected HL7PatientHandler hl7PatientHandler = null;
-	private Properties prop;
 	private Integer port;
 	private String host;
 	private Socket socket = null;
@@ -780,6 +775,7 @@ public class HL7SocketHandler implements Application {
 		String encChars = Terser.get(inbound, 2, 0, 1, 1);
 		String fieldSep = Terser.get(inbound, 1, 0, 1, 1);
 		String procID = Terser.get(inbound, 11, 0, 1, 1);
+		String sendingApp = Terser.get(inbound, 3, 0, 1, 1);
 
 		// populate outbound MSH using data from inbound message ...
 		Terser.set(outbound, 2, 0, 1, 1, encChars);
@@ -790,7 +786,7 @@ public class HL7SocketHandler implements Application {
 		Terser.set(outbound, 10, 0, 1, 1, MessageIDGenerator.getInstance()
 				.getNewID());
 		Terser.set(outbound, 11, 0, 1, 1, procID);
-		Terser.set(outbound, 3, 0, 1, 1, "NBS");
+		Terser.set(outbound, 3, 0, 1, 1, sendingApp);
 	}
 
 	/**
@@ -852,8 +848,6 @@ public class HL7SocketHandler implements Application {
 		
 		return null;
 	}
-	
-	
 	
 	protected Patient createPatient(Patient p){
 		
@@ -941,16 +935,13 @@ public class HL7SocketHandler implements Application {
 				}
 						
 			}
-			
+			hl7ListService.setHl7Message(pid, encid, incomingMessageString,
+					false, isDuplicateDateTime, this.port);
 			
 			
 		} catch (RuntimeException e) {
 			logger.error("Exception when checking encounter date/time. ",e);
-		} finally {
-			
-			hl7ListService.setHl7Message(pid, encid, incomingMessageString,
-					false, isDuplicateDateTime, this.port);
-		}
+		} 
 		
 		
 		return enc;
@@ -1337,14 +1328,18 @@ public class HL7SocketHandler implements Application {
 		}
 		
 		socket.setSoTimeout(timeoutSec * 1000);
-		String result = readAck();
-		logger.error("Read ACK: " + result);
-		Date ackDate = null;
-		if (result != null){ 
-			ackDate = new Date();
-			hl7Out.setAckReceived(ackDate);
-			hl7ListService.saveMessageToDatabase(hl7Out);
-			}
+		try {
+			String result = readAck();
+			logger.error("Read ACK: " + result);
+			Date ackDate = null;
+			if (result != null){ 
+				ackDate = new Date();
+				hl7Out.setAckReceived(ackDate);
+				hl7ListService.saveMessageToDatabase(hl7Out);
+				}
+		} catch (Exception e) {
+			logger.error("Error during readAck", e);
+		}
 
         return hl7Out;
 	}
@@ -1367,10 +1362,12 @@ public class HL7SocketHandler implements Application {
 	        try {
 	            Socket sckt = socket;
 	            socket = null;
-	            if (sckt != null)
-	                sckt.close();
 	            os.close();
 	            is.close();
+	           
+	            if (sckt != null)
+	                sckt.close();
+	           
 	        }
 	        catch (Exception e) {
 	            
