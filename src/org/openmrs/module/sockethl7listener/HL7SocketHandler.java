@@ -38,6 +38,7 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
@@ -500,7 +501,12 @@ public class HL7SocketHandler implements Application {
 
 			if (providerNameConcept != null) {
 				obsForName.setConcept(providerNameConcept);
-				User prov = enc.getProvider();
+				UserService userService = Context.getUserService();
+				List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
+				User prov = null;
+				if(providers != null&& providers.size()>0){
+					prov = providers.get(0);
+				}
 				if (prov == null){
 					obsForName.setValueText("");
 				} else {
@@ -926,7 +932,13 @@ public class HL7SocketHandler implements Application {
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
 					User providerUser = provider.getUserForProvider(provider);
-					if ( ! providerUser.equals( enc.getProvider().getUserId())){
+					UserService userService = Context.getUserService();
+					List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
+					User encounterProvider = null;
+					if(providers != null&& providers.size()>0){
+						encounterProvider = providers.get(0);
+					}
+					if ( ! providerUser.equals( encounterProvider.getUserId())){
 						enc.setProvider(provider.getUserForProvider(provider));
 						es.saveEncounter(enc);
 					}

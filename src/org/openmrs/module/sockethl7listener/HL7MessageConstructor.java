@@ -3,6 +3,7 @@ package org.openmrs.module.sockethl7listener;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -12,7 +13,9 @@ import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonAddress;
 import org.openmrs.PersonAttribute;
+import org.openmrs.User;
 import org.openmrs.api.PersonService;
+import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -301,7 +304,13 @@ public class HL7MessageConstructor {
 			pv1.getAttendingDoctor(0).getGivenName().setValue("");
 
 			Provider prov = new Provider();
-			prov.setProviderfromUser(enc.getProvider());
+			UserService userService = Context.getUserService();
+			List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
+			User provider = null;
+			if(providers != null&& providers.size()>0){
+				provider = providers.get(0);
+			}
+			prov.setProviderfromUser(provider);
 			String providerId = prov.getId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
@@ -457,7 +466,13 @@ public class HL7MessageConstructor {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
 			SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 			Provider prov = new Provider();
-			prov.setProviderfromUser(enc.getProvider());
+			UserService userService = Context.getUserService();
+			List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
+			User provider = null;
+			if(providers != null&& providers.size()>0){
+				provider = providers.get(0);
+			}
+			prov.setProviderfromUser(provider);
 			String providerId = prov.getId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
