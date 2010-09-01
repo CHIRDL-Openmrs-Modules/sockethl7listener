@@ -147,12 +147,16 @@ public class HL7SocketHandler implements Application {
         
 		Message response = null;
 		
-		if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01))
+		if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) {
+			String messageType = "";
+			if (message.getParent() != null) {
+				messageType = message.getParent().getName();
+			}
+			
 			throw new ApplicationException(
-					
-			"Invalid message type (" + message.getParent().getName() 
-			+  ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. " );
-
+			"Invalid message type (" + messageType
+			+  ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
+		}
 		if (logger.isDebugEnabled())
 			logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
 
