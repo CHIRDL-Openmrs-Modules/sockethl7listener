@@ -38,6 +38,7 @@ public class DialogBox
 		final JTextField t1 = new JTextField(5);
 		final JTextField t2= new JTextField(20);
 		final JTextField t3= new JTextField(20);
+		final JTextField t4= new JTextField(20);
 		
 		
 		class OpenCloseListener implements ActionListener
@@ -63,6 +64,14 @@ public class DialogBox
 	            
 	        }
 
+		}
+		
+		class ExitHandler implements ActionListener
+		 {
+			public void actionPerformed(ActionEvent e) 
+			{
+				System.exit(0);
+			}
 		}
 		
 		class BrowseListener implements ActionListener
@@ -99,6 +108,8 @@ public class DialogBox
 				
 				int port = Integer.parseInt(t3.getText());
 				
+				int sleep = Integer.parseInt(t4.getText());
+				
 				if(b.getText().equals("Run"))
 				{		
 				
@@ -110,13 +121,13 @@ public class DialogBox
 							//	prefix = f.getAbsolutePath() + "\\";
 					    	File [] myFiles = f.listFiles();	
 					    	for(int i=0; i < myFiles.length; i++){
-					    		process(myFiles[i], host, port);
+					    		process(myFiles[i], host, port, sleep * 1000);
 					    	}
 						}
 					    else {
 					    	
 					    	File file = new File(t1.getText());
-					    	process(file, host, port);
+					    	process(file, host, port, sleep * 1000);
 					    	
 					    }
 				   	
@@ -128,7 +139,7 @@ public class DialogBox
 				}
 			}
 			
-			public void process(File file, String host, Integer port){
+			public void process(File file, String host, Integer port, Integer sleep){
 				
 				String outputString = null;
 				StringBuffer fileData = new StringBuffer(1000);
@@ -153,6 +164,7 @@ public class DialogBox
 					String[] messages = HL7ServerTestHelper.getHL7Messages(fileData.toString());
 			    	for (int i = 0; i < messages.length; i++) {
 						sendMessage(messages[i]);
+						Thread.sleep(sleep); 
 			    	}
 					
 					
@@ -160,6 +172,9 @@ public class DialogBox
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} finally {
@@ -193,8 +208,11 @@ public class DialogBox
 		JLabel filename = new JLabel("Filename: ");
 		JLabel hostname = new JLabel("Hostname: ");
 		JLabel postnum = new JLabel("Port Number: ");
+		JLabel sleeptime = new JLabel("Sleep Time (sec): ");
 		JButton browse = new JButton("Browse");
 		JButton run = new JButton("Run");
+		JButton exit = new JButton("Exit");
+		exit.addActionListener(new ExitHandler());
 		JPanel pan = new JPanel();
 		ActionListener runlist = new RunListener();
 		run.addActionListener(runlist);
@@ -207,20 +225,22 @@ public class DialogBox
 		pan.add(hostname);
 		pan.add(t2);
 		t2.setText("localhost");
-		t3.setText("8765");
+		t3.setText("5002");
+		t4.setText("10");
 		pan.add(postnum);
 		pan.add(t3);
+		pan.add(sleeptime);
+		pan.add(t4);
 		pan.add(run);
+		pan.add(exit);
 		frame.add(pan);
-		frame.setSize(600, 200);
+		frame.setSize(600, 275);
 		frame.setVisible(true);	
 		frame.setTitle("Tester");
-
-		
-			
-			
-			
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				
 	}
+	
 	
 	
 	public static void openSocket(String host, Integer port) throws IOException{

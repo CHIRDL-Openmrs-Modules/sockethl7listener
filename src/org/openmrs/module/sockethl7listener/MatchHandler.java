@@ -26,16 +26,6 @@ public class MatchHandler {
 	public static final String ATTRIBUTE_RACE = "Race";
 	public static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
 	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
-	protected PatientIdentifier bestIdentifier;
-	protected PersonName bestName;
-	protected String correctGender;
-	protected Date DOB;
-	protected Provider bestProv;
-	protected PersonAddress bestAddress;
-	protected PersonAttribute bestNKAttribute;
-	protected PersonAttribute bestTelephoneAttr;
-	
-	
 
 	public MatchHandler() {
 		
@@ -59,7 +49,7 @@ public class MatchHandler {
 			return resolvedPatient;
 		}
 	
-		bestIdentifier = getBestIdentifier(hl7Patient,
+		PatientIdentifier bestIdentifier = getBestIdentifier(hl7Patient,
 				resolvedPatient, encounterDate);
 		if (bestIdentifier != null)
 		{
@@ -69,8 +59,9 @@ public class MatchHandler {
 		{
 			bestIdentifier = resolvedPatient.getPatientIdentifier();
 		}
+		
 
-		bestName = getBestName(hl7Patient.getPersonName(), resolvedPatient.getPersonName(),
+		PersonName bestName = getBestName(hl7Patient.getPersonName(), resolvedPatient.getPersonName(),
 				encounterDate);
 		if (bestName != null)
 		{
@@ -81,15 +72,17 @@ public class MatchHandler {
 			bestName = resolvedPatient.getPersonName();
 		}
 
-		correctGender = getBestGender(hl7Patient, resolvedPatient);
+		
+		String correctGender = getBestGender(hl7Patient, resolvedPatient);
 		resolvedPatient.setGender(correctGender);
 
-		DOB = getBestDOB(hl7Patient, resolvedPatient);
+		
+		Date DOB = getBestDOB(hl7Patient, resolvedPatient);
 		resolvedPatient.setBirthdate(DOB);
 
 
 		
-		bestAddress = getBestAddress(hl7Patient, resolvedPatient,
+		PersonAddress bestAddress = getBestAddress(hl7Patient, resolvedPatient,
 				encounterDate);
 		
 		if (hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
@@ -102,27 +95,21 @@ public class MatchHandler {
 		} 
 		
 
-		bestNKAttribute = getBestNK(hl7Patient,
+		//openmrs addAttribute takes care of voiding old value 
+		PersonAttribute bestNKAttribute = getBestNK(hl7Patient,
 				resolvedPatient, encounterDate);
-		if (bestNKAttribute != null)
-		{
-			if (resolvedPatient.getAttribute(ATTRIBUTE_NEXT_OF_KIN) != null)
-			{
-				resolvedPatient.getAttribute(ATTRIBUTE_NEXT_OF_KIN).setVoided(
-						true);
-			}
-			resolvedPatient.addAttribute(bestNKAttribute);
-		} else
-		{
-			bestNKAttribute = resolvedPatient
-					.getAttribute(ATTRIBUTE_NEXT_OF_KIN);
-		}
-
 		
-		bestTelephoneAttr = getBestTel(hl7Patient.getAttribute(ATTRIBUTE_TELEPHONE),
+		if (bestNKAttribute != null){
+			resolvedPatient.addAttribute(bestNKAttribute);
+		}
+		
+		PersonAttribute bestTelephoneAttr = getBestTel(hl7Patient.getAttribute(ATTRIBUTE_TELEPHONE),
 				resolvedPatient.getAttribute(ATTRIBUTE_TELEPHONE), encounterDate);
 		
-
+		if (bestTelephoneAttr != null) {
+			resolvedPatient.addAttribute(bestTelephoneAttr);
+		}
+	
 		return resolvedPatient;
 	}
 
@@ -202,18 +189,6 @@ public class MatchHandler {
 		if (isEqual){
 			return existingPreferredAddr;
 		}
-		/*if (compare(existingPrefAddr1, PIDAddr1)
-				&& compare(existingPrefAddr2, PIDAddr2)
-				&& compare(existingPrefCity, PIDCity)
-				&& compare(existingPrefCountry, PIDCountry)
-				&& compare(existingPrefPostalCode, PIDPostalCode)
-				&& compare(existingPrefCounty, PIDCounty)
-				&& compare(existingState, PIDState))
-		{
-			bestAddress = existingPreferredAddr;
-
-		}*/
-		
 
 		if (!existingPreferredAddr.getDateCreated().after(
 				hl7Address.getDateCreated()))
