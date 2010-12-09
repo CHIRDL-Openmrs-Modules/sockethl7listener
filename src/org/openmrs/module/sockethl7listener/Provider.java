@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.PersonAttribute;
@@ -212,14 +213,14 @@ public class Provider {
 				PersonName providerName = new PersonName(firstname, "", lastname);
 				providerName.isPreferred();
 				providerUser.addName(providerName);
-				providerUser.setGender("U");
-				providerUser.setVoided(false);
+				providerUser.getPerson().setGender("U");
+				providerUser.setRetired(false);
 
 				//Store the provider's id in the provider's person attribute.
 				PersonAttribute pattr = new PersonAttribute();
 				if (ps.getPersonAttributeTypeByName(PROVIDER_ID) != null&&
 						provider.id!=null&&provider.id.length()>0){
-					PersonAttribute attr = providerUser.getAttribute(
+					PersonAttribute attr = providerUser.getPerson().getAttribute(
 						ps.getPersonAttributeTypeByName(PROVIDER_ID));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(provider.id)) {
@@ -227,7 +228,7 @@ public class Provider {
 						pattr.setValue(provider.id);
 						pattr.setCreator(Context.getAuthenticatedUser());
 						pattr.setDateCreated(new Date());
-						providerUser.addAttribute(pattr);
+						providerUser.getPerson().addAttribute(pattr);
 						changed = true;
 					}
 				}
@@ -235,21 +236,21 @@ public class Provider {
 
 				PersonAttribute posFacAttr = new PersonAttribute();
 				if (pocFacility != null && ps.getPersonAttributeTypeByName("POC_FACILITY") != null){
-					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
+					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(pocFacility)) {
 						posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
 						posFacAttr.setValue(pocFacility);
 						posFacAttr.setCreator(Context.getAuthenticatedUser());
 						posFacAttr.setDateCreated(new Date());
-						providerUser.addAttribute(posFacAttr);
+						providerUser.getPerson().addAttribute(posFacAttr);
 						changed = true;
 					}
 				}
 
 				PersonAttribute posBedAttr = new PersonAttribute();
 				if (pocBed != null && ps.getPersonAttributeTypeByName("POC_BED") != null){
-					PersonAttribute attr = providerUser.getAttribute(
+					PersonAttribute attr = providerUser.getPerson().getAttribute(
 						ps.getPersonAttributeTypeByName("POC_BED"));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(pocBed)) {
@@ -257,35 +258,35 @@ public class Provider {
 						posBedAttr.setValue(pocBed);
 						posBedAttr.setCreator(Context.getAuthenticatedUser());
 						posBedAttr.setDateCreated(new Date());
-						providerUser.addAttribute(posBedAttr);
+						providerUser.getPerson().addAttribute(posBedAttr);
 						changed = true;
 					}
 				}
 
 				PersonAttribute posAttr = new PersonAttribute();
 				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null) {
-					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC"));
+					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC"));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(poc)) {
 						posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
 						posAttr.setValue(poc);
 						posAttr.setCreator(Context.getAuthenticatedUser());
 						posAttr.setDateCreated(new Date());
-						providerUser.addAttribute(posAttr);
+						providerUser.getPerson().addAttribute(posAttr);
 						changed = true;
 					}
 				}
 
 				PersonAttribute posRoomAttr = new PersonAttribute();
 				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null) {
-					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
+					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(pocRoom)) {
 						posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
 						posRoomAttr.setValue(pocRoom);
 						posRoomAttr.setCreator(Context.getAuthenticatedUser());
 						posRoomAttr.setDateCreated(new Date());
-						providerUser.addAttribute(posRoomAttr);
+						providerUser.getPerson().addAttribute(posRoomAttr);
 						changed = true;
 					}
 				}
@@ -293,14 +294,14 @@ public class Provider {
 
 				PersonAttribute adminSourceAttr = new PersonAttribute();
 				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null) {
-					PersonAttribute attr = providerUser.getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
+					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(admitSource)) {
 						adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
 						adminSourceAttr.setValue(admitSource);
 						adminSourceAttr.setCreator(Context.getAuthenticatedUser());
 						adminSourceAttr.setDateCreated(new Date());
-						providerUser.addAttribute(adminSourceAttr);
+						providerUser.getPerson().addAttribute(adminSourceAttr);
 						changed = true;
 					}
 				}
@@ -347,7 +348,7 @@ public class Provider {
 		}	
 	    setFirstName(provUser.getGivenName());
 	    setLastName(provUser.getFamilyName());
-	    PersonAttribute providerId = provUser.getAttribute(PROVIDER_ID);
+	    PersonAttribute providerId = provUser.getPerson().getAttribute(PROVIDER_ID);
 	    if (providerId == null) {
 	    	setId("");
 	    }
@@ -433,13 +434,13 @@ public class Provider {
 		User provider = new User();
 		if (existingProv != null){
 			provider.setUserId(existingProv.getUserId());
-			provider.setAttributes(existingProv.getAttributes());
-			provider.setDateVoided(existingProv.getDateVoided());
-			provider.setVoided(false);
+			provider.getPerson().setAttributes(existingProv.getPerson().getAttributes());
+			provider.setDateRetired(existingProv.getDateRetired());
+			provider.setRetired(false);
 			provider.setCreator(existingProv.getCreator());
 			provider.setDateCreated(existingProv.getDateCreated());
-			provider.setNames(existingProv.getNames());
-			provider.setGender(existingProv.getGender());
+			provider.getPerson().setNames(existingProv.getPerson().getNames());
+			provider.getPerson().setGender(existingProv.getPerson().getGender());
 			provider.setId(existingProv.getId());
 		}
 		return provider;
