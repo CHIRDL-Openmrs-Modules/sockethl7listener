@@ -38,7 +38,6 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
@@ -123,122 +122,135 @@ public class HL7SocketHandler implements Application {
 		return message != null && "ORU_R01".equals(message.getName());
 	}
 
-	protected Message processMessage(Message message,HashMap<String,Object> parameters) throws ApplicationException{
-		HL7Service hl7Service = Context.getHL7Service();
-		AdministrationService adminService = Context.getAdministrationService();
-		Context.openSession();
-		String incomingMessageString = "";
-		try
-		{
-			incomingMessageString = this.parser.encode(message);
-		} catch (HL7Exception e2)
-		{
-			e2.printStackTrace();
-		}
-		try
-		{
-			message.addNonstandardSegment("ZLR");
-			ZLR zlr = new ZLR(message);
-			zlr.loadZLRSegment(incomingMessageString);
-		} catch (HL7Exception e1)
-		{
-			e1.printStackTrace();
-		}
-        
+	protected Message processMessage(Message message, HashMap<String, Object> parameters) throws ApplicationException {
 		Message response = null;
-		
-		if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) {
-			String messageType = "";
-			if (message.getParent() != null) {
-				messageType = message.getParent().getName();
-			}
-			
-			throw new ApplicationException(
-			"Invalid message type (" + messageType
-			+  ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
-		}
-		if (logger.isDebugEnabled())
-			logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
-
 		try {
+			HL7Service hl7Service = Context.getHL7Service();
+			AdministrationService adminService = Context.getAdministrationService();
+			Context.openSession();
+			String incomingMessageString = "";
+			try 
+			{
+				incomingMessageString = this.parser.encode(message);
+			} catch (HL7Exception e2) 
+			{
+				e2.printStackTrace();
+			}
+			try 
+			{
+				message.addNonstandardSegment("ZLR");
+				ZLR zlr = new ZLR(message);
+				zlr.loadZLRSegment(incomingMessageString);
+			} catch (HL7Exception e1) 
+			{
+				e1.printStackTrace();
+			}
+						
+			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
+			{
+				String messageType = "";
+				
+				if (message.getParent() != null) {
+					messageType = message.getParent().getName();
+				}
+				throw new ApplicationException(
 
-			Context.authenticate(adminService
-					.getGlobalProperty("scheduler.username"), adminService
-					.getGlobalProperty("scheduler.password"));
-			Context.addProxyPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE);
-			if (!Context.hasPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE)) {
-				logger.error("You do not have HL7 add privilege!!");
-				System.exit(0);
+				"Invalid message type (" + messageType
+				        + ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
 			}
+			if (logger.isDebugEnabled())
+				logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
 			
-			HL7Source hl7Source = new HL7Source();
-			
-			if (hl7Service.getHL7SourceByName(port.toString()) == null){
-				hl7Source.setName(String.valueOf(port));
-				hl7Source.setDescription("Port for hl7 message.");
-				hl7Service.saveHL7Source(hl7Source);
-			} else {
-				hl7Source = hl7Service.getHL7SourceByName(port.toString());
-			}
-			
-			HL7InQueue hl7inQ = new HL7InQueue();
-			hl7inQ.setHL7Source(hl7Source);
-			hl7inQ.setHL7Data(incomingMessageString);
-			//MessageState 0=pending, 1=processing, 2=processed, 3=error
-			hl7inQ.setMessageState(1);
-			HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
-			
-			archiveHL7Message(incomingMessageString);
-			
-			boolean ignoreMessage = false;
-			
-			if(this.filters != null){
-				for(HL7Filter filter:filters){
-					if(filter.ignoreMessage(hl7EncounterHandler,
-									message,incomingMessageString)){
-						ignoreMessage = true;
-						break;
+			try {
+				
+				Context.authenticate(adminService
+				.getGlobalProperty("scheduler.username"), adminService
+				        .getGlobalProperty("scheduler.password"));
+				Context.addProxyPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE);
+				if (!Context.hasPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE)) {
+					logger.error("You do not have HL7 add privilege!!");
+					System.exit(0);
+				}
+				
+				HL7Source hl7Source = new HL7Source();
+				
+				if (hl7Service.getHL7SourceByName(port.toString()) == null) {
+					hl7Source.setName(String.valueOf(port));
+					hl7Source.setDescription("Port for hl7 message.");
+					hl7Service.saveHL7Source(hl7Source);
+				} else {
+					hl7Source = hl7Service.getHL7SourceByName(port.toString());
+				}
+				
+				HL7InQueue hl7inQ = new HL7InQueue();
+				hl7inQ.setHL7Source(hl7Source);
+				hl7inQ.setHL7Data(incomingMessageString);
+				//MessageState 0=pending, 1=processing, 2=processed, 3=error
+				hl7inQ.setMessageState(1);
+				HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
+				
+				archiveHL7Message(incomingMessageString);
+				
+				boolean ignoreMessage = false;
+				
+				if (this.filters != null) {
+					for (HL7Filter filter : filters) {
+						if (filter.ignoreMessage(hl7EncounterHandler, 
+						message, incomingMessageString)) {
+							ignoreMessage = true;
+							break;
+						}
 					}
 				}
+				boolean error = false;
+				if (!ignoreMessage) {
+					error = processMessageSegments(message, incomingMessageString, parameters);
+				}
+				try {
+					MSH msh = HL7ObsHandler25.getMSH(message);
+					response = makeACK(msh);
+					fillDetails(response, error);
+				}catch (IOException e) {
+					logger.error("Error creating ACK message." + e.getMessage());
+				}catch (ApplicationException e) {
+					logger.error("Error filling in the details of an Application Response or reject message:" + e);
+				}
+				
+				Context.clearSession();
+				
+				savedHl7.setMessageState(2);
+				Context.getHL7Service().saveHL7InQueue(savedHl7);
+				
+			}catch (ContextAuthenticationException e) {
+				logger.error("Context Authentication exception: ", e);
+				Context.closeSession();
+				System.exit(0);
+			}catch (ClassCastException e) {
+				logger.error("Error casting to " + message.getClass().getName() + " ",
+				 e);
+				throw new ApplicationException("Invalid message type for handler");
+			}catch (HL7Exception e) {
+				logger.error("Error while processing hl7 message", e);
+				throw new ApplicationException(e);
+			}finally {
+				Context.closeSession();
 			}
-			boolean error = false;
-			if(!ignoreMessage){
-				error = processMessageSegments(message, incomingMessageString,parameters);
-			}
-			try {
-				MSH msh = HL7ObsHandler25.getMSH(message);
-				response = makeACK(msh);
-				fillDetails(response, error);
-			} catch (IOException e) {
-				logger.error("Error creating ACK message." + e.getMessage());
-			} catch (ApplicationException e) {
-				logger.error("Error filling in the details of an Application Response or reject message:" + e );
-			}	
-
-			Context.clearSession();
-
-
-            
-			
-			savedHl7.setMessageState(2);
-			Context.getHL7Service().saveHL7InQueue(savedHl7);
-			
-			
-		} catch (ContextAuthenticationException e) {
-			logger.error("Context Authentication exception: ", e);
-			Context.closeSession();
-			System.exit(0);
-		} catch (ClassCastException e) {
-			logger.error("Error casting to " + message.getClass().getName() + " ",
-					e);
-			throw new ApplicationException("Invalid message type for handler");
-		} catch (HL7Exception e) {
-			logger.error("Error while processing hl7 message", e);
-			throw new ApplicationException(e);
-		} finally {
-			Context.closeSession();
 		}
-
+		catch (Exception e) {
+			logger.error("", e);
+		}
+		finally {
+			if (response == null) {
+				try {
+					MSH msh = HL7ObsHandler25.getMSH(message);
+					response = makeACK(msh);
+				}
+				catch (Exception e) {
+					logger.error("Could not send acknowledgement", e);
+				}
+			}
+		}
+		
 		return response;
 	}
 	
@@ -505,12 +517,7 @@ public class HL7SocketHandler implements Application {
 
 			if (providerNameConcept != null) {
 				obsForName.setConcept(providerNameConcept);
-				UserService userService = Context.getUserService();
-				List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-				User prov = null;
-				if(providers != null&& providers.size()>0){
-					prov = providers.get(0);
-				}
+				User prov = enc.getProvider();
 				if (prov == null){
 					obsForName.setValueText("");
 				} else {
@@ -936,13 +943,7 @@ public class HL7SocketHandler implements Application {
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
 					User providerUser = provider.getUserForProvider(provider);
-					UserService userService = Context.getUserService();
-					List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-					User encounterProvider = null;
-					if(providers != null&& providers.size()>0){
-						encounterProvider = providers.get(0);
-					}
-					if ( ! providerUser.equals( encounterProvider.getUserId())){
+					if ( ! providerUser.equals( enc.getProvider().getUserId())){
 						enc.setProvider(provider.getUserForProvider(provider));
 						es.saveEncounter(enc);
 					}
