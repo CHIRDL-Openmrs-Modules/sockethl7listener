@@ -33,9 +33,7 @@ public class Provider {
 	private String pocRoom;
 	private String pocBed;
 	private String admitSource;
-	public UserService us;
 	public AdministrationService as;
-	public PersonService ps;
 	private static final String PROVIDER_ID = "Provider ID";
 	private Log log =  LogFactory.getLog(this.getClass());
 	
@@ -44,19 +42,13 @@ public class Provider {
 		firstName = "";
 		lastName = "";
 		id = "";
-		as = Context.getAdministrationService();
-		ps = Context.getPersonService();
-		us = Context.getUserService();
+		
 	}
 	
 	public Provider (String observationName){
 		firstName = "";
 		lastName = "";
 		id = "";
-		us = Context.getUserService();
-		
-		as = Context.getAdministrationService();
-		ps = Context.getPersonService();
 	}
 	public String getFirstName() {
 		return firstName;
@@ -150,7 +142,8 @@ public class Provider {
 		User savedProviderUser = null;
 		String password = null;
 		boolean changed = false;
-		PersonService personService = Context.getPersonService();
+		UserService us = Context.getUserService();
+		PersonService ps = Context.getPersonService();
 
 		try {
 			
@@ -328,10 +321,13 @@ public class Provider {
 
 	public User getUserForProvider(Provider provider) throws APIException {
 	   
+		UserService us = Context.getUserService();
         Integer userid = provider.getUserId();
-        User providerUser = us.getUser(userid);
-        if ( providerUser == null){
-        	providerUser = createUserForProvider(provider);
+        User providerUser = null;
+		if (userid != null) 
+			providerUser = us.getUser(userid);
+		if (userid == null || providerUser == null){
+			providerUser = createUserForProvider(provider);
         }
 
 		return providerUser;

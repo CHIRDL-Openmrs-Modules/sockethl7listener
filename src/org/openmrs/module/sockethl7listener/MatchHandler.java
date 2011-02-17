@@ -41,7 +41,8 @@ public class MatchHandler {
 	{
 		// Start with matched patient demographics and update with new hl7
 		// demographics where applicable.
-		Patient resolvedPatient = initializePatient(hl7Patient, matchedPatient);
+		
+		Patient resolvedPatient = matchedPatient;
 		if (resolvedPatient == null){
 			return null;
 		}
@@ -49,6 +50,10 @@ public class MatchHandler {
 			return resolvedPatient;
 		}
 	
+		resolvedPatient.setCauseOfDeath(hl7Patient.getCauseOfDeath());
+		resolvedPatient.setDead(hl7Patient.getDead());
+		resolvedPatient.setDeathDate(hl7Patient.getDeathDate());
+		
 		PatientIdentifier bestIdentifier = getBestIdentifier(hl7Patient,
 				resolvedPatient, encounterDate);
 		if (bestIdentifier != null)
@@ -73,11 +78,11 @@ public class MatchHandler {
 		}
 
 		
-		String correctGender = getBestGender(hl7Patient, resolvedPatient);
+		String correctGender = getBestGenderByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setGender(correctGender);
 
 		
-		Date DOB = getBestDOB(hl7Patient, resolvedPatient);
+		Date DOB = getBestDOBByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setBirthdate(DOB);
 
 
@@ -605,6 +610,8 @@ public class MatchHandler {
 	}
 
 
+	
+	@Deprecated
 	private String getBestGender(Patient hl7Patient, Patient resolvedPatient)
 	{
 
@@ -623,6 +630,25 @@ public class MatchHandler {
 		return resolvedGender;
 
 	}
+	
+	private String getBestGenderByEncounterDate(Patient hl7Patient, 
+			Patient resolvedPatient, Date encounterDate)
+	{
+
+		String matchGender = resolvedPatient.getGender();
+		String hl7Gender = hl7Patient.getGender();
+		
+		Date latestDate = resolvedPatient.getDateChanged();
+		if (latestDate == null){
+			latestDate = resolvedPatient.getDateCreated();
+		}
+		if (hl7Gender == null || encounterDate.before(latestDate)){
+			return matchGender;
+		}
+
+		return hl7Gender;
+
+	}
 
 	private Date getBestDOB(Patient hl7Patient, Patient resolvedPatient)
 	{
@@ -631,15 +657,31 @@ public class MatchHandler {
 		Date hl7DOB = hl7Patient.getBirthdate();
 		Date resolvedDOB = hl7DOB;
 
-		if (hl7DOB != null)
+		if (hl7DOB != null )
 		{
-			resolvedDOB = hl7DOB;
-		} else
-		{
-			resolvedDOB = matchDOB;
+			return hl7DOB;
 		}
 
-		return resolvedDOB;
+		return matchDOB;
+
+	}
+	
+	private Date getBestDOBByEncounterDate(Patient hl7Patient, 
+			Patient resolvedPatient, Date encounterDate)
+	{
+
+		Date matchDOB = resolvedPatient.getBirthdate();
+		Date hl7DOB = hl7Patient.getBirthdate();
+		
+		Date latestDate = resolvedPatient.getDateChanged();
+		if (latestDate == null){
+			latestDate = resolvedPatient.getDateCreated();
+		}
+		if (hl7DOB == null || encounterDate.before(latestDate)){
+			return matchDOB;
+		}
+
+		return hl7DOB;
 
 	}
 
