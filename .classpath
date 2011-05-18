@@ -55,11 +55,11 @@
 	<classpathentry kind="lib" path="lib/commons-cli-1.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/junit/junit-4.4.jar"/>
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate325-mod.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.14.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/logic-0.5.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/tests-openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.7.2.19959-dev.jar"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.18.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
