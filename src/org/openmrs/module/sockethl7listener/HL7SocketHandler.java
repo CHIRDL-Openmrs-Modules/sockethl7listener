@@ -215,6 +215,8 @@ public class HL7SocketHandler implements Application {
 					logger.error("Error creating ACK message." + e.getMessage());
 				}catch (ApplicationException e) {
 					logger.error("Error filling in the details of an Application Response or reject message:" + e);
+				}catch (HL7Exception e){
+					logger.error("Parser error constructing ACK.",e);
 				}
 				
 				Context.clearSession();
@@ -582,9 +584,14 @@ public class HL7SocketHandler implements Application {
 		}
 		
 		// set Observation date/time
+		//Modified to check for instance of ORU_RO1
+		//Reason: Previously, the only messages that had OBX
+		//were ORU_R01.  However, some projects have ADT
+		//messages with observations. The method isNTE() assumes
+		//messages as ORU, so check first. 
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		if (obsDateTime == null){
-		   if (enc == null && isNTE(message,orderRep, obxRep)){
+		   if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
 			   obsDateTime = new Date();
 		   }else {
 		   if(enc != null){
@@ -886,14 +893,16 @@ public class HL7SocketHandler implements Application {
 		PatientService patientService = Context.getPatientService();
 		MatchHandler matchHandler = new MatchHandler();
 		
-		Patient resolvedPatient = matchHandler.setPatient(hl7Patient, mp, encounterDate);
-		if (resolvedPatient == null){
+		Patient matchPatient = patientService.getPatient(mp.getPatientId());
+		
+		Patient resolvedPatient = matchHandler.setPatient(hl7Patient, matchPatient, encounterDate);
+		
+		if (resolvedPatient == null ){
 			return null;
 		}
-		Patient testPatient = patientService.getPatient(resolvedPatient.getPatientId());
 		Patient resultPatient = new Patient();
 		try {
-			resultPatient = patientService.savePatient(testPatient);
+			resultPatient = patientService.savePatient(resolvedPatient);
 		} catch (APIException e) {
 			logger.error(e.getMessage(),e);
 		}
@@ -1195,11 +1204,18 @@ public class HL7SocketHandler implements Application {
 			if (version != null && version.endsWith("2.3")){
 				oru23 = (ca.uhn.hl7v2.model.v23.message.ORU_R01) message;
 				ca.uhn.hl7v2.model.v23.segment.NTE nteSegment23 =  oru23.getRESPONSE().getORDER_OBSERVATION(orderRep).getNTE();
-				value = nteSegment23.getComment()[0].getValue();
+				if (nteSegment23 !=  null && nteSegment23.getComment()!= null
+						&& nteSegment23.getComment().length > 0){
+					value = nteSegment23.getComment()[0].getValue();
+				}
+				
 			} else {
 				oru25 = (ca.uhn.hl7v2.model.v25.message.ORU_R01) message; 
 				NTE nteSegment25 = oru25.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep).getNTE();
-				value = nteSegment25.getComment()[0].getValue();
+				if (nteSegment25 !=  null && nteSegment25.getComment()!= null
+						&& nteSegment25.getComment().length > 0){
+					value = nteSegment25.getComment()[0].getValue();
+				}
 			}
 			
 			if (value != null && !value.equals("")){
@@ -1326,9 +1342,10 @@ public class HL7SocketHandler implements Application {
 	        os.write(13);
 	        os.flush();
 		}
+		socket.setSoTimeout(timeoutSec * 1000);
 		String result = null;
 		if (readAck) {
-			socket.setSoTimeout(timeoutSec * 1000);
+			
 			result = readAck();
 			logger.info("Read ACK: " + result);
 		}

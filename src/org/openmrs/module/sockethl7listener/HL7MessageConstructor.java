@@ -646,7 +646,7 @@ public class HL7MessageConstructor {
 
 	}
 
-	private String getAssigningAuthorityFromIdentifierType(PatientIdentifier pi) {
+	public String getAssigningAuthorityFromIdentifierType(PatientIdentifier pi) {
 		String assignAuth = "";
 		if (pi != null && pi.getIdentifierType() != null) {
 			assignAuth = pi.getIdentifierType().getName();
@@ -715,4 +715,15 @@ public class HL7MessageConstructor {
 		this.oru = oru;
 	}
 
+	public String getAssignAuthority() {
+		return assignAuthority;
+	}
+
+	public void setAssignAuthority(String assignAuthority) {
+		this.assignAuthority = assignAuthority;
+	}
+	public void setAssignAuthority(PatientIdentifier pi) {
+		
+		this.assignAuthority = getAssigningAuthorityFromIdentifierType(pi);
+	}
 }
