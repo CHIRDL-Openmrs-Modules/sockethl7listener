@@ -262,7 +262,7 @@ public class HL7SocketHandler implements Application {
 	 * 
 	 * @throws ContextAuthenticationException
 	 */
-	public synchronized Message processMessage(Message message) throws ApplicationException {
+	public Message processMessage(Message message) throws ApplicationException {
 		
 		HashMap<String,Object> parameters = new HashMap<String,Object>();
 		return this.processMessage(message, parameters);
