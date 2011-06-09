@@ -17,6 +17,7 @@ import org.openmrs.User;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
 
@@ -671,7 +672,7 @@ public class HL7MessageConstructor {
 
 	private void setProperties(String hl7ConfigFile) {
 
-		prop = Util.getProps(hl7ConfigFile);
+		prop = IOUtil.getProps(hl7ConfigFile);
 		if (prop != null) {
 			codeSys = prop.getProperty("coding_system");
 			checkDigitScheme = prop.getProperty("check_digit_algorithm");

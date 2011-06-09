@@ -8,12 +8,12 @@ import java.util.List;
 import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.openmrs.Encounter;
+import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
-import org.openmrs.module.sockethl7listener.util.Util;
 
 /**
  * Defines implementations of services used by this module
