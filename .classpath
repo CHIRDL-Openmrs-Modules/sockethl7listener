@@ -60,5 +60,6 @@
 	<classpathentry kind="lib" path="lib-common/tests-openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.18.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
