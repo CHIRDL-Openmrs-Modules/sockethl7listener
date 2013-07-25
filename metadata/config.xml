@@ -6,7 +6,7 @@
 	<!-- SocketHL7Listener Module Properties -->
 	<id>sockethl7listener</id>
 	<name>sockethl7listener</name>
-	<version>1.3.24</version>
+	<version>1.3.31</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley and Vibha Anand</author>
 	<description>
@@ -15,7 +15,8 @@
 
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
-		<require_module version="1.0.11">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="1.0.22">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="1.0.0">org.openmrs.module.chirdlutilbackports</require_module>
 	</require_modules>
 	<extension>
 		<point>org.openmrs.admin.list</point>
@@ -42,8 +43,18 @@
 		<defaultValue>tif</defaultValue>
    		<description>File type for export form</description>
 	</globalProperty>	
+	<globalProperty>
+        <property>sockethl7listener.encounterDateTimeWindow</property>
+        <defaultValue>0</defaultValue>
+        <description>Allowable time window (minutes) to be considered a duplicate encounter. </description>
+    </globalProperty>   
+    <globalProperty>
+        <property>sockethl7listener.ignoreDuplicateEncounter</property>
+        <defaultValue>true</defaultValue>
+        <description>Ignore hl7 message if it is for the same encounter. </description>
+    </globalProperty>   
 	
-		
+	
 	<!-- Internationalization -->
 	<!-- All message codes should start with @MODULE_ID@.* -->
 	<messages>

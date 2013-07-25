@@ -9,6 +9,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
+import org.openmrs.Patient;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
@@ -43,7 +44,7 @@ public interface HL7ObsHandler
 			Logger logger,String pIdentifierString,String obsvID,
 			String obsValueType,Logger conceptNotFoundLogger);
 	
-	public ArrayList<Obs> getObs(Message message) throws HL7Exception;
+	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception;
 
 	public int getReps(Message message);
 }

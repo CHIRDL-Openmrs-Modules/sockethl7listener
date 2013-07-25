@@ -9,6 +9,7 @@ import java.util.Date;
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
+import org.openmrs.Patient;
 import org.openmrs.module.sockethl7listener.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -414,7 +415,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 	 * 
 	 * @see org.openmrs.module.sockethl7listener.ObsHandler#getObs(ca.uhn.hl7v2.model.Message)
 	 */
-	public ArrayList<Obs> getObs(Message message) throws HL7Exception
+	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception
 	{
 		// TODO Auto-generated method stub
 		return null;

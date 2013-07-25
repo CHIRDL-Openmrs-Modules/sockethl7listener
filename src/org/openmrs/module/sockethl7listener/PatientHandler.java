@@ -22,7 +22,7 @@ import ca.uhn.hl7v2.model.Message;
 public class PatientHandler
 {
 
-	protected static final String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
+	protected static  String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
 	protected static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
 	protected static final String ATTRIBUTE_RACE = "Race";
 	protected static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
@@ -233,9 +233,13 @@ public class PatientHandler
 
 		if (attributeType == null)
 		{
-			createAttributeType(attributeTypeName);
+			attributeType = createAttributeType(attributeTypeName);
+			if (attributeType == null){
+				logger.error("Unable to create attribute: " + attributeTypeName);
+				return;
+			}
 		}
-
+		
 		PersonAttribute attr = new PersonAttribute(attributeType, value);
 		attr.setDateCreated(encounterDate);
 		attr.setCreator(Context.getAuthenticatedUser());

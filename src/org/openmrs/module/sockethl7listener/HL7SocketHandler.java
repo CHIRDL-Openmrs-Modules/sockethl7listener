@@ -307,7 +307,8 @@ public class HL7SocketHandler implements Application {
 		}
 			
 		// trigger rules for NBS module and ATD module
-		ProcessedMessagesManager.messageProcessed(encounter);
+		SocketHL7ListenerService socketHL7ListenerService = Context.getService(SocketHL7ListenerService.class);
+		socketHL7ListenerService.messageProcessed(encounter);
 		
 		return encounter;
 	}
@@ -938,6 +939,12 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = 
 			Context.getService(SocketHL7ListenerService.class);
+		AdministrationService adminService = Context.getAdministrationService();	
+		String window = adminService
+		   .getGlobalProperty("sockethl7listener.encounterDateTimeWindow");
+		String ignoreDuplicateEncounter = adminService
+		   .getGlobalProperty("sockethl7listener.ignoreDuplicateEncounter");
+		
 		EncounterService es = Context.getEncounterService();
 		Encounter enc = null;
 		int pid = 0;
@@ -946,13 +953,42 @@ public class HL7SocketHandler implements Application {
 		
 		try {
 			pid = p.getPatientId();
-			List<Encounter> encounters = es.getEncounters(p,null, encDate, encDate,null,null,null,false);
+		
+			//Check for any encounter with the same encounter date/time 
+			//or within a specified window of this encounter date/time.
+			Integer timeWindow = 0;
+			
+			Calendar cal = Calendar.getInstance();
+			if (window != null) {
+				try {
+					timeWindow = Integer.valueOf(window);
+				} catch (NumberFormatException e) {
+					//global property string is not an Integer 
+					//set time window = 0
+				}
+			}
+			
+			cal.setTime(encDate);
+			cal.add(Calendar.MINUTE, -timeWindow);
+			Date fromDate = cal.getTime();
+
+			List<Encounter> encounters = es.getEncounters(p,null, fromDate, encDate,null,null,null,false);
 					
 			Iterator <Encounter> it = encounters.iterator();
 			if (it.hasNext()){
 				enc = encounters.iterator().next();
 				isDuplicateDateTime = true;
 				encid = enc.getEncounterId();
+				if (ignoreDuplicateEncounter  != null 
+						&& (ignoreDuplicateEncounter.equalsIgnoreCase("true")
+								|| ignoreDuplicateEncounter.equalsIgnoreCase("0") 
+								||  ignoreDuplicateEncounter.equalsIgnoreCase("yes"))){
+					hl7ListService.setHl7Message(pid, encid, incomingMessageString,
+							false, isDuplicateDateTime, this.port);
+					logger.error("Encounter occurred within " + window 
+							+ " minutes of a previous encounter (" + encid + ") for patient " + pid);
+					return null;
+				}
 			}else {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){

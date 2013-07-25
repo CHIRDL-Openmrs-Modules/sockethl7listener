@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
 import org.openmrs.Role;
@@ -190,6 +191,7 @@ public class Provider {
 			} else{
 				UUID uuid = UUID.randomUUID();
 				password = uuid.toString();
+				providerUser.setPerson(new Person());
 				changed = true;
 			}
 			
@@ -300,6 +302,13 @@ public class Provider {
 				}
 
 				if(changed){
+					if (password != null) {
+						// Password has to be a mix of upper and lower case.
+						int passLength = password.length();
+						String firstPass = password.substring(0, passLength/2);
+						String secondPass = password.substring(passLength/2, passLength);
+						password = firstPass.toUpperCase() + secondPass;
+					}
 					savedProviderUser = us.saveUser(providerUser, password);
 				}else{
 					provider.setUserId(providerUser.getUserId());

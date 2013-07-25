@@ -71,8 +71,6 @@ public class TestSimpleServer extends AbstractTask
 		Context.openSession();
 		try
 		{
-			if (Context.isAuthenticated() == false)
-				authenticate();
 			this.server.start();
 		} catch (Exception e)
 		{
