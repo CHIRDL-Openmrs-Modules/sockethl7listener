@@ -6,11 +6,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
+import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
-import org.openmrs.module.sockethl7listener.util.Util;
+
 
 /**
  * Hibernate implementations of SocketHL7Listener related database functions.

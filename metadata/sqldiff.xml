@@ -59,47 +59,47 @@
 
 			INSERT INTO patient_identifier_type
 			(`name`, `description`, `check_digit`, `creator`, `date_created`,
-			`validator`)
+			`validator`, `uuid`)
 			select 'MRN_OTHER', 'other medical record number', 1, 1, NOW(),
-			'org.openmrs.patient.impl.LuhnIdentifierValidator' from
+			'org.openmrs.patient.impl.LuhnIdentifierValidator', UUID() from
 			(select count(*) as cnt from patient_identifier_type where name='MRN_OTHER')
 			a
 			where a.cnt=0;
 
 			INSERT INTO person_attribute_type
-			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`, `uuid`)
 			select 'Telephone Number', 'Telephone Number', 'java.lang.String', 0,
-			1, NOW() from (
+			1, NOW(), UUID() from (
 			select count(*) as cnt from person_attribute_type where name='Telephone
 			Number') a
 			where a.cnt=0;
 
 			INSERT INTO person_attribute_type
-			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`, `uuid`)
 			select 'Other Matching Information', 'Other Matching Information',
-			'java.lang.String',0, 1,NOW() from (
+			'java.lang.String',0, 1,NOW(), UUID() from (
 			select count(*) as cnt from person_attribute_type where name='Other
 			Matching Information') a
 			where a.cnt=0;
 
 			INSERT INTO person_attribute_type
-			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-			select 'Race', 'Race', 'java.lang.String', 1, 1, NOW() from (
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`, `uuid`)
+			select 'Race', 'Race', 'java.lang.String', 1, 1, NOW(), UUID() from (
 			select count(*) as cnt from person_attribute_type where name='Race') a
 			where a.cnt=0;
 
 			INSERT INTO person_attribute_type
-			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
-			select 'Provider ID', 'provider ID', 'java.lang.String', 1, 1, NOW()
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`, `uuid`)
+			select 'Provider ID', 'provider ID', 'java.lang.String', 1, 1, NOW(), UUID()
 			from (
 			select count(*) as cnt from person_attribute_type where name='Provider ID')
 			a
 			where a.cnt=0;
 
 			INSERT INTO person_attribute_type
-			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`)
+			(`name`, `description`, `format`, `searchable`, `creator`, `date_created`, `uuid`)
 			select 'Mother\'s Name', 'First or last name of this person\'s
-			mother', 'java.lang.String', 1, 1, NOW() from (
+			mother', 'java.lang.String', 1, 1, NOW(), UUID() from (
 			select count(*) as cnt from person_attribute_type where name='Mother\'s
 			Name') a
 			where a.cnt=0;
@@ -174,45 +174,45 @@
 
 			INSERT INTO person_attribute_type
 				(`name`, `description`, `format`, `searchable`,
-				`creator`, `date_created`)
+				`creator`, `date_created`, `uuid`)
 				select 'POC', 'Provider Point of Care',
-				'java.lang.String', 1, 1, NOW() from (
+				'java.lang.String', 1, 1, NOW(), UUID() from (
 				select count(*) as cnt from person_attribute_type
 				where name='POC') a
 				where a.cnt=0;
 
 			INSERT INTO person_attribute_type
 				(`name`, `description`, `format`, `searchable`,
-				`creator`, `date_created`)
+				`creator`, `date_created`, `uuid`)
 				select 'POC_FACILITY', 'Provider Point of Care
-				Facility', 'java.lang.String', 1, 1, NOW() from (
+				Facility', 'java.lang.String', 1, 1, NOW(), UUID() from (
 				select count(*) as cnt from person_attribute_type
 				where name='POC_FACILITY') a
 				where a.cnt=0;
 
 			INSERT INTO person_attribute_type
 				(`name`, `description`, `format`, `searchable`,
-				`creator`, `date_created`)
+				`creator`, `date_created`, `uuid`)
 				select 'POC_ROOM', 'Provider Point of Care Room',
-				'java.lang.String', 1, 1, NOW() from (
+				'java.lang.String', 1, 1, NOW(), UUID() from (
 				select count(*) as cnt from person_attribute_type
 				where name='POC_ROOM') a
 				where a.cnt=0;
 
 			INSERT INTO person_attribute_type
 				(`name`, `description`, `format`, `searchable`,
-				`creator`, `date_created`)
+				`creator`, `date_created`, `uuid`)
 				select 'POC_BED', 'Provider Point of Care Bed
-				Number', 'java.lang.String', 1, 1, NOW() from (
+				Number', 'java.lang.String', 1, 1, NOW(), UUID() from (
 				select count(*) as cnt from person_attribute_type
 				where name='POC_BED') a
 				where a.cnt=0;
 
 			INSERT INTO person_attribute_type
 				(`name`, `description`, `format`, `searchable`,
-				`creator`, `date_created`)
+				`creator`, `date_created`, `uuid`)
 				select 'ADMIT_SOURCE', 'Provider source of
-				admission', 'java.lang.String', 1, 1, NOW() from (
+				admission', 'java.lang.String', 1, 1, NOW(), UUID() from (
 				select count(*) as cnt from person_attribute_type
 				where name='ADMIT_SOURCE') a
 				where a.cnt=0;

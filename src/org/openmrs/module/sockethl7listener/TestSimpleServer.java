@@ -21,17 +21,15 @@ import ca.uhn.hl7v2.validation.impl.NoValidation;
 public class TestSimpleServer extends AbstractTask
 {
 	private Log log = LogFactory.getLog(this.getClass());
-	private TaskDefinition taskConfig;
 	private SimpleServer server = null;
 	
 	@Override
 	public void initialize(TaskDefinition config)
 	{
+		super.initialize(config);
 		AdministrationService adminService = Context.getAdministrationService();
 
-		this.taskConfig = config;
-
-		String portString = this.taskConfig.getProperty("port");
+		String portString = this.taskDefinition.getProperty("port");
 
 		if (portString == null)
 		{
