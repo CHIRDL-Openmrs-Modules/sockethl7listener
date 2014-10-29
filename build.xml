@@ -68,11 +68,11 @@
 		</javac>
 				
 		<!--  Compile module web java files -->
-		<javac destdir="build" classpathref="classpath" debug="true" debuglevel="lines,vars,source">
+		<!--<javac destdir="build" classpathref="classpath" debug="true" debuglevel="lines,vars,source">
 			<compilerarg line="-g" />
 			<src path="web/src/" />
 			<include name="**/*.java" />
-		</javac>
+		</javac>-->
 	</target>
 	
 	<target name="package-jar" depends="package-module" description="Packages class files into jar file to be included in other projects">
@@ -213,10 +213,10 @@
 			</copy>
 			
 			<!-- Copy module web data -->
-			<copy todir="build/web/module/">
+			<!--<copy todir="build/web/module/">
 				<fileset dir="web/module/" includes="**/*" />
 				<filterset refid="variables.to.replace" />
-			</copy>
+			</copy>-->
 			
 			<!-- Copy lib folder -->
 			<!-- (lib should only contain this module's required -->
