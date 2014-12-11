@@ -231,7 +231,7 @@ public class HL7MessageConstructor {
 			return pid;
 
 		} catch (Exception e) {
-			logger.error("Exception adding PID segment to hl7.  PatientId: " + pat.getPatientId());
+			logger.error("Exception adding PID segment to hl7.  PatientId: " + pat.getPatientId(), e);
 			return null;
 		} 
 	}
@@ -284,7 +284,7 @@ public class HL7MessageConstructor {
 			}
 		
 		} catch (Exception e) {
-			Log.error("Exception setting next of kin. PatientId: " + pat.getPatientIdentifier(), e);
+			logger.error("Exception setting next of kin. PatientId: " + pat.getPatientIdentifier(), e);
 		}
 		return nk1;
 
