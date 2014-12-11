@@ -36,6 +36,7 @@ import ca.uhn.hl7v2.model.v25.segment.PID;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
 import ca.uhn.hl7v2.parser.PipeParser;
 
+
 /**
  * Constructs the hl7 message resulting from an abnormal newborn screen
  * @author msheley
@@ -82,6 +83,7 @@ public class HL7MessageConstructor {
 	private String obxDataType = "";
 	private String patientClass = "";
 	private boolean image = false;
+	
 
 	public boolean isImage() {
 		return image;
@@ -171,17 +173,20 @@ public class HL7MessageConstructor {
 					identifierTypeCode);
 
 			// Address
-			pid.getPatientAddress(0).getStreetAddress()
-					.getStreetOrMailingAddress().setValue(
-							pat.getPersonAddress().getAddress1());
-			pid.getPatientAddress(0).getOtherDesignation().setValue(
-					pat.getPersonAddress().getAddress2());
-			pid.getPatientAddress(0).getCity().setValue(
-					pat.getPersonAddress().getCityVillage());
-			pid.getPatientAddress(0).getStateOrProvince().setValue(
-					pat.getPersonAddress().getStateProvince());
-			pid.getPatientAddress(0).getZipOrPostalCode().setValue(
-					pat.getPersonAddress().getPostalCode());
+			PersonAddress personAddress = pat.getPersonAddress();
+			if  (personAddress != null ){
+				pid.getPatientAddress(0).getStreetAddress()
+						.getStreetOrMailingAddress().setValue(
+								pat.getPersonAddress().getAddress1());
+				pid.getPatientAddress(0).getOtherDesignation().setValue(
+						pat.getPersonAddress().getAddress2());
+				pid.getPatientAddress(0).getCity().setValue(
+						pat.getPersonAddress().getCityVillage());
+				pid.getPatientAddress(0).getStateOrProvince().setValue(
+						pat.getPersonAddress().getStateProvince());
+				pid.getPatientAddress(0).getZipOrPostalCode().setValue(
+						pat.getPersonAddress().getPostalCode());
+			}
 
 			// Telephone
 			int personAttrTypeId = personService.getPersonAttributeTypeByName(
@@ -225,14 +230,10 @@ public class HL7MessageConstructor {
 			// pid.getEthnicGroup(0).getText().setValue("");
 			return pid;
 
-		} catch (DataTypeException e) {
-			logger.error(e);
+		} catch (Exception e) {
+			logger.error("Exception adding PID segment to hl7.  PatientId: " + pat.getPatientId(), e);
 			return null;
-		} catch (HL7Exception e) {
-			logger.error(e);
-			return null;
-		}
-
+		} 
 	}
 
 	/**
@@ -281,13 +282,9 @@ public class HL7MessageConstructor {
 						pa.getPostalCode());
 				nk1.getAddress(0).getCountry().setValue(pa.getCountry());
 			}
-		} catch (DataTypeException e) {
-			Log
-					.error("DateType exception when assigning the values to the components.");
-		} catch (HL7Exception e) {
-			Log.error("Exception setting components of NK1.", e);
+		
 		} catch (Exception e) {
-			Log.error("Exception setting next of kin", e);
+			logger.error("Exception setting next of kin. PatientId: " + pat.getPatientIdentifier(), e);
 		}
 		return nk1;
 
@@ -376,13 +373,8 @@ public class HL7MessageConstructor {
 				pv1.getAdmitSource().setValue(admitSource.getValue());
 			}
 
-		} catch (DataTypeException e) {
-			logger.error("DataTypeException when constructing PV1 segment", e);
-		} catch (HL7Exception e) {
-			logger.error("HL7Exception when constructing PV1 segment", e);
-		} catch (RuntimeException e) {
-			logger.error(
-					"Run time exception when constructing pv1 segment for encounter#="
+		} catch (Exception e) {
+			logger.error("Exception adding PV1 segment to hl7 "
 							+ enc.getEncounterId(), e);
 		}
 		return pv1;
@@ -421,8 +413,8 @@ public class HL7MessageConstructor {
 			msh.getProcessingID().getProcessingID().setValue(processing_id);
 			msh.getMessageControlID().setValue(
 					ourApplication + "-" + formattedDate);
-		} catch (DataTypeException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.error("Exception contructing export message MSH segment. EncounterId: " + enc.getEncounterId(), e);
 		}
 
 		return msh;
@@ -514,13 +506,8 @@ public class HL7MessageConstructor {
 			obr.getFillerOrderNumber().getEntityIdentifier().setValue(
 					accessionNumber);
 
-		} catch (DataTypeException e) {
-			Log.error("The data type was incorrect for the OBR field.", e);
-		} catch (HL7Exception e) {
-			Log.error("The values are the correct data type, but"
-					+ " there was an error saving values to the OBS field.", e);
 		} catch (Exception e) {
-			Log.error(e.getMessage());
+			logger.error("Exception adding OBR segment to hl7. EncounterId: " + enc.getEncounterId(), e);
 		}
 
 		return obr;
@@ -634,14 +621,8 @@ public class HL7MessageConstructor {
 
 			}
 
-		} catch (DataTypeException e) {
-			logger.error("", e);
-
-		} catch (HL7Exception e) {
-			logger.error("", e);
-
-		} catch (RuntimeException e) {
-			logger.error("", e);
+		} catch (Exception e) {
+			logger.error("Exception constructing OBX segment for concept ." + name ,e);
 		}
 		return obx;
 
@@ -663,8 +644,8 @@ public class HL7MessageConstructor {
 		String msg = null;
 		try {
 			msg = pipeParser.encode(oru);
-		} catch (HL7Exception e) {
-			Log.error("Exception parsing constructed message.");
+		} catch (Exception e) {
+			logger.error("Exception parsing constructed message.", e);
 		}
 		return msg;
 

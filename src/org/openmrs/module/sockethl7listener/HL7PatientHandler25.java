@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.openmrs.PatientIdentifier;
@@ -126,6 +127,8 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		address.setStateProvince(stateProvince);
 		address.setCountry(country);
 		address.setPostalCode(postalCode);
+		UUID uuid = UUID.randomUUID();
+		address.setUuid(uuid.toString()); 
 		address.setPreferred(true);
 
 		return address;
@@ -233,6 +236,8 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			name.setFamilyName(ln.replaceAll("\"", ""));
 			name.setGivenName(fn.replaceAll("\"", ""));
 			name.setMiddleName(mn.replaceAll("\"", ""));
+			UUID uuid = UUID.randomUUID();
+			name.setUuid(uuid.toString()); 
 			// set preferred to true because this method
 			// deliberately just processes the first person name
 			name.setPreferred(true);
