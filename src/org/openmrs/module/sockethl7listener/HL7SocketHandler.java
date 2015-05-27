@@ -56,6 +56,7 @@ import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
+import ca.uhn.hl7v2.model.v25.datatype.TS;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
@@ -63,6 +64,7 @@ import ca.uhn.hl7v2.model.v25.segment.NTE;
 import ca.uhn.hl7v2.sourcegen.SourceGenerator;
 import ca.uhn.hl7v2.util.MessageIDGenerator;
 import ca.uhn.hl7v2.util.Terser;
+import ca.uhn.hl7v2.model.v25.segment.OBR;
 
 /**
  * 
@@ -592,14 +594,22 @@ public class HL7SocketHandler implements Application {
 		//messages as ORU, so check first. 
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		if (obsDateTime == null){
-		   if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
-			   obsDateTime = new Date();
-		   }else {
-		   if(enc != null){
-			obsDateTime = enc.getEncounterDatetime();
+			if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
+				obsDateTime = new Date();
+			}else {
+				if(enc != null){
+					obsDateTime = enc.getEncounterDatetime();
+				}
+				else{
+					//If there is no encounter and no obs date time, use the obr (order) datetime
+					OBR obr = HL7ObsHandler25.getOBR(message, orderRep);
+					TS tsObsDateTime = obr.getObservationDateTime() ;
+					if (obr != null && tsObsDateTime != null){
+						obsDateTime = HL7ObsHandler25.TranslateDate(tsObsDateTime );
+					}
+				}
 			}
-		   }
-		}
+		
 		obs.setObsDatetime(obsDateTime);
 
 		// set Location
@@ -833,12 +843,12 @@ public class HL7SocketHandler implements Application {
 				Segment msa = (Segment) ack.get("MSA");
 				Terser.set(msa, 1, 0, 1, 1, "AA");
 				Terser.set(msa, 3, 0, 1, 1,
-				"Unable to create or update patient in openmrs database.");
+				"Application error.");
 			} else {
 				Segment msa = (Segment) ack.get("MSA");
 				Terser.set(msa, 1, 0, 1, 1, "AA");
 				Terser.set(msa, 3, 0, 1, 1,
-				"Message created or updated Patient in openmrs database.");
+				"Message accepted.");
 				// this is max length
 
 			}
