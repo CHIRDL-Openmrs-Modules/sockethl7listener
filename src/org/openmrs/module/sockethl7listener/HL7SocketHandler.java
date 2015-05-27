@@ -602,7 +602,7 @@ public class HL7SocketHandler implements Application {
 				}
 				else{
 					//If there is no encounter and no obs date time, use the obr (order) datetime
-					OBR obr = HL7ObsHandler25.getOBR(message, orderRep);
+					OBR obr = HL7ObsHandler.getOBR(message, orderRep);
 					TS tsObsDateTime = obr.getObservationDateTime() ;
 					if (obr != null && tsObsDateTime != null){
 						obsDateTime = HL7ObsHandler25.TranslateDate(tsObsDateTime );
