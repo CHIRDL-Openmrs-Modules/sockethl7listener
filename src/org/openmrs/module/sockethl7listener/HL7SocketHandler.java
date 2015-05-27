@@ -609,6 +609,7 @@ public class HL7SocketHandler implements Application {
 					}
 				}
 			}
+		}
 		
 		obs.setObsDatetime(obsDateTime);
 
