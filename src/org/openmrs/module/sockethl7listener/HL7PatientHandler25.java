@@ -507,7 +507,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		if (identList.length != 0)
 		{
 			// personAttrList ="mrn:";
-
+			boolean preferred = true;
 			for (CX ident : identList)
 			{
 				// First set up the identifier type; We currently use MRN
@@ -517,6 +517,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 				PatientIdentifier pi = new PatientIdentifier();
 				String stIdent = getMRN(ident);
 				String assignAuth = "";
+				
 
 				if (stIdent != null)
 				{
@@ -531,9 +532,10 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 					}
 					pi.setIdentifierType(pit);
 					pi.setIdentifier(stIdent);
-					pi.setPreferred(true);
-
+					pi.setPreferred(preferred);
 					identifiers.add(pi);
+					preferred = false;
+
 
 				} else
 				{
@@ -542,6 +544,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 			}
 		}
+		
 		return identifiers;
 	}
 
