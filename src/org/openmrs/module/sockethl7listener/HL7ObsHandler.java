@@ -13,8 +13,6 @@ import org.openmrs.Patient;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.model.v23.message.ORU_R01;
-import ca.uhn.hl7v2.model.v23.segment.OBR;
 
 /**
  * @author tmdugan
@@ -48,7 +46,5 @@ public interface HL7ObsHandler
 	
 	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception;
 	
-	public OBR getOBR(ORU_R01 oru, int orderRep);
-
 	public int getReps(Message message);
 }

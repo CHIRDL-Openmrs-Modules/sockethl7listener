@@ -86,8 +86,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 
 	public static OBR getOBR(Message message, int orderRep)
 	{
-		message.getParent().getName().valueOf ("ca.uhn.hl7v2.model.v23.message.ORU_R01") ;
-		if (message instanceof ORU_R01 || message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01)
+		if (message instanceof ORU_R01)
 		{
 			return getOBR((ORU_R01) message, orderRep);
 		}

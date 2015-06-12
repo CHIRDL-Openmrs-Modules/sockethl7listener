@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -64,7 +65,9 @@ import ca.uhn.hl7v2.model.v25.segment.NTE;
 import ca.uhn.hl7v2.sourcegen.SourceGenerator;
 import ca.uhn.hl7v2.util.MessageIDGenerator;
 import ca.uhn.hl7v2.util.Terser;
+import ca.uhn.hl7v2.validation.impl.NoValidation;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
+import ca.uhn.hl7v2.parser.PipeParser;
 
 /**
  * 
@@ -75,6 +78,8 @@ public class HL7SocketHandler implements Application {
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 	private static final Logger conceptNotFoundLogger = Logger.getLogger("ConceptNotFoundLogger");
 	private static final Logger npiLogger = Logger.getLogger("NPILogger");
+	
+	private static final String HL7_VERSION_2_5 = "2.5";
 		
 	protected PatientHandler patientHandler;
 	protected HL7ObsHandler hl7ObsHandler = null;
@@ -593,22 +598,39 @@ public class HL7SocketHandler implements Application {
 		//messages with observations. The method isNTE() assumes
 		//messages as ORU, so check first. 
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
-		if (obsDateTime == null){
-			if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
-				obsDateTime = new Date();
-			}else {
-				if(enc != null){
-					obsDateTime = enc.getEncounterDatetime();
-				}
-				else{
-					//If there is no encounter and no obs date time, use the obr (order) datetime
-					OBR obr = HL7ObsHandler.getOBR(message, orderRep);
-					TS tsObsDateTime = obr.getObservationDateTime() ;
-					if (obr != null && tsObsDateTime != null){
-						obsDateTime = HL7ObsHandler25.TranslateDate(tsObsDateTime );
+		
+		try {
+			if (obsDateTime == null){
+				if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
+					obsDateTime = new Date();
+				}else {
+					if(enc != null){
+						obsDateTime = enc.getEncounterDatetime();
+					}
+					else{
+						//If there is no encounter and no obs date time, use the obr (order) datetime
+							if (message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01){
+								((ca.uhn.hl7v2.model.v23.message.ORU_R01) message).getMSH().getVersionID().setValue(HL7_VERSION_2_5);
+								//String  newMessageString = this.parser.encode(message);
+								//orumessage = this.parser.parse(newMessageString);
+								
+							}
+							Terser terser = new Terser(message);
+							String datetime = terser.get("/.OBR-7");
+							SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMDD");
+							obsDateTime = formatter.parse(datetime);
 					}
 				}
 			}
+		} catch (DataTypeException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (HL7Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		obs.setObsDatetime(obsDateTime);
