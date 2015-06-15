@@ -479,6 +479,10 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		return citizenString;
 	}
 
+	
+	/* (non-Javadoc)
+	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getIdentifiers(ca.uhn.hl7v2.model.Message)
+	 */
 	public Set<PatientIdentifier> getIdentifiers(Message message)
 	{
 		PID pid = getPID(message);
@@ -506,7 +510,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 		if (identList.length != 0)
 		{
-			// personAttrList ="mrn:";
+			//MES - CHICA-438 - When there are > 1 identifiers, set only the first to preferred.
 			boolean preferred = true;
 			for (CX ident : identList)
 			{
