@@ -41,9 +41,6 @@ import ca.uhn.hl7v2.model.v25.segment.PID;
 public class HL7PatientHandler25 implements HL7PatientHandler
 {
 
-	
-	
-	
 	private static final String MRN_PREFIX = "MRN_";
 	private static final String GENERIC_MRN = "MRN_OTHER";
 	protected static final Logger logger = Logger
@@ -485,9 +482,6 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	}
 
 	
-	/* (non-Javadoc)
-	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getIdentifiers(ca.uhn.hl7v2.model.Message)
-	 */
 	public Set<PatientIdentifier> getIdentifiers(Message message)
 	{
 		PID pid = getPID(message);
