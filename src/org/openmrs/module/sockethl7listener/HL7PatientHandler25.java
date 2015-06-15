@@ -42,7 +42,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 {
 
 	private static final String MRN_PREFIX = "MRN_";
-	private static final String GENERIC_MRN = "MRN_OTHER";
+	private static final String GENERIC_ASSIGNING_AUTHORITY = "OTHER";
 	protected static final Logger logger = Logger
 			.getLogger("SocketHandlerLogger");
 	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
@@ -481,7 +481,6 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		return citizenString;
 	}
 
-	
 	public Set<PatientIdentifier> getIdentifiers(Message message)
 	{
 		PID pid = getPID(message);
@@ -493,11 +492,11 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		{
 
 			identList = pid.getPatientIdentifierList();
-		} catch (RuntimeException e2)
+		} catch (RuntimeException e)
 		{
 			// Exception in Hapi method for parsing identifiers from PID segment
 			// Execute find match without the identifier. Some applications do not need MRN for lookup.
-			logger.error("Error parsing identifier (MRN) from PID segment. ", e2);
+			logger.error("Error parsing identifier (MRN) from PID segment. ", e);
 			return identifiers;   
 		}
 		if (identList == null)
@@ -531,7 +530,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 							.getPatientIdentifierTypeByName(MRN_PREFIX + assignAuth)) == null)
 					{
 						pit = patientService
-								.getPatientIdentifierTypeByName(GENERIC_MRN);
+								.getPatientIdentifierTypeByName(MRN_PREFIX + GENERIC_ASSIGNING_AUTHORITY);
 					}
 					pi.setIdentifierType(pit);
 					pi.setIdentifier(stIdent);
