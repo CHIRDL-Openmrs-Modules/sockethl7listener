@@ -41,6 +41,11 @@ import ca.uhn.hl7v2.model.v25.segment.PID;
 public class HL7PatientHandler25 implements HL7PatientHandler
 {
 
+	
+	
+	
+	private static final String MRN_PREFIX = "MRN_";
+	private static final String GENERIC_MRN = "MRN_OTHER";
 	protected static final Logger logger = Logger
 			.getLogger("SocketHandlerLogger");
 	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
@@ -496,15 +501,15 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			identList = pid.getPatientIdentifierList();
 		} catch (RuntimeException e2)
 		{
-			// Unable to extract identifier from PID segment
-			logger
-					.error("Error extracting identifier from PID segment (MRN). ");
-			// Still need to continue. Execute find match without the identifer
+			// Exception in Hapi method for parsing identifiers from PID segment
+			// Execute find match without the identifier. Some applications do not need MRN for lookup.
+			logger.error("Error parsing identifier (MRN) from PID segment. ", e2);
+			return identifiers;   
 		}
 		if (identList == null)
 		{
+			// Some applications do not need MRN for lookup. Execute find match without the identifier
 			logger.warn(" No patient identifier available for this message.");
-			// Still need to continue. Execute find match without the identifer
 			return identifiers;
 		}
 
@@ -529,10 +534,10 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 							.getValue();
 
 					if ((pit = patientService
-							.getPatientIdentifierTypeByName("MRN_" + assignAuth)) == null)
+							.getPatientIdentifierTypeByName(MRN_PREFIX + assignAuth)) == null)
 					{
 						pit = patientService
-								.getPatientIdentifierTypeByName("MRN_OTHER");
+								.getPatientIdentifierTypeByName(GENERIC_MRN);
 					}
 					pi.setIdentifierType(pit);
 					pi.setIdentifier(stIdent);
