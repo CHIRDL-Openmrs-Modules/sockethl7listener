@@ -41,6 +41,8 @@ import ca.uhn.hl7v2.model.v25.segment.PID;
 public class HL7PatientHandler25 implements HL7PatientHandler
 {
 
+	private static final String MRN_PREFIX = "MRN_";
+	private static final String GENERIC_ASSIGNING_AUTHORITY = "OTHER";
 	protected static final Logger logger = Logger
 			.getLogger("SocketHandlerLogger");
 	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
@@ -490,24 +492,24 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		{
 
 			identList = pid.getPatientIdentifierList();
-		} catch (RuntimeException e2)
+		} catch (RuntimeException e)
 		{
-			// Unable to extract identifier from PID segment
-			logger
-					.error("Error extracting identifier from PID segment (MRN). ");
-			// Still need to continue. Execute find match without the identifer
+			// Exception in Hapi method for parsing identifiers from PID segment
+			// Execute find match without the identifier. Some applications do not need MRN for lookup.
+			logger.error("Error parsing identifier (MRN) from PID segment. ", e);
+			return identifiers;   
 		}
 		if (identList == null)
 		{
+			// Some applications do not need MRN for lookup. Execute find match without the identifier
 			logger.warn(" No patient identifier available for this message.");
-			// Still need to continue. Execute find match without the identifer
 			return identifiers;
 		}
 
 		if (identList.length != 0)
 		{
-			// personAttrList ="mrn:";
-
+			//MES - CHICA-438 - When there are > 1 identifiers, set only the first to preferred.
+			boolean preferred = true;
 			for (CX ident : identList)
 			{
 				// First set up the identifier type; We currently use MRN
@@ -517,6 +519,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 				PatientIdentifier pi = new PatientIdentifier();
 				String stIdent = getMRN(ident);
 				String assignAuth = "";
+				
 
 				if (stIdent != null)
 				{
@@ -524,16 +527,17 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 							.getValue();
 
 					if ((pit = patientService
-							.getPatientIdentifierTypeByName("MRN_" + assignAuth)) == null)
+							.getPatientIdentifierTypeByName(MRN_PREFIX + assignAuth)) == null)
 					{
 						pit = patientService
-								.getPatientIdentifierTypeByName("MRN_OTHER");
+								.getPatientIdentifierTypeByName(MRN_PREFIX + GENERIC_ASSIGNING_AUTHORITY);
 					}
 					pi.setIdentifierType(pit);
 					pi.setIdentifier(stIdent);
-					pi.setPreferred(true);
-
+					pi.setPreferred(preferred);
 					identifiers.add(pi);
+					preferred = false;
+
 
 				} else
 				{
@@ -542,6 +546,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 			}
 		}
+		
 		return identifiers;
 	}
 
