@@ -57,10 +57,10 @@
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate325-mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/logic-0.5.jar"/>
-	<classpathentry kind="lib" path="lib-common/openmrs-api-1.7.2.19959-dev.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-api-1.7.3.0-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/tests-openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.7.2.19959-dev.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.0.22.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutilbackports-1.0.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.8.2.jar"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutilbackports-2.2.0.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
