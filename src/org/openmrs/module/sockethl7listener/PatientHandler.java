@@ -94,6 +94,10 @@ public class PatientHandler
 			hl7Patient.setDateChanged(lastUpdate);
 		}
 
+		// DWE CHICA-406
+		// Patient account number
+		setAccountNumber(message, hl7Patient, encounterDate, hl7PatientHandler);
+		
 		return hl7Patient;
 	}
 
@@ -270,5 +274,18 @@ public class PatientHandler
 		}
 		return personAttr;
 
+	}
+	
+	/**
+	 * DWE CHICA-406 
+	 * @param message
+	 * @param hl7Patient
+	 * @param encounterDate
+	 * @param hl7PatientHandler
+	 */
+	protected void setAccountNumber(Message message, Patient hl7Patient,
+			Date encounterDate, HL7PatientHandler hl7PatientHandler)
+	{
+		// Intentionally left empty
 	}
 }
