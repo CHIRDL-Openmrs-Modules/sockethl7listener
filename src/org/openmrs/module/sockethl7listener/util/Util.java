@@ -66,6 +66,7 @@ public class Util
 	@SuppressWarnings("unchecked")
 	public static Message makeACK(Segment inboundHeader, boolean error, String errorText, String acceptText) throws HL7Exception,
 	IOException {
+		
 		if (!inboundHeader.getName().equals(ChirdlUtilConstants.HL7_SEGMENT_MESSAGE_HEADER_MSH))
 			throw new HL7Exception(
 					"Need an MSH segment to create a response ACK (got "
@@ -115,22 +116,24 @@ public class Util
 		
 		
 		// get MSH data from incoming message ...
-		String encChars = Terser.get(inboundHeader, 2, 0, 1, 1);
 		String fieldSep = Terser.get(inboundHeader, 1, 0, 1, 1);
-		String procID = Terser.get(inboundHeader, 11, 0, 1, 1);
+		String encChars = Terser.get(inboundHeader, 2, 0, 1, 1);
 		String sendingApp = Terser.get(inboundHeader, 3, 0, 1, 1);
-
-		// populate outbound MSH using data from inbound message ...
-		Terser.set(outboundHeader, 2, 0, 1, 1, encChars);
-		Terser.set(outboundHeader, 1, 0, 1, 1, fieldSep);
+		String sendingFac = Terser.get(inboundHeader, 4, 0, 1, 1);
+		String procID = Terser.get(inboundHeader, 11, 0, 1, 1);
+		
 		GregorianCalendar now = new GregorianCalendar();
 		now.setTime(new Date());
+		// populate outbound MSH using data from inbound message ...
+		Terser.set(outboundHeader, 1, 0, 1, 1, fieldSep);
+		Terser.set(outboundHeader, 2, 0, 1, 1, encChars);
+		Terser.set(outboundHeader, 3, 0, 1, 1, sendingApp);	
+		Terser.set(outboundHeader, 4, 0, 1, 1, sendingFac);	
 		Terser.set(outboundHeader, 7, 0, 1, 1, CommonTS.toHl7TSFormat(now));
+		Terser.set(outboundHeader, 9, 0, 1, 1, "ACK");
 		Terser.set(outboundHeader, 10, 0, 1, 1, MessageIDGenerator.getInstance()
 				.getNewID());
 		Terser.set(outboundHeader, 11, 0, 1, 1, procID);
-		Terser.set(outboundHeader, 3, 0, 1, 1, sendingApp);
-		Terser.set(outboundHeader, 9, 0, 1, 1, "ACK");
 		Terser.set(outboundHeader, 12, 0, 1, 1, version);
 		
 	}
@@ -139,6 +142,13 @@ public class Util
 	 * Fills in the details of an Application Reject message, including response
 	 * and error codes, and a text error message. This is the method to override
 	 * if you want to respond differently.
+	 *
+	 * @param ack
+	 * @param inboundHeader
+	 * @param error
+	 * @param errorText
+	 * @param acceptText
+	 * @throws HL7Exception
 	 */
 	public static void fillDetails(Message ack, Segment inboundHeader, boolean error, String errorText, String acceptText) throws HL7Exception
 	{
