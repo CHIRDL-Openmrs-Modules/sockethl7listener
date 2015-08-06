@@ -63,7 +63,7 @@ public class Util
 	 * @throws HL7Exception
 	 * @throws IOException
 	 */
-	@SuppressWarnings("unchecked")
+
 	public static Message makeACK(Segment inboundHeader, boolean error, String errorText, String acceptText) throws HL7Exception,
 	IOException {
 		
@@ -92,7 +92,7 @@ public class Util
 			throw new HL7Exception("Can't instantiate ACK of class "
 					+ ackClassName + ": " + e.getClass().getName());
 		}
-		String test = ChirdlUtilConstants.HL7_SEGMENT_MESSAGE_HEADER_MSH;
+		
 		// populate outbound MSH using data from inbound message ...
 		Segment outboundHeader = (Segment) ackMessage.get(ChirdlUtilConstants.HL7_SEGMENT_MESSAGE_HEADER_MSH);
 		fillResponseHeader(inboundHeader, outboundHeader, version);

@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,7 +44,6 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
-import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -53,17 +51,11 @@ import org.openmrs.module.sockethl7listener.util.Util;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
 import ca.uhn.hl7v2.app.ApplicationException;
-import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.model.Segment;
-import ca.uhn.hl7v2.model.primitive.CommonTS;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.NTE;
-import ca.uhn.hl7v2.sourcegen.SourceGenerator;
-import ca.uhn.hl7v2.util.MessageIDGenerator;
-import ca.uhn.hl7v2.util.Terser;
 
 /**
  * 
@@ -126,11 +118,14 @@ public class HL7SocketHandler implements Application {
 
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) throws ApplicationException {
 		Message response = null;
+		boolean error = false;
+		
 		try {
 			HL7Service hl7Service = Context.getHL7Service();
 			AdministrationService adminService = Context.getAdministrationService();
 			Context.openSession();
 			String incomingMessageString = "";
+			
 			try 
 			{
 				incomingMessageString = this.parser.encode(message);
@@ -204,7 +199,7 @@ public class HL7SocketHandler implements Application {
 						}
 					}
 				}
-				boolean error = false;
+				
 				if (!ignoreMessage) {
 					error = processMessageSegments(message, incomingMessageString, parameters);
 				}
@@ -243,7 +238,7 @@ public class HL7SocketHandler implements Application {
 		finally {
 			if (response == null) {
 				try {
-					boolean error = true;
+					error = true;
 					MSH msh = HL7ObsHandler25.getMSH(message);
 					response = Util.makeACK(msh, error, null, null);
 				}
@@ -727,7 +722,7 @@ public class HL7SocketHandler implements Application {
 	}
 
 	
-	private Location setSendingFacility(Message message) {
+	public Location setSendingFacility(Message message) {
 		
 	    LocationService locationService = Context.getLocationService();
 		String sendingLocString = null;
