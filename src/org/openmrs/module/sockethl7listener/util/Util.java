@@ -27,6 +27,12 @@ import ca.uhn.hl7v2.util.Terser;
  */
 public class Util
 {	
+	private static final String DEFAULT_APPLICATION_SUCCESS_TEXT = "Message received successfully";
+	private static final String DEFAULT_APPLICATION_ERROR_TEXT = "Application Error";
+	private static final String VERSION_2_5 = "2.5";
+	private static final String DATE_FORMAT_YYYY_M_MDD_H_HMM = "yyyyMMddHHmm";
+	private static final String ACK = "ACK";		
+
 	public static Concept lookupConcept(Integer conceptId,String conceptName)
 	{
 		ConceptService cs = Context.getConceptService();
@@ -45,7 +51,7 @@ public class Util
 	public static String convertDateToString(Date date){
 		String dateStr = "";
 		
-		SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
+		SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT_YYYY_M_MDD_H_HMM);
 		if (date != null) { 
 			dateStr = df.format(date);
 		}
@@ -79,7 +85,7 @@ public class Util
 		} catch (HL7Exception e) { /* proceed with null */
 		}
 		if (version == null)
-			version = "2.5";
+			version = VERSION_2_5;
 
 		String ackClassName = SourceGenerator.getVersionPackageName(version)
 		+ "message.ACK";
@@ -130,7 +136,7 @@ public class Util
 		Terser.set(outboundHeader, 3, 0, 1, 1, sendingApp);	
 		Terser.set(outboundHeader, 4, 0, 1, 1, sendingFac);	
 		Terser.set(outboundHeader, 7, 0, 1, 1, CommonTS.toHl7TSFormat(now));
-		Terser.set(outboundHeader, 9, 0, 1, 1, "ACK");
+		Terser.set(outboundHeader, 9, 0, 1, 1, ACK);
 		Terser.set(outboundHeader, 10, 0, 1, 1, MessageIDGenerator.getInstance()
 				.getNewID());
 		Terser.set(outboundHeader, 11, 0, 1, 1, procID);
@@ -157,14 +163,14 @@ public class Util
 		if (error) {
 			Terser.set(msa, 1, 0, 1, 1, ChirdlUtilConstants.HL7_ACK_CODE_APPLICATION_ERROR);
 			if (errorText == null || errorText.equals("")){
-				errorText = "Application Error";
+				errorText = DEFAULT_APPLICATION_ERROR_TEXT;
 			}
 			Terser.set(msa, 3, 0, 1, 1, errorText);
 			
 		} else {
 			Terser.set(msa, 1, 0, 1, 1, ChirdlUtilConstants.HL7_ACK_CODE_APPLICATION_ACCEPT);
 			if (acceptText == null || acceptText.equals("")){
-				acceptText = "Message received successfully";
+				acceptText = DEFAULT_APPLICATION_SUCCESS_TEXT;
 			}
 			Terser.set(msa, 3, 0, 1, 1, acceptText);			
 		}

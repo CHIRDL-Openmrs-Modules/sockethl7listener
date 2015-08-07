@@ -116,7 +116,7 @@ public class HL7SocketHandler implements Application {
 		return message != null && "ORU_R01".equals(message.getName());
 	}
 
-	protected Message processMessage(Message message, HashMap<String, Object> parameters) throws ApplicationException {
+	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
 		Message response = null;
 		boolean error = false;
 		
@@ -125,7 +125,6 @@ public class HL7SocketHandler implements Application {
 			AdministrationService adminService = Context.getAdministrationService();
 			Context.openSession();
 			String incomingMessageString = "";
-			
 			try 
 			{
 				incomingMessageString = this.parser.encode(message);
