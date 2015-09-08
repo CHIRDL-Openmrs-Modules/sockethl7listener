@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.log4j.Logger;
+import org.jfree.util.Log;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.Encounter;
@@ -46,6 +47,7 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -57,6 +59,7 @@ import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
+import ca.uhn.hl7v2.model.v23.group.ORU_R01_ORDER_OBSERVATION;
 import ca.uhn.hl7v2.model.v25.datatype.TS;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
@@ -75,6 +78,8 @@ import ca.uhn.hl7v2.parser.PipeParser;
  */
 @SuppressWarnings("deprecation")
 public class HL7SocketHandler implements Application {
+	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
+	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 	private static final Logger conceptNotFoundLogger = Logger.getLogger("ConceptNotFoundLogger");
 	private static final Logger npiLogger = Logger.getLogger("NPILogger");
@@ -597,6 +602,8 @@ public class HL7SocketHandler implements Application {
 		//were ORU_R01.  However, some projects have ADT
 		//messages with observations. The method isNTE() assumes
 		//messages as ORU, so check first. 
+		
+		//MES -Use OBR datetime if OBX is null
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		
 		try {
@@ -609,28 +616,25 @@ public class HL7SocketHandler implements Application {
 					}
 					else{
 						//If there is no encounter and no obs date time, use the obr (order) datetime
-							if (message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01){
-								((ca.uhn.hl7v2.model.v23.message.ORU_R01) message).getMSH().getVersionID().setValue(HL7_VERSION_2_5);
-								//String  newMessageString = this.parser.encode(message);
-								//orumessage = this.parser.parse(newMessageString);
-								
-							}
-							Terser terser = new Terser(message);
-							String datetime = terser.get("/.OBR-7");
-							SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMDD");
-							obsDateTime = formatter.parse(datetime);
+						//if (message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01){
+						//	((ca.uhn.hl7v2.model.v23.message.ORU_R01) message).getMSH().getVersionID().setValue(HL7_VERSION_2_5);
+						//}
+						Terser terser = new Terser(message);
+						String datetime = terser.get("/.ORDER_OBSERVATION(" + orderRep + ")/OBR-7-1");
+						if (datetime != null && datetime.length() == 8){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD);
+						} else if (datetime != null && datetime.length() == 12){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM);
+						}
 					}
 				}
 			}
-		} catch (DataTypeException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (HL7Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		} catch (DataTypeException e) {
+			logger.error("Data type exception modifying HL7 version. " 
+					+ org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
+		} catch (Exception e){
+			logger.error("Ex1ception getting obs datetime from OBX/OBR. " 
+					+ org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		}
 		
 		obs.setObsDatetime(obsDateTime);
