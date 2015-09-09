@@ -45,6 +45,6 @@ public interface HL7ObsHandler
 			String obsValueType,Logger conceptNotFoundLogger);
 	
 	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception;
-	
+
 	public int getReps(Message message);
 }
