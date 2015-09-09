@@ -654,7 +654,6 @@ public class HL7SocketHandler implements Application {
 		}
 		
 		obs.setPerson(resultPatient);
-		
 		// Set the encounter based on the encounter id
 		obs.setEncounter(enc);
 		
