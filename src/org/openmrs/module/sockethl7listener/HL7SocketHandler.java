@@ -615,10 +615,6 @@ public class HL7SocketHandler implements Application {
 						obsDateTime = enc.getEncounterDatetime();
 					}
 					else{
-						//If there is no encounter and no obs date time, use the obr (order) datetime
-						//if (message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01){
-						//	((ca.uhn.hl7v2.model.v23.message.ORU_R01) message).getMSH().getVersionID().setValue(HL7_VERSION_2_5);
-						//}
 						Terser terser = new Terser(message);
 						String datetime = terser.get("/.ORDER_OBSERVATION(" + orderRep + ")/OBR-7-1");
 						if (datetime != null && datetime.length() == 8){
@@ -629,11 +625,8 @@ public class HL7SocketHandler implements Application {
 					}
 				}
 			}
-		} catch (DataTypeException e) {
-			logger.error("Data type exception modifying HL7 version. " 
-					+ org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		} catch (Exception e){
-			logger.error("Ex1ception getting obs datetime from OBX/OBR. " 
+			logger.error("Exception getting obs datetime from OBX/OBR. " 
 					+ org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		}
 		
