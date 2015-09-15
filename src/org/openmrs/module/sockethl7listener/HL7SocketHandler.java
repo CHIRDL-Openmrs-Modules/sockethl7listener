@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -20,7 +19,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.apache.log4j.Logger;
-import org.jfree.util.Log;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.Encounter;
@@ -59,8 +57,6 @@ import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
-import ca.uhn.hl7v2.model.v23.group.ORU_R01_ORDER_OBSERVATION;
-import ca.uhn.hl7v2.model.v25.datatype.TS;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
@@ -68,9 +64,6 @@ import ca.uhn.hl7v2.model.v25.segment.NTE;
 import ca.uhn.hl7v2.sourcegen.SourceGenerator;
 import ca.uhn.hl7v2.util.MessageIDGenerator;
 import ca.uhn.hl7v2.util.Terser;
-import ca.uhn.hl7v2.validation.impl.NoValidation;
-import ca.uhn.hl7v2.model.v25.segment.OBR;
-import ca.uhn.hl7v2.parser.PipeParser;
 
 /**
  * 
@@ -79,12 +72,11 @@ import ca.uhn.hl7v2.parser.PipeParser;
 @SuppressWarnings("deprecation")
 public class HL7SocketHandler implements Application {
 	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
+	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS = "yyyyMMddHHmmss";
 	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 	private static final Logger conceptNotFoundLogger = Logger.getLogger("ConceptNotFoundLogger");
 	private static final Logger npiLogger = Logger.getLogger("NPILogger");
-	
-	private static final String HL7_VERSION_2_5 = "2.5";
 		
 	protected PatientHandler patientHandler;
 	protected HL7ObsHandler hl7ObsHandler = null;
@@ -621,6 +613,10 @@ public class HL7SocketHandler implements Application {
 							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD);
 						} else if (datetime != null && datetime.length() == 12){
 							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM);
+						} else if (datetime != null && datetime.length() == 14){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM_SS);
+						} else {
+							logger.error("Invalid date / time" + datetime  );
 						}
 					}
 				}
