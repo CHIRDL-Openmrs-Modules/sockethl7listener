@@ -595,7 +595,7 @@ public class HL7SocketHandler implements Application {
 		//messages with observations. The method isNTE() assumes
 		//messages as ORU, so check first. 
 		
-		//MES -Use OBR datetime if OBX is null
+		//MES CHICA-358 Use OBR datetime if OBX is null
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		
 		try {
@@ -859,12 +859,12 @@ public class HL7SocketHandler implements Application {
 				Segment msa = (Segment) ack.get("MSA");
 				Terser.set(msa, 1, 0, 1, 1, "AA");
 				Terser.set(msa, 3, 0, 1, 1,
-				"Application error.");
+				"Unable to create or update patient in openmrs database.");
 			} else {
 				Segment msa = (Segment) ack.get("MSA");
 				Terser.set(msa, 1, 0, 1, 1, "AA");
 				Terser.set(msa, 3, 0, 1, 1,
-				"Message accepted.");
+				"Message created or updated Patient in openmrs database.");
 				// this is max length
 
 			}
