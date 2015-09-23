@@ -45,6 +45,7 @@ import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -70,6 +71,9 @@ import ca.uhn.hl7v2.util.Terser;
  */
 @SuppressWarnings("deprecation")
 public class HL7SocketHandler implements Application {
+	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
+	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS = "yyyyMMddHHmmss";
+	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 	private static final Logger conceptNotFoundLogger = Logger.getLogger("ConceptNotFoundLogger");
 	private static final Logger npiLogger = Logger.getLogger("NPILogger");
@@ -590,16 +594,38 @@ public class HL7SocketHandler implements Application {
 		//were ORU_R01.  However, some projects have ADT
 		//messages with observations. The method isNTE() assumes
 		//messages as ORU, so check first. 
+		
+		//MES CHICA-358 Use OBR datetime if OBX is null
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
-		if (obsDateTime == null){
-		   if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
-			   obsDateTime = new Date();
-		   }else {
-		   if(enc != null){
-			obsDateTime = enc.getEncounterDatetime();
+		
+		try {
+			if (obsDateTime == null){
+				if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
+					obsDateTime = new Date();
+				}else {
+					if(enc != null){
+						obsDateTime = enc.getEncounterDatetime();
+					}
+					else{
+						Terser terser = new Terser(message);
+						String datetime = terser.get("/.ORDER_OBSERVATION(" + orderRep + ")/OBR-7-1");
+						if (datetime != null && datetime.length() == 8){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD);
+						} else if (datetime != null && datetime.length() == 12){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM);
+						} else if (datetime != null && datetime.length() == 14){
+							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM_SS);
+						} else {
+							logger.error("Invalid date / time" + datetime  );
+						}
+					}
+				}
 			}
-		   }
+		} catch (Exception e){
+			logger.error("Exception getting obs datetime from OBX/OBR. " 
+					+ org.openmrs.module.chirdlutil.util.Util.getStackTrace(e));
 		}
+		
 		obs.setObsDatetime(obsDateTime);
 
 		// set Location
