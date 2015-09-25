@@ -593,8 +593,8 @@ public class HL7SocketHandler implements Application {
 		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		
 		try {
-			if (obsDateTime == null){
-				if (enc == null &&  (message instanceof ORU_R01) && isNTE(message,orderRep, obxRep)){
+			if (obsDateTime == null && (message instanceof ORU_R01)){ // DWE CHICA-556 Make sure this is an ORU_R01 message before trying to use the OBR date/time
+				if (enc == null && isNTE(message,orderRep, obxRep)){
 					obsDateTime = new Date();
 				}else {
 					if(enc != null){
