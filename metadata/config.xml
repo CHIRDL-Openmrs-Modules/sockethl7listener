@@ -6,7 +6,7 @@
 	<!-- SocketHL7Listener Module Properties -->
 	<id>sockethl7listener</id>
 	<name>sockethl7listener</name>
-	<version>1.4.1</version>
+	<version>1.5.0</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley and Vibha Anand</author>
 	<description>
@@ -15,7 +15,7 @@
 
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
-		<require_module version="1.9.0">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="1.9.3">org.openmrs.module.chirdlutil</require_module>
 		<require_module version="2.3.0">org.openmrs.module.chirdlutilbackports</require_module>
 	</require_modules>
 	<extension>
