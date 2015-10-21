@@ -566,4 +566,34 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		}
 		return patientIdentsAsString;
 	}
+	
+	/**
+	 * DWE CHICA-406
+	 */
+	public String getAccountNumber(Message message)
+	{
+		CX accountNumber = null;
+		PID pid = getPID(message);
+		try
+		{
+			accountNumber = pid.getPatientAccountNumber();
+		} catch (RuntimeException e)
+		{
+			logger.warn("Unable to parse patient account number from PID. Message: "
+					+ e.getMessage());
+		}
+
+		if (accountNumber != null)
+		{
+			try
+			{
+				return accountNumber.getIDNumber().toString();
+			} catch (RuntimeException e1)
+			{
+				logger
+						.debug("Warning: Patient account number not available in PID segment.");
+			}
+		}
+		return null;
+	}
 }

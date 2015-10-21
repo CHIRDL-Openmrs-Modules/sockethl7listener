@@ -47,4 +47,5 @@ public interface HL7PatientHandler
 	
 	public String[] getPatientIdentifierList(Message message);
 
+	public String getAccountNumber(Message message); // DWE CHICA-406
 }
