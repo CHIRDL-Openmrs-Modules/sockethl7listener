@@ -174,6 +174,9 @@ public class Util
 			}
 			Terser.set(msa, 3, 0, 1, 1, acceptText);			
 		}
+		
+		// DWE CHICA-616 Populate MSA-2 with the Message Control ID(MSH-10) from the inbound message
+		Terser.set(msa, 2, 0, 1, 1, Terser.get(inboundHeader, 10, 0, 1, 1));
 	}
 
 }
