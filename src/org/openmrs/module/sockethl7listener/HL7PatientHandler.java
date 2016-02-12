@@ -35,6 +35,8 @@ public interface HL7PatientHandler
 	
 	public Set<PatientIdentifier> getIdentifiers(Message message);
 	
+	public String getNextOfKin(Message message);
+	
 	public String getMothersName(Message message);
 	
 	public String getTelephoneNumber(Message message);
