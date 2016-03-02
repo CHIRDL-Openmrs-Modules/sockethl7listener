@@ -11,7 +11,6 @@ import org.openmrs.PersonAttributeType;
 import org.openmrs.PersonName;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 
 /**
  * Evaluates differences between hl7 patient and matched patient to define the
@@ -22,7 +21,10 @@ import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
  */
 public class MatchHandler {
 	
-	
+	public static final String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
+	public static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
+	public static final String ATTRIBUTE_RACE = "Race";
+	public static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
 	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 
 	public MatchHandler() {
@@ -106,8 +108,8 @@ public class MatchHandler {
 			resolvedPatient.addAttribute(bestNKAttribute);
 		}
 		
-		PersonAttribute bestTelephoneAttr = getBestTel(hl7Patient.getAttribute(ChirdlUtilConstants.PERSON_ATTRIBUTE_TELEPHONE),
-				resolvedPatient.getAttribute(ChirdlUtilConstants.PERSON_ATTRIBUTE_TELEPHONE), encounterDate);
+		PersonAttribute bestTelephoneAttr = getBestTel(hl7Patient.getAttribute(ATTRIBUTE_TELEPHONE),
+				resolvedPatient.getAttribute(ATTRIBUTE_TELEPHONE), encounterDate);
 		
 		if (bestTelephoneAttr != null) {
 			resolvedPatient.addAttribute(bestTelephoneAttr);
@@ -491,9 +493,9 @@ public class MatchHandler {
 	{
 
 		PersonAttribute matchedNKNameAttr = matchedPatient
-				.getAttribute(ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN);
+				.getAttribute(ATTRIBUTE_NEXT_OF_KIN);
 		PersonAttribute hl7NKNameAttr = hl7Patient
-				.getAttribute(ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN);
+				.getAttribute(ATTRIBUTE_NEXT_OF_KIN);
 		PersonAttribute bestAttr = new PersonAttribute();
 		bestAttr.setVoided(false);
 		

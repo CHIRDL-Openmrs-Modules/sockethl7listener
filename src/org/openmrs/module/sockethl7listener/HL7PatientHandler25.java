@@ -45,6 +45,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	private static final String GENERIC_ASSIGNING_AUTHORITY = "OTHER";
 	protected static final Logger logger = Logger
 			.getLogger("SocketHandlerLogger");
+	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
 
 	protected PID getPID(Message message)
 	{
