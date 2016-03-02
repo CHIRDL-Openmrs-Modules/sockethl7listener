@@ -22,10 +22,7 @@ import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
  */
 public class MatchHandler {
 	
-	//public static final String ATTRIBUTE_NEXT_OF_KIN = ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN;
-	//public static final String ATTRIBUTE_TELEPHONE = ChirdlUtilConstants.PERSON_ATTRIBUTE_TELEPHONE;
-	//public static final String ATTRIBUTE_RACE = ChirdlUtilConstants.PERSON_ATTRIBUTE_RACE;
-	//public static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
+	
 	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 
 	public MatchHandler() {

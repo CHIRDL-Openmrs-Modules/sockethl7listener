@@ -23,11 +23,7 @@ import ca.uhn.hl7v2.model.Message;
 public class PatientHandler
 {
 
-	protected static  String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
-	protected static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
-	protected static final String ATTRIBUTE_RACE = "Race";
 	protected static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
-	protected static final String CITIZENSHIP = "Citizenship";
 	protected static final String MATCH_INFO = "Other Matching Information";
 
 	protected PatientService patientService;
@@ -75,11 +71,11 @@ public class PatientHandler
 		setAddresses(message, hl7Patient, encounterDate, hl7PatientHandler);
 
 		// telephone number
-		addAttribute(hl7Patient, ATTRIBUTE_TELEPHONE, hl7PatientHandler
+		addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_TELEPHONE, hl7PatientHandler
 				.getTelephoneNumber(message), encounterDate);
 
 		// citizenship
-		addAttribute(hl7Patient, CITIZENSHIP, hl7PatientHandler
+		addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_CITIZENSHIP, hl7PatientHandler
 				.getCitizenship(message), encounterDate);
 
 		// death date
@@ -193,9 +189,7 @@ public class PatientHandler
 			break;
 		}
 
-		// personAttrList += ";race:" + race ;
-
-		addAttribute(hl7Patient, ATTRIBUTE_RACE, race, encounterDate);
+		addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_RACE, race, encounterDate);
 
 	}
 

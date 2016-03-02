@@ -17,7 +17,6 @@ import org.openmrs.User;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
@@ -50,9 +49,9 @@ import ca.uhn.hl7v2.parser.PipeParser;
 public class HL7MessageConstructor {
 
 	private ORU_R01 oru;
-	private String attributeNextOfKin = ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN;
-	private String attributeTelephoneNum = ChirdlUtilConstants.PERSON_ATTRIBUTE_TELEPHONE;
-	private String attributeRace = ChirdlUtilConstants.PERSON_ATTRIBUTE_RACE;
+	private String attributeNextOfKin = "Mother's Name";
+	private String attributeTelephoneNum = "Telephone Number";
+	private String attributeRace = "Race";
 	private String ourFacility = "";
 	private String ourApplication = "";
 	private String univServId = "";

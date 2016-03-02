@@ -45,7 +45,6 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	private static final String GENERIC_ASSIGNING_AUTHORITY = "OTHER";
 	protected static final Logger logger = Logger
 			.getLogger("SocketHandlerLogger");
-	
 
 	protected PID getPID(Message message)
 	{
@@ -445,11 +444,10 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		return nextOfKin;
 	}
 	
+
 	/* (non-Javadoc)
 	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getMothersName(ca.uhn.hl7v2.model.Message)
-	 * @Deprecated
 	 */
-	@Deprecated
 	public String getMothersName(Message message)
 	{
 		NK1 nk1 = getNK1(message);
