@@ -411,17 +411,49 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		return TranslateDate(tsLastUpdate);
 	}
 
+	public String getNextOfKin(Message message){
+		String nextOfKin = "";	
+		NK1 nk1 = getNK1(message);	
+
+		try
+		{
+			XPN[] list = null;
+			list = nk1.getNKName();
+			String nkln = "", nkfn = "";
+
+			if (list != null)
+			{
+				for (XPN identifier : list)
+				{
+					nkln = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getFamilyName()
+							.getSurname().getValue());
+					nkfn = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getGivenName()
+							.getValue());
+				}
+			}
+
+			if (nkln == null)
+				nkln = "";
+			if (nkfn == null)
+				nkfn = "";		
+			nextOfKin = nkfn + "|" + nkln;
+		} catch (RuntimeException e)
+		{
+			logger.error("Exception while extracting next-of-kin. Message: "
+					+ e.getMessage());
+		}
+		return nextOfKin;
+	}
+	
+
+	/* (non-Javadoc)
+	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getMothersName(ca.uhn.hl7v2.model.Message)
+	 */
 	public String getMothersName(Message message)
 	{
 		NK1 nk1 = getNK1(message);
 		String motherNameString = "";
-		// Using mother's name since that was originally the only choice for
-		// type Patient
-		// After openmrs modification for 1.1.0, next-of-kin is an attribute.
-		// Existing OpenMRS tables
-		// show the attribute as "Mother's Name", so I am going to check for
-		// that attribute.
-
+		
 		try
 		{
 			String relation = null;
