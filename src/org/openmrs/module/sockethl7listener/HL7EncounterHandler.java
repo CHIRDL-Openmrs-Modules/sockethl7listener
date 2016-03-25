@@ -16,4 +16,6 @@ public interface HL7EncounterHandler
 	public Provider getProvider(Message message);
 	
 	public Date getEncounterDate(Message message);
+	
+	public String getVisitNumber(Message message); // DWE CHICA-633
 }
