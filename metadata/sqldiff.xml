@@ -227,13 +227,13 @@
 			Add columns to sockethl7listener_hl7_out_queue
 		</description>
 		<sql>
-			alter ignore table sockethl7listener_hl7_out_queue
+			alter table sockethl7listener_hl7_out_queue
 			add column ack_received datetime  after date_processed;
 	
-			alter ignore table sockethl7listener_hl7_out_queue
+			alter table sockethl7listener_hl7_out_queue
 			add column port varchar(10) DEFAULT NULL; 
 			
-			alter ignore table sockethl7listener_hl7_out_queue
+			alter table sockethl7listener_hl7_out_queue
 			add column host varchar(25) DEFAULT NULL; 
 		</sql>
 	</diff>
