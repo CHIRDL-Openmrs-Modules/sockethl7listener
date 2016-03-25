@@ -47,4 +47,16 @@ public interface HL7ObsHandler
 	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception;
 
 	public int getReps(Message message);
+	
+	/**
+	 * DWE CHICA-635
+	 * 
+	 * Get the units from OBX-6
+	 * 
+	 * @param message
+	 * @param orderRep
+	 * @param obxRep
+	 * @return
+	 */
+	public String getUnits(Message message, int orderRep, int obxRep);
 }

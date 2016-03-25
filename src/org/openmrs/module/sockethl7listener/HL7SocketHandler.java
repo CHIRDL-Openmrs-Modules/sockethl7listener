@@ -20,6 +20,7 @@ import java.util.Locale;
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
+import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
 import org.openmrs.EncounterType;
 import org.openmrs.Location;
@@ -675,7 +676,12 @@ public class HL7SocketHandler implements Application {
 			}
 		}else
 		{
-			concept = new Concept();
+			// DWE CHICA-635 Testing
+			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
+				concept = new ConceptNumeric();
+			}else{
+				concept = new Concept();
+			}
 			concept.setConceptId(conceptId);
 			ConceptName name = new ConceptName();
 			name.setName(conceptName);
@@ -1059,6 +1065,16 @@ public class HL7SocketHandler implements Application {
 			double dVal = hl7ObsHandler
 					.getNumericResult(message, orderRep, obxRep);
 			obs.setValueNumeric(dVal);
+			
+			// DWE CHICA-635 Get the units from OBX-6 
+			// and set it in the concept for this obs
+			Concept concept = obs.getConcept();
+			if(concept instanceof ConceptNumeric){
+				String units = hl7ObsHandler.getUnits(message, orderRep, obxRep);
+				((ConceptNumeric) concept).setUnits(units);
+				obs.setConcept(concept);
+			}
+			
 			return true;
 		} catch (APIException e)
 		{

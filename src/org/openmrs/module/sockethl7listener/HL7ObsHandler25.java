@@ -64,6 +64,10 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		{
 			return getOBX((ORU_R01) message, orderRe, obRep);
 		}
+		else if ((message instanceof ADT_A01)) // DWE CHICA-635 Handle instance of ADT_A01
+		{
+			return getOBX((ADT_A01) message, orderRe, obRep);
+		}
 		return null;
 	}
 
@@ -81,6 +85,29 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 			logger.error("HL7Exception" ,e);
 		}
 
+		return obx;
+	}
+	
+	/**
+	 * DWE CHICA-635 
+	 * Get OBX from ADT_A01 message
+	 * @param adt
+	 * @param orderRep
+	 * @param obRep
+	 * @return
+	 */
+	private static OBX getOBX(ADT_A01 adt, int orderRep, int obRep)
+	{
+		OBX obx = null;
+		try
+		{
+			obx = adt.getOBX(obRep);
+		}
+		catch(HL7Exception e)
+		{
+			logger.error("HL7Exception" ,e);
+		}
+		
 		return obx;
 	}
 
@@ -433,5 +460,20 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 			reps = ((ADT_A01) message).getOBXReps();
 		}
 		return reps;
+	}
+	
+	/**
+	 * @see org.openmrs.module.sockethl7listener.HL7ObsHandler#getUnits(Message, int, int)
+	 * DWE CHICA-635
+	 */
+	public String getUnits(Message message, int orderRep, int obxRep)
+	{
+		OBX obx = getOBX(message, orderRep, obxRep);
+    	if(obx != null){
+    		CE units = obx.getUnits();
+    		return units.getText().toString();
+    	}
+    				
+		return "";
 	}
 }
