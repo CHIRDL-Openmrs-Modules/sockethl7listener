@@ -16,13 +16,13 @@ import org.openmrs.api.APIException;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 
 import ca.uhn.hl7v2.model.Message;
 
 public class PatientHandler
 {
 
-	protected static  String ATTRIBUTE_NEXT_OF_KIN = "Mother's Name";
 	protected static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
 	protected static final String ATTRIBUTE_RACE = "Race";
 	protected static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
@@ -56,10 +56,10 @@ public class PatientHandler
 		// Race
 		setRace(message, hl7Patient, encounterDate, hl7PatientHandler);
 
-		// mother's name
-		addAttribute(hl7Patient, ATTRIBUTE_NEXT_OF_KIN, hl7PatientHandler
-				.getMothersName(message), encounterDate);
-
+		// next of kin
+		addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN, hl7PatientHandler
+						.getNextOfKin(message), encounterDate);
+				
 		// birthdate
 		hl7Patient.setBirthdate(hl7PatientHandler.getBirthdate(message));
 
