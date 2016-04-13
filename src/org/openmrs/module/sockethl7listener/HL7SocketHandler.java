@@ -307,7 +307,7 @@ public class HL7SocketHandler implements Application {
 			
 		// trigger rules for NBS module and ATD module
 		SocketHL7ListenerService socketHL7ListenerService = Context.getService(SocketHL7ListenerService.class);
-		socketHL7ListenerService.messageProcessed(encounter);
+		socketHL7ListenerService.messageProcessed(encounter, parameters);
 		
 		return encounter;
 	}

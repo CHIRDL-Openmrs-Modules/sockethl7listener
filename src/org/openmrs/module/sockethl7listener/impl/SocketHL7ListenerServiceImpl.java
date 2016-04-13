@@ -2,6 +2,7 @@ package org.openmrs.module.sockethl7listener.impl;
 
 import java.security.DigestException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -177,7 +178,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 		return duplicate;
 	}
 	
-	public void messageProcessed(Encounter encounter) {
+	public void messageProcessed(Encounter encounter, HashMap<String, Object> parameters) {
 		// nothing is done here.  Modules override/hook on this method
 	}
 	
