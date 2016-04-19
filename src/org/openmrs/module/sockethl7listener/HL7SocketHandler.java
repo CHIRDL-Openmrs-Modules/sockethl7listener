@@ -325,8 +325,8 @@ public class HL7SocketHandler implements Application {
 		//new
 		ZLR zlr = new ZLR(message);
 		MSH msh = HL7ObsHandler25.getMSH(message);
-		parameters.put("sendingApplication", msh.getSendingApplication());
-		parameters.put("sendingFacility", msh.getSendingFacility());
+		parameters.put("sendingApplication", msh.getSendingApplication().getNamespaceID().getValue());
+		parameters.put("sendingFacility", msh.getSendingFacility().getNamespaceID().getValue());
 		
 		// Obtain message control id (unique ID for message from sending
 		// application)
