@@ -307,7 +307,7 @@ public class HL7SocketHandler implements Application {
 			
 		// trigger rules for NBS module and ATD module
 		SocketHL7ListenerService socketHL7ListenerService = Context.getService(SocketHL7ListenerService.class);
-		socketHL7ListenerService.messageProcessed(encounter);
+		socketHL7ListenerService.messageProcessed(encounter, parameters);
 		
 		return encounter;
 	}
@@ -325,6 +325,8 @@ public class HL7SocketHandler implements Application {
 		//new
 		ZLR zlr = new ZLR(message);
 		MSH msh = HL7ObsHandler25.getMSH(message);
+		parameters.put("sendingApplication", msh.getSendingApplication().getNamespaceID().getValue());
+		parameters.put("sendingFacility", msh.getSendingFacility().getNamespaceID().getValue());
 		
 		// Obtain message control id (unique ID for message from sending
 		// application)

@@ -1,6 +1,7 @@
 package org.openmrs.module.sockethl7listener.service;
 
 import java.util.Date;
+import java.util.HashMap;
 
 import org.openmrs.Encounter;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
@@ -27,7 +28,7 @@ public interface SocketHL7ListenerService
 	
 	public boolean checkMD5(String incoming, Integer port);
 	
-	public void messageProcessed(Encounter encounter);
+	public void messageProcessed(Encounter encounter,HashMap<String,Object> parameters);
 	
 	public String getFaxNumber(String firstName, String lastName);
 
