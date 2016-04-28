@@ -2,7 +2,9 @@ package org.openmrs.module.sockethl7listener.service;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.openmrs.Encounter;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
@@ -33,4 +35,13 @@ public interface SocketHL7ListenerService
 	public String getFaxNumber(String firstName, String lastName);
 
 	public PatientMessage getPatientMessageByEncounter(Integer encounterId);
+	
+	/**
+	 * DWE CHICA-636
+	 * Get a list of hl7_out_queue records that are waiting to be sent
+	 * @param host
+	 * @param port
+	 * @return list of HL7Outbound objects
+	 */
+	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException; // DWE CHICA-636
 }
