@@ -43,5 +43,5 @@ public interface SocketHL7ListenerService
 	 * @param port
 	 * @return list of HL7Outbound objects
 	 */
-	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException; // DWE CHICA-636
+	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException;
 }
