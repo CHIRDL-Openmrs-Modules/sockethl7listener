@@ -186,4 +186,13 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 		return getSocketHL7ListenerDAO().getPatientMessageByEncounter(encounterId);
 	}
 
+	/**
+	 * DWE CHICA-636
+	 * @see org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService#getPendingHL7OutboundByHostAndPort(String, Integer)
+	 */
+	@Override
+	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException
+	{
+		return getSocketHL7ListenerDAO().getPendingHL7OutboundByHostAndPort(host, port);
+	}
 }

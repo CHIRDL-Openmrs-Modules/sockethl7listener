@@ -678,7 +678,7 @@ public class HL7SocketHandler implements Application {
 			}
 		}else
 		{
-			// DWE CHICA-635 Testing
+			// DWE CHICA-635
 			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
 				concept = new ConceptNumeric();
 			}else{

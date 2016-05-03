@@ -4,9 +4,13 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.Criteria;
+import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
+import org.hibernate.criterion.Expression;
 import org.openmrs.module.chirdlutil.util.Util;
+import org.openmrs.module.chirdlutilbackports.hibernateBeans.EncounterAttribute;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
@@ -112,5 +116,20 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	/**
+	 * DWE CHICA-636
+	 * @see org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO#getPendingHL7OutboundByHostAndPort(String, Integer)
+	 */
+	@Override
+	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException
+	{
+		Criteria criteria = sessionFactory.getCurrentSession().createCriteria(HL7Outbound.class)
+				.add(Expression.eq("host", host))
+				.add(Expression.eq("port", port))
+				.add(Expression.isNull("ackReceived"));
+		
+		return criteria.list();
 	}
 }
