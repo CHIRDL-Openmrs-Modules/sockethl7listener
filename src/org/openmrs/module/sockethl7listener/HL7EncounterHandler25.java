@@ -246,4 +246,24 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		}
 		return null;	
 	}
+	
+	/**
+	 * DWE CHICA-751
+	 * Get location description from PV1-3.9
+	 * Note: Mirth is being used to copy the original value received
+	 * in PV1-3.1 to the location description field (PV1-3.9)
+	 */
+	public String getLocationDescription(Message message)
+	{
+		PV1 pv1 = getPV1(message);
+		try
+		{
+			return pv1.getAssignedPatientLocation().getLocationDescription().getValue();
+		} 
+		catch (RuntimeException e)
+		{
+			logger.error("Unable to parse original location from PV1-3.9", e);
+		}
+		return null;	
+	}
 }
