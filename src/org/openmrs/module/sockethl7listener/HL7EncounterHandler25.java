@@ -16,7 +16,6 @@ import ca.uhn.hl7v2.model.v25.datatype.CX;
 import ca.uhn.hl7v2.model.v25.datatype.HD;
 import ca.uhn.hl7v2.model.v25.datatype.IS;
 import ca.uhn.hl7v2.model.v25.datatype.PL;
-import ca.uhn.hl7v2.model.v25.datatype.ST;
 import ca.uhn.hl7v2.model.v25.datatype.TS;
 import ca.uhn.hl7v2.model.v25.datatype.XCN;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
