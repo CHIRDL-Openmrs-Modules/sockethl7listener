@@ -98,6 +98,8 @@ public class PatientHandler
 		// Patient account number
 		setAccountNumber(message, hl7Patient, encounterDate, hl7PatientHandler);
 		
+		setEthnicity(message, hl7Patient, encounterDate, hl7PatientHandler); // DWE CHICA-706
+		
 		return hl7Patient;
 	}
 
@@ -287,5 +289,18 @@ public class PatientHandler
 			Date encounterDate, HL7PatientHandler hl7PatientHandler)
 	{
 		// Intentionally left empty
+	}
+	
+	/**
+	 * DWE CHICA-706
+	 * @param message
+	 * @param hl7Patient
+	 * @param encounterDate
+	 * @param hl7PatientHandler
+	 */
+	protected void setEthnicity(Message message, Patient hl7Patient,
+			Date encounterDate, HL7PatientHandler hl7PatientHandler)
+	{
+		// Intentionally left empty so the mrfdump doesn't set ethnicity
 	}
 }

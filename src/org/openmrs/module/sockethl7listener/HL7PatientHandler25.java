@@ -17,6 +17,8 @@ import org.openmrs.PersonAddress;
 import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
@@ -549,12 +551,9 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 				PatientIdentifierType pit = new PatientIdentifierType();
 				PatientIdentifier pi = new PatientIdentifier();
-				String stIdent = getMRN(ident);
+				String stIdent = "";
 				String assignAuth = "";
-				
 
-				if (stIdent != null)
-				{
 					assignAuth = ident.getAssigningAuthority().getNamespaceID()
 							.getValue();
 
@@ -564,6 +563,20 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 						pit = patientService
 								.getPatientIdentifierTypeByName(MRN_PREFIX + GENERIC_ASSIGNING_AUTHORITY);
 					}
+					
+					// DWE CHICA-771 Store MRN with leading zeros as MRN_EHR identifier
+					if(pit.getName().equals(ChirdlUtilConstants.IDENTIFIER_TYPE_MRN_EHR))
+					{
+						stIdent = getIDNumberValue(ident);
+					}
+					else
+					{
+						// Existing functionality always removes leading zeros and adds "-" before the check digit
+						stIdent = getMRN(ident);
+					}
+					
+				if(stIdent != null && stIdent.length() > 0)
+				{
 					pi.setIdentifierType(pit);
 					pi.setIdentifier(stIdent);
 					pi.setPreferred(preferred);
@@ -573,7 +586,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 				} else
 				{
-					logger.error("No MRN in PID segement. ");
+					logger.error("No MRN in PID segement for identifier type: " + pit.getName());
 				}
 
 			}
@@ -627,5 +640,57 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * DWE CHICA-702
+	 * 
+	 * HL7 Version 2.5 Parse ethnicity code from PID-22
+	 * 
+	 * @param message
+	 * @return ethnicity code
+	 */
+	public String getEthnicity(Message message)
+	{
+		CE[] ceEthnicGroup = null;
+		PID pid = getPID(message);
+		try
+		{
+			ceEthnicGroup = pid.getEthnicGroup();
+		} 
+		catch (RuntimeException e)
+		{
+			logger.warn("Unable to parse ethnic group from PID. Message: " + e.getMessage());
+		}
+
+		if (ceEthnicGroup != null)
+		{
+			try
+			{
+				return ceEthnicGroup[0].getIdentifier().toString();
+			} 
+			catch (RuntimeException e1)
+			{
+				logger.debug("Warning: Ethnic group not available in PID segment.");
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * DWE CHICA-771 
+	 * Get the string value of the identifier
+	 * @param ident
+	 * @return
+	 */
+	public String getIDNumberValue(CX ident)
+	{
+		String identifier = null;
+		ST id = ident.getIDNumber();
+		if (id != null)
+		{
+			identifier = id.getValue();
+		}
+		return identifier;
 	}
 }

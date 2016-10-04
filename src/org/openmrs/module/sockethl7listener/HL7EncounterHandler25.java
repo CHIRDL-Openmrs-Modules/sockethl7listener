@@ -12,6 +12,7 @@ import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
+import ca.uhn.hl7v2.model.v25.datatype.CX;
 import ca.uhn.hl7v2.model.v25.datatype.HD;
 import ca.uhn.hl7v2.model.v25.datatype.IS;
 import ca.uhn.hl7v2.model.v25.datatype.PL;
@@ -212,5 +213,57 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 	protected Date TranslateDate(TS ts)
 	{
 		return HL7ObsHandler25.TranslateDate(ts);
+	}
+	
+	/**
+	 * DWE CHICA-633 
+	 * Get visit number from PV1-19
+	 */
+	@Override
+	public String getVisitNumber(Message message)
+	{
+		CX visitNumber = null;
+		PV1 pv1 = getPV1(message);
+		try
+		{
+			visitNumber = pv1.getVisitNumber();
+		} 
+		catch (RuntimeException e)
+		{
+			logger.error("Unable to parse visit number from PV1-19.", e);
+		}
+
+		if (visitNumber != null)
+		{
+			try
+			{
+				return visitNumber.getIDNumber().toString();
+			} 
+			catch (RuntimeException e1)
+			{
+				logger.error("Visit number not available in PV1-19 segment.", e1);
+			}
+		}
+		return null;	
+	}
+	
+	/**
+	 * DWE CHICA-751
+	 * Get location description from PV1-3.9
+	 * Note: Mirth is being used to copy the original value received
+	 * in PV1-3.1 to the location description field (PV1-3.9)
+	 */
+	public String getLocationDescription(Message message)
+	{
+		PV1 pv1 = getPV1(message);
+		try
+		{
+			return pv1.getAssignedPatientLocation().getLocationDescription().getValue();
+		} 
+		catch (RuntimeException e)
+		{
+			logger.error("Unable to parse original location from PV1-3.9", e);
+		}
+		return null;	
 	}
 }

@@ -20,6 +20,7 @@ import java.util.Locale;
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
+import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
 import org.openmrs.EncounterType;
 import org.openmrs.Location;
@@ -306,7 +307,7 @@ public class HL7SocketHandler implements Application {
 			
 		// trigger rules for NBS module and ATD module
 		SocketHL7ListenerService socketHL7ListenerService = Context.getService(SocketHL7ListenerService.class);
-		socketHL7ListenerService.messageProcessed(encounter);
+		socketHL7ListenerService.messageProcessed(encounter, parameters);
 		
 		return encounter;
 	}
@@ -324,6 +325,8 @@ public class HL7SocketHandler implements Application {
 		//new
 		ZLR zlr = new ZLR(message);
 		MSH msh = HL7ObsHandler25.getMSH(message);
+		parameters.put("sendingApplication", msh.getSendingApplication().getNamespaceID().getValue());
+		parameters.put("sendingFacility", msh.getSendingFacility().getNamespaceID().getValue());
 		
 		// Obtain message control id (unique ID for message from sending
 		// application)
@@ -675,7 +678,12 @@ public class HL7SocketHandler implements Application {
 			}
 		}else
 		{
-			concept = new Concept();
+			// DWE CHICA-635
+			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
+				concept = new ConceptNumeric();
+			}else{
+				concept = new Concept();
+			}
 			concept.setConceptId(conceptId);
 			ConceptName name = new ConceptName();
 			name.setName(conceptName);
@@ -1059,6 +1067,16 @@ public class HL7SocketHandler implements Application {
 			double dVal = hl7ObsHandler
 					.getNumericResult(message, orderRep, obxRep);
 			obs.setValueNumeric(dVal);
+			
+			// DWE CHICA-635 Get the units from OBX-6 
+			// and set it in the concept for this obs
+			Concept concept = obs.getConcept();
+			if(concept instanceof ConceptNumeric){
+				String units = hl7ObsHandler.getUnits(message, orderRep, obxRep);
+				((ConceptNumeric) concept).setUnits(units);
+				obs.setConcept(concept);
+			}
+			
 			return true;
 		} catch (APIException e)
 		{

@@ -120,7 +120,6 @@ public class Util
 	throws HL7Exception, IOException {
 		
 		
-		
 		// get MSH data from incoming message ...
 		String fieldSep = Terser.get(inboundHeader, 1, 0, 1, 1);
 		String encChars = Terser.get(inboundHeader, 2, 0, 1, 1);

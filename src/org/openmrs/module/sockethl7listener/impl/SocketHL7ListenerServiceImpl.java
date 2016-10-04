@@ -2,6 +2,7 @@ package org.openmrs.module.sockethl7listener.impl;
 
 import java.security.DigestException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -177,7 +178,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 		return duplicate;
 	}
 	
-	public void messageProcessed(Encounter encounter) {
+	public void messageProcessed(Encounter encounter, HashMap<String, Object> parameters) {
 		// nothing is done here.  Modules override/hook on this method
 	}
 	
@@ -185,4 +186,13 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 		return getSocketHL7ListenerDAO().getPatientMessageByEncounter(encounterId);
 	}
 
+	/**
+	 * DWE CHICA-636
+	 * @see org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService#getPendingHL7OutboundByHostAndPort(String, Integer)
+	 */
+	@Override
+	public List<HL7Outbound> getPendingHL7OutboundByHostAndPort(String host, Integer port) throws HibernateException
+	{
+		return getSocketHL7ListenerDAO().getPendingHL7OutboundByHostAndPort(host, port);
+	}
 }
