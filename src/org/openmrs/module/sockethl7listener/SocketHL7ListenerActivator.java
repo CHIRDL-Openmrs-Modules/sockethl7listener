@@ -2,12 +2,14 @@ package org.openmrs.module.sockethl7listener;
 
 import java.util.Iterator;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.GlobalProperty;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.BaseModuleActivator;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 
 /**
  * Purpose: Checks that module specific global properties have been set 
@@ -27,6 +29,9 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 		
 		//check that all the required global properties are set
 		checkGlobalProperties();
+		
+		// configure Hapi
+		configureHapi();
 	}
 
 	private void checkGlobalProperties()
@@ -61,6 +66,19 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 		{
 			this.log.error("Error checking global properties for hl7 listener module");
 
+		}
+	}
+	
+	/**
+	 * Sets up configuration for Hapi
+	 */
+	private void configureHapi() {
+		String charEncoding = Context.getAdministrationService().getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING);
+		if (StringUtils.isEmpty(charEncoding) || StringUtils.isWhitespace(charEncoding)) {
+			log.warn("Global property " + ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING + " is not set.  Hapi's default " +
+				"character encoding will be used.");
+		} else {
+			System.setProperty(ChirdlUtilConstants.HAPI_CHARSET_PROPERTY_KEY, charEncoding);
 		}
 	}
 	

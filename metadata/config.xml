@@ -53,6 +53,11 @@
         <defaultValue>true</defaultValue>
         <description>Ignore hl7 message if it is for the same encounter. </description>
     </globalProperty>   
+    <globalProperty>
+        <property>sockethl7listener.hapiCharacterEncoding</property>
+        <defaultValue>UTF-8</defaultValue>
+        <description>Sets the character encoding Hapi will use to parse HL7 messages</description>
+    </globalProperty>  
 	
 	
 	<!-- Internationalization -->
