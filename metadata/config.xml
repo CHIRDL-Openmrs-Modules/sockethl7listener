@@ -6,7 +6,7 @@
 	<!-- SocketHL7Listener Module Properties -->
 	<id>sockethl7listener</id>
 	<name>sockethl7listener</name>
-	<version>1.6.0</version>
+	<version>1.7.0</version>
 	<package>org.openmrs.module.@MODULE_ID@</package>
 	<author>Meena Sheley and Vibha Anand</author>
 	<description>
@@ -15,8 +15,8 @@
 
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
-		<require_module version="1.11.0">org.openmrs.module.chirdlutil</require_module>
-		<require_module version="2.5.0">org.openmrs.module.chirdlutilbackports</require_module>
+		<require_module version="1.12.0">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="2.6.0">org.openmrs.module.chirdlutilbackports</require_module>
 	</require_modules>
 	<extension>
 		<point>org.openmrs.admin.list</point>
@@ -53,6 +53,10 @@
         <defaultValue>true</defaultValue>
         <description>Ignore hl7 message if it is for the same encounter. </description>
     </globalProperty>   
+    <globalProperty>
+        <property>sockethl7listener.hapiCharacterEncoding</property>
+        <description>Sets the character encoding Hapi will use to parse HL7 messages.  If not set, Hapi's default encoding will be used.</description>
+    </globalProperty>  
 	
 	
 	<!-- Internationalization -->
