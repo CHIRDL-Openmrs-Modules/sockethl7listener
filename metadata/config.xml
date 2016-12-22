@@ -13,6 +13,7 @@
 			Accepts and processes hl7 messages
 	</description>
 
+	<require_version>1.12.*</require_version>
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
 		<require_module version="1.12.0">org.openmrs.module.chirdlutil</require_module>

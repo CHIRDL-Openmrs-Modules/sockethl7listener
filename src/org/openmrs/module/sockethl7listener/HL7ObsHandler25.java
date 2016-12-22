@@ -79,10 +79,10 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		{
 			obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
 					.getOBSERVATION(obRep).getOBX();
-		} catch (HL7Exception e)
+		} catch (Exception e)
 		{
 
-			logger.error("HL7Exception" ,e);
+			logger.error("Exception" ,e);
 		}
 
 		return obx;
@@ -103,9 +103,9 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		{
 			obx = adt.getOBX(obRep);
 		}
-		catch(HL7Exception e)
+		catch(Exception e)
 		{
-			logger.error("HL7Exception" ,e);
+			logger.error("Exception" ,e);
 		}
 		
 		return obx;
@@ -129,9 +129,9 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		{
 			obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
 					.getOBR();
-		} catch (HL7Exception e)
+		} catch (Exception e)
 		{
-			logger.error("HL7Exception" ,e);
+			logger.error("Exception" ,e);
 		}
 
 		return obr;

@@ -15,6 +15,7 @@ import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.PersonService;
+import org.openmrs.api.ProviderService;
 import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 
@@ -29,7 +30,7 @@ public class Provider {
 	private String firstName;
 	private String lastName;
 	private String id;
-	private Integer userid;
+	private Integer providerId;
 	private String poc;
 	private String pocFacility;
 	private String pocRoom;
@@ -71,12 +72,19 @@ public class Provider {
 	public void setLastName(String lastName) {
 		this.lastName = org.openmrs.module.chirdlutil.util.Util.toProperCase(lastName);
 	}
-	public Integer getUserId (){
-		return userid;
+	
+	/**
+	 * @return providerId
+	 */
+	public Integer getProviderId(){
+		return this.providerId;
 	}
 	
-	public void setUserId(Integer userid){
-		this.userid = userid;
+	/**
+	 * @param providerId the providerId to set
+	 */
+	public void setProviderId(Integer providerId){
+		this.providerId = providerId;
 	}
 	
 	/** Parses Provider information from PROVIDER_NAME observation in past
@@ -133,27 +141,24 @@ public class Provider {
 	}
 	
 	
-	/** CreateUserForProvider
+	/**
+	 * CHICA-221 Updated method to use the ProviderService
 	 * @param provider
 	 * @return
 	 */
-	public User createUserForProvider(Provider provider)  {
+	public org.openmrs.Provider createProvider(Provider provider)  {
 
-		User providerUser = new User();
-		List<Role> roles = new ArrayList <Role> ();
-		User savedProviderUser = null;
-		String password = null;
+		org.openmrs.Provider savedProvider = null;
 		boolean changed = false;
-		UserService us = Context.getUserService();
 		PersonService ps = Context.getPersonService();
-
+		
 		try {
 			
 			//set the username
 			String username = "";
 			String firstname = provider.getFirstName();
 			String lastname = provider.getLastName();
-			String userid = provider.getId();
+			String providerId = provider.getId();
 			String fn = "";
 			String ln = "";
 			
@@ -163,8 +168,8 @@ public class Provider {
 			if(lastname == null){
 				lastname = "";
 			}
-			if(userid == null){
-				userid = "";
+			if(providerId == null){
+				providerId = "";
 			}
 			if(firstname.contains(" ")){
 				fn = firstname.replace(" ", "_");
@@ -179,26 +184,50 @@ public class Provider {
 				ln = lastname;
 			}
 				
+			// TODO CHICA-221 Remove later
+//			username = fn + "." + ln + "." + userid;
+//			providerUser.setUsername(username);
+//
+//			//get existing provider or create password if no provider exists.
+//			List<User> providers = us.getUsers(username, roles, true);
+//			if (providers != null && providers.size()> 0){
+//				providerUser = providers.get(0);
+//				
+//			} else{
+//				UUID uuid = UUID.randomUUID();
+//				password = uuid.toString();
+//				providerUser.setPerson(new Person());
+//				changed = true;
+//			}
+//			
+//			Role r = us.getRole("Provider");
+//			roles.add(r);
+//			if(!providerUser.hasRole(r.getRole())){
+//				providerUser.addRole(r); 
+//				changed = true;
+//			}
 			
-			username = fn + "." + ln + "." + userid;
-			providerUser.setUsername(username);
+			// Determine if the provider already exists
+			ProviderService providerService = Context.getProviderService();
+			List<org.openmrs.Provider> providers = providerService.getAllProviders();
+			org.openmrs.Provider openmrsProvider = null;
 
-			//get existing provider or create password if no provider exists.
-			List<User> providers = us.getUsers(username, roles, true);
-			if (providers != null && providers.size()> 0){
-				providerUser = providers.get(0);
-				
-			} else{
-				UUID uuid = UUID.randomUUID();
-				password = uuid.toString();
-				providerUser.setPerson(new Person());
-				changed = true;
+			// Match provider on first and last name
+			// TODO CHICA-221 What about cases where the name may or may not contain spaces
+			// Some users in the EHR has multiple user names because of names that contain spaces
+			// TODO CHICA-221 Fix inconsistency between what is stored in the DB and what we are checking here using fn and ln variable. 
+			// Below stores the name using firstname and lastname variables, which would contain spaces instead of "_" as shown above
+			for(org.openmrs.Provider currProvider : providers){
+				Person person = currProvider.getPerson();
+				if(fn.toLowerCase().equals(person.getGivenName().toLowerCase()) && ln.toLowerCase().equals(person.getFamilyName().toLowerCase())){
+					openmrsProvider = currProvider;
+					break;
+				}
 			}
-			
-			Role r = us.getRole("Provider");
-			roles.add(r);
-			if(!providerUser.hasRole(r.getRole())){
-				providerUser.addRole(r); 
+
+			if(openmrsProvider == null){
+				openmrsProvider = new org.openmrs.Provider();
+				openmrsProvider.setPerson(new Person());
 				changed = true;
 			}
 
@@ -207,15 +236,15 @@ public class Provider {
 
 				PersonName providerName = new PersonName(firstname, "", lastname);
 				providerName.isPreferred();
-				providerUser.addName(providerName);
-				providerUser.getPerson().setGender("U");
-				providerUser.setRetired(false);
+				openmrsProvider.getPerson().addName(providerName);
+				openmrsProvider.getPerson().setGender("U");
+				openmrsProvider.setRetired(false);
 
 				//Store the provider's id in the provider's person attribute.
 				PersonAttribute pattr = new PersonAttribute();
 				if (ps.getPersonAttributeTypeByName(PROVIDER_ID) != null&&
 						provider.id!=null&&provider.id.length()>0){
-					PersonAttribute attr = providerUser.getPerson().getAttribute(
+					PersonAttribute attr = openmrsProvider.getPerson().getAttribute(
 						ps.getPersonAttributeTypeByName(PROVIDER_ID));
 					//only update if this is truly a new attribute value
 					if (attr == null || !attr.getValue().equals(provider.id)) {
@@ -223,100 +252,101 @@ public class Provider {
 						pattr.setValue(provider.id);
 						pattr.setCreator(Context.getAuthenticatedUser());
 						pattr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(pattr);
+						openmrsProvider.getPerson().addAttribute(pattr);
 						changed = true;
 					}
 				}
 
-
-				PersonAttribute posFacAttr = new PersonAttribute();
-				if (pocFacility != null && ps.getPersonAttributeTypeByName("POC_FACILITY") != null){
-					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(pocFacility)) {
-						posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
-						posFacAttr.setValue(pocFacility);
-						posFacAttr.setCreator(Context.getAuthenticatedUser());
-						posFacAttr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(posFacAttr);
-						changed = true;
-					}
-				}
-
-				PersonAttribute posBedAttr = new PersonAttribute();
-				if (pocBed != null && ps.getPersonAttributeTypeByName("POC_BED") != null){
-					PersonAttribute attr = providerUser.getPerson().getAttribute(
-						ps.getPersonAttributeTypeByName("POC_BED"));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(pocBed)) {
-						posBedAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_BED"));
-						posBedAttr.setValue(pocBed);
-						posBedAttr.setCreator(Context.getAuthenticatedUser());
-						posBedAttr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(posBedAttr);
-						changed = true;
-					}
-				}
-
-				PersonAttribute posAttr = new PersonAttribute();
-				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null) {
-					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC"));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(poc)) {
-						posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
-						posAttr.setValue(poc);
-						posAttr.setCreator(Context.getAuthenticatedUser());
-						posAttr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(posAttr);
-						changed = true;
-					}
-				}
-
-				PersonAttribute posRoomAttr = new PersonAttribute();
-				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null) {
-					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(pocRoom)) {
-						posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
-						posRoomAttr.setValue(pocRoom);
-						posRoomAttr.setCreator(Context.getAuthenticatedUser());
-						posRoomAttr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(posRoomAttr);
-						changed = true;
-					}
-				}
-
-
-				PersonAttribute adminSourceAttr = new PersonAttribute();
-				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null) {
-					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(admitSource)) {
-						adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
-						adminSourceAttr.setValue(admitSource);
-						adminSourceAttr.setCreator(Context.getAuthenticatedUser());
-						adminSourceAttr.setDateCreated(new Date());
-						providerUser.getPerson().addAttribute(adminSourceAttr);
-						changed = true;
-					}
-				}
+				// TODO CHICA-221 Are these attributes needed?
+//				PersonAttribute posFacAttr = new PersonAttribute();
+//				if (pocFacility != null && ps.getPersonAttributeTypeByName("POC_FACILITY") != null){
+//					PersonAttribute attr = openmrsProvider.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_FACILITY"));
+//					//only update if this is truly a new attribute value
+//					if (attr == null || !attr.getValue().equals(pocFacility)) {
+//						posFacAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_FACILITY"));
+//						posFacAttr.setValue(pocFacility);
+//						posFacAttr.setCreator(Context.getAuthenticatedUser());
+//						posFacAttr.setDateCreated(new Date());
+//						openmrsProvider.getPerson().addAttribute(posFacAttr);
+//						changed = true;
+//					}
+//				}
+//
+//				PersonAttribute posBedAttr = new PersonAttribute();
+//				if (pocBed != null && ps.getPersonAttributeTypeByName("POC_BED") != null){
+//					PersonAttribute attr = providerUser.getPerson().getAttribute(
+//						ps.getPersonAttributeTypeByName("POC_BED"));
+//					//only update if this is truly a new attribute value
+//					if (attr == null || !attr.getValue().equals(pocBed)) {
+//						posBedAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_BED"));
+//						posBedAttr.setValue(pocBed);
+//						posBedAttr.setCreator(Context.getAuthenticatedUser());
+//						posBedAttr.setDateCreated(new Date());
+//						providerUser.getPerson().addAttribute(posBedAttr);
+//						changed = true;
+//					}
+//				}
+//
+//				PersonAttribute posAttr = new PersonAttribute();
+//				if (poc != null && ps.getPersonAttributeTypeByName("POC") != null) {
+//					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC"));
+//					//only update if this is truly a new attribute value
+//					if (attr == null || !attr.getValue().equals(poc)) {
+//						posAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC"));
+//						posAttr.setValue(poc);
+//						posAttr.setCreator(Context.getAuthenticatedUser());
+//						posAttr.setDateCreated(new Date());
+//						providerUser.getPerson().addAttribute(posAttr);
+//						changed = true;
+//					}
+//				}
+//
+//				PersonAttribute posRoomAttr = new PersonAttribute();
+//				if (pocRoom != null && ps.getPersonAttributeTypeByName("POC_ROOM") != null) {
+//					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("POC_ROOM"));
+//					//only update if this is truly a new attribute value
+//					if (attr == null || !attr.getValue().equals(pocRoom)) {
+//						posRoomAttr.setAttributeType(ps.getPersonAttributeTypeByName("POC_ROOM"));
+//						posRoomAttr.setValue(pocRoom);
+//						posRoomAttr.setCreator(Context.getAuthenticatedUser());
+//						posRoomAttr.setDateCreated(new Date());
+//						providerUser.getPerson().addAttribute(posRoomAttr);
+//						changed = true;
+//					}
+//				}
+//
+//
+//				PersonAttribute adminSourceAttr = new PersonAttribute();
+//				if (admitSource != null && ps.getPersonAttributeTypeByName("ADMIT_SOURCE") != null) {
+//					PersonAttribute attr = providerUser.getPerson().getAttribute(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
+//					//only update if this is truly a new attribute value
+//					if (attr == null || !attr.getValue().equals(admitSource)) {
+//						adminSourceAttr.setAttributeType(ps.getPersonAttributeTypeByName("ADMIT_SOURCE"));
+//						adminSourceAttr.setValue(admitSource);
+//						adminSourceAttr.setCreator(Context.getAuthenticatedUser());
+//						adminSourceAttr.setDateCreated(new Date());
+//						providerUser.getPerson().addAttribute(adminSourceAttr);
+//						changed = true;
+//					}
+//				}
 
 				if(changed){
-					if (password != null) {
-						// Password has to be a mix of upper and lower case.
-						int passLength = password.length();
-						String firstPass = password.substring(0, passLength/2);
-						String secondPass = password.substring(passLength/2, passLength);
-						password = firstPass.toUpperCase() + secondPass;
-					}
-					savedProviderUser = us.saveUser(providerUser, password);
+					// TODO CHICA-221 Remove if this is no longer needed
+//					if (password != null) {
+//						// Password has to be a mix of upper and lower case.
+//						int passLength = password.length();
+//						String firstPass = password.substring(0, passLength/2);
+//						String secondPass = password.substring(passLength/2, passLength);
+//						password = firstPass.toUpperCase() + secondPass;
+//					}
+					savedProvider = providerService.saveProvider(openmrsProvider);
 				}else{
-					provider.setUserId(providerUser.getUserId());
-					return providerUser;
+					provider.setId(openmrsProvider.getId().toString());
+					return openmrsProvider;
 				}
 
-				if (savedProviderUser != null  && savedProviderUser.getUserId() != null) {
-					provider.userid = savedProviderUser.getUserId();
+				if (savedProvider != null  && savedProvider.getId() != null) {
+					provider.providerId = savedProvider.getId();
 				}
 			}
 
@@ -326,34 +356,46 @@ public class Provider {
 
 
 
-		return savedProviderUser;
+		return savedProvider;
 	}
 
-	public User getUserForProvider(Provider provider) throws APIException {
+	/**
+	 * CHICA-221 Updated method to use the ProviderService and return org.openmrs.Provider
+	 * @param provider
+	 * @return
+	 * @throws APIException
+	 */
+	public org.openmrs.Provider getProvider(Provider provider) throws APIException {
 	   
-		UserService us = Context.getUserService();
-        Integer userid = provider.getUserId();
-        User providerUser = null;
-		if (userid != null) 
-			providerUser = us.getUser(userid);
-		if (userid == null || providerUser == null){
-			providerUser = createUserForProvider(provider);
+		ProviderService providerService = Context.getProviderService();
+        Integer providerId = provider.getProviderId();
+        org.openmrs.Provider openmrsProvider = null;
+		if (providerId != null) {
+			openmrsProvider = providerService.getProvider(providerId);
+		}
+		if (providerId == null || openmrsProvider == null){
+			openmrsProvider = createProvider(provider);
         }
 
-		return providerUser;
+		return openmrsProvider;
 	}
 	
 	
 
-
-	public void setProviderfromUser(User provUser)  {
+	/**
+	 * CHICA-221 Updated method to use ProviderService and org.openmrs.Provider
+	 * @param openmrsProvider
+	 */
+	public void setProvider(org.openmrs.Provider openmrsProvider)  {
 	
-		if (provUser == null){
-			provUser = createUserForProvider(this);
+		if (openmrsProvider == null){
+			openmrsProvider = createProvider(this);
 		}	
-	    setFirstName(provUser.getGivenName());
-	    setLastName(provUser.getFamilyName());
-	    PersonAttribute providerId = provUser.getPerson().getAttribute(PROVIDER_ID);
+		
+		Person person = openmrsProvider.getPerson();
+	    setFirstName(person.getGivenName());
+	    setLastName(person.getFamilyName());
+	    PersonAttribute providerId = openmrsProvider.getPerson().getAttribute(PROVIDER_ID);
 	    if (providerId == null) {
 	    	setId("");
 	    }
@@ -435,20 +477,21 @@ public class Provider {
 		this.admitSource = admitSource;
 	}
 	
-	public User initializeProvider(User existingProv){
-		User provider = new User();
-		if (existingProv != null){
-			provider.setUserId(existingProv.getUserId());
-			provider.getPerson().setAttributes(existingProv.getPerson().getAttributes());
-			provider.setDateRetired(existingProv.getDateRetired());
-			provider.setRetired(false);
-			provider.setCreator(existingProv.getCreator());
-			provider.setDateCreated(existingProv.getDateCreated());
-			provider.getPerson().setNames(existingProv.getPerson().getNames());
-			provider.getPerson().setGender(existingProv.getPerson().getGender());
-			provider.setId(existingProv.getId());
-		}
-		return provider;
-	}
+	// TODO CHICA-221 Remove later. This method doesn't appear to be used
+//	public User initializeProvider(User existingProv){
+//		User provider = new User();
+//		if (existingProv != null){
+//			provider.setUserId(existingProv.getUserId());
+//			provider.getPerson().setAttributes(existingProv.getPerson().getAttributes());
+//			provider.setDateRetired(existingProv.getDateRetired());
+//			provider.setRetired(false);
+//			provider.setCreator(existingProv.getCreator());
+//			provider.setDateCreated(existingProv.getDateCreated());
+//			provider.getPerson().setNames(existingProv.getPerson().getNames());
+//			provider.getPerson().setGender(existingProv.getPerson().getGender());
+//			provider.setId(existingProv.getId());
+//		}
+//		return provider;
+//	}
 
 }

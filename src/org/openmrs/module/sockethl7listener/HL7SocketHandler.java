@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +30,6 @@ import org.openmrs.Patient;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
-import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
@@ -38,7 +38,7 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.UserService;
+import org.openmrs.api.ProviderService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
@@ -119,7 +119,7 @@ public class HL7SocketHandler implements Application {
 	 * @returns true
 	 */
 	public boolean canProcess(Message message) {
-		return message != null && "ORU_R01".equals(message.getName());
+		return true; // message != null && "ORU_R01".equals(message.getName()); // TODO CHICA-221 
 	}
 
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
@@ -274,7 +274,7 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
-		if (provider.createUserForProvider(provider) == null){
+		if (provider.createProvider(provider) == null){
 			logger.error("Could not create a user or find an existing user for provider: firstname=" 
 					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
 					+ provider.getId()  );
@@ -433,6 +433,8 @@ public class HL7SocketHandler implements Application {
 	 * Create encounter from patient, provider,location, datetime. Create
 	 * observation containing provider information.
 	 * 
+	 * CHICA-221 Updated method to use org.openmrs.Provider
+	 * 
 	 * @param pid
 	 * @param pv1
 	 * @param obr
@@ -451,8 +453,8 @@ public class HL7SocketHandler implements Application {
 
 			if (resultPatient != null)
 			{
-				User providerUser = provider.getUserForProvider(provider);
-				newEncounter.setProvider(providerUser);
+				org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+				newEncounter.setProvider(openmrsProvider.getPerson());
 				newEncounter.setPatient(resultPatient);
 				newEncounter.setPatientId(resultPatient.getPatientId());
 				es.saveEncounter(newEncounter);
@@ -500,7 +502,7 @@ public class HL7SocketHandler implements Application {
 			obsForUserId.setObsDatetime(encDate);
 			Concept providerIDConcept = cs.getConceptByName("PROVIDER_ID");
 			Concept providerNameConcept = cs.getConceptByName("PROVIDER_NAME");
-			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID");
+			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID"); // TODO CHICA-221 This will no longer be user_id from the user table it will be provider_id from the provider table
              
 			if (providerIDConcept != null) {
 				if (provider.getId() != null &&  !provider.getId().equals("")){
@@ -513,7 +515,7 @@ public class HL7SocketHandler implements Application {
 					
 					npiLogger.warn("No NPI found for provider: " + provider.getFirstName() + " " 
 							+ provider.getLastName() + "; Openmrs userid = " 
-							+ provider.getUserId() + "; Enc date: " + enc.getEncounterDatetime() + ";");
+							+ provider.getProviderId() + "; Enc date: " + enc.getEncounterDatetime() + ";");
 				}
 
 			} else {
@@ -522,11 +524,14 @@ public class HL7SocketHandler implements Application {
 
 			if (providerNameConcept != null) {
 				obsForName.setConcept(providerNameConcept);
-				UserService userService = Context.getUserService();
-				List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-				User prov = null;
+				ProviderService providerService = Context.getProviderService();
+				Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true);
+				org.openmrs.Provider prov = null;
 				if(providers != null&& providers.size()>0){
-					prov = providers.get(0);
+					Iterator<org.openmrs.Provider> iter = providers.iterator();
+					if(iter.hasNext()){
+						prov = iter.next();
+					}
 				}
 				if (prov == null){
 					obsForName.setValueText("");
@@ -543,8 +548,8 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			if (providerUseridConcept != null){
-				obsForUserId.setConcept(providerUseridConcept);
-				obsForUserId.setValueNumeric( Double.valueOf(provider.getUserId()));
+				obsForUserId.setConcept(providerUseridConcept); // TODO CHICA-221 See above for comment related to this
+				obsForUserId.setValueNumeric( Double.valueOf(provider.getId()));
 				os.saveObs(obsForUserId,null);
 				obsForUserId.setEncounter(enc);
 				enc.addObs(obsForUserId);
@@ -693,14 +698,6 @@ public class HL7SocketHandler implements Application {
 		
 		obs.setConcept(concept);
 
-		// set date started
-		Date sdt = hl7ObsHandler.getDateStarted(message);
-		obs.setDateStarted(sdt);
-
-		//set date stopped (null if not present)
-		Date edt = hl7ObsHandler.getDateStopped(message);
-		obs.setDateStopped(edt);
-
 		// Meeting on 3/20/07 - only one set of data in field 5. There will be
 		// no "~"
 		// Varies value = values[0];
@@ -838,6 +835,16 @@ public class HL7SocketHandler implements Application {
 		return loc;
 	}
 	
+	/**
+	 * CHICA-221 Updated method to use ProviderService and org.openmrs.Provider
+	 * @param incomingMessageString
+	 * @param p
+	 * @param encDate
+	 * @param newEncounter
+	 * @param provider
+	 * @param parameters
+	 * @return
+	 */
 	protected Encounter processEncounter(String incomingMessageString, Patient p, 
 			Date encDate, Encounter newEncounter , Provider provider,
 			HashMap<String,Object> parameters){
@@ -898,15 +905,18 @@ public class HL7SocketHandler implements Application {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
-					User providerUser = provider.getUserForProvider(provider);
-					UserService userService = Context.getUserService();
-					List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-					User encounterProvider = null;
+					org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+					ProviderService providerService = Context.getProviderService();
+					Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider() is deprecated
+					org.openmrs.Provider encounterProvider = null;
 					if(providers != null&& providers.size()>0){
-						encounterProvider = providers.get(0);
+						Iterator<org.openmrs.Provider> iter = providers.iterator();
+						if(iter.hasNext()){
+							encounterProvider = iter.next();
+						}
 					}
-					if ( ! providerUser.equals( encounterProvider.getUserId())){
-						enc.setProvider(provider.getUserForProvider(provider));
+					if ( ! openmrsProvider.equals( openmrsProvider.getId())){
+						enc.setProvider(openmrsProvider.getPerson());
 						es.saveEncounter(enc);
 					}
 				}else {
@@ -1173,10 +1183,8 @@ public class HL7SocketHandler implements Application {
 					nte = true;
 			}
 			
-		} catch (HL7Exception e) {
-			logger.error("HL7Exception while extracting NTE segment from hl7",e);
-		} catch (Exception e){
-			logger.error("",e);
+		} catch (Exception e) {
+			logger.error("Exception while extracting NTE segment from hl7",e);
 		}
 		return nte;
 		

@@ -57,10 +57,19 @@
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate325-mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/logic-0.5.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/openmrs-api-1.7.3.0-dev.jar"/>
-	<classpathentry kind="lib" path="lib-common/tests-openmrs-api-1.7.2.19959-dev.jar"/>
-	<classpathentry kind="lib" path="lib-common/web-openmrs-api-1.7.2.19959-dev.jar"/>
 	<classpathentry kind="lib" path="lib-common/chirdlutil-1.12.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/chirdlutilbackports-2.6.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT-tests.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-tests.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-tools-1.12.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib-common/openmrs-web-1.12.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-base-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v22-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v23-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v24-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v25-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v26-2.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/hl7api/hapi-structures-v231-2.0.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>

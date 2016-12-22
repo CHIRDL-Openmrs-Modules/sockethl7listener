@@ -91,10 +91,6 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			
 			return provider;
 
-		} catch (HL7Exception e2)
-		{
-			hl7Logger.error("Unable to collect provider id from PV1 segment",
-					e2);
 		} catch (RuntimeException e){
 			logger.error("Error setting provider object",e) ;
 		}
@@ -109,7 +105,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		try
 		{
 			doctor = pv1.getAttendingDoctor(0);
-		} catch (HL7Exception e)
+		} catch (Exception e)
 		{
 			logger.warn("Unable to parse doctor name from PV1. Message: "
 					+ e.getMessage());
