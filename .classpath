@@ -54,7 +54,10 @@
 	<classpathentry kind="lib" path="lib-common/xerces/xml-apis.jar"/>
 	<classpathentry kind="lib" path="lib/commons-cli-1.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/junit/junit-4.4.jar"/>
-	<classpathentry kind="lib" path="lib-common/hibernate/hibernate325-mod.jar"/>
+	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-c3p0-3.6.5.Final.jar"/>
+	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-core-3.6.5.Final-mod.jar"/>
+	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-ehcache-3.6.5.Final.jar"/>
+	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-search-3.4.2.Final.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/logic-0.5.0.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/chirdlutil-1.12.0.jar"/>
