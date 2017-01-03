@@ -82,7 +82,6 @@ public class SimpleServer extends ca.uhn.hl7v2.app.SimpleServer {
         //this.port = port;
         this.patientHandler = patientHandler;
         this.socketHandler = socketHandler;
-
     }
     
 //    public SimpleServer(int port, LowerLayerProtocol llp, Parser parser,
@@ -214,12 +213,12 @@ public class SimpleServer extends ca.uhn.hl7v2.app.SimpleServer {
 //
 //    }
     
-    public static BufferedWriter getBufferedWriter() throws IOException {
-		if (bw == null){
-			bw = new BufferedWriter(new FileWriter("hl7Out" + ".txt",true));
-		}
-		return bw;
-	}
+//    public static BufferedWriter getBufferedWriter() throws IOException {
+//		if (bw == null){
+//			bw = new BufferedWriter(new FileWriter("hl7Out" + ".txt",true));
+//		}
+//		return bw;
+//	}
 
 	/* (non-Javadoc)
 	 * @see ca.uhn.hl7v2.app.HL7Service#newConnection(ca.uhn.hl7v2.app.Connection)
