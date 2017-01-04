@@ -4,10 +4,12 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib-common/antlr/antlr_2.7.6.jar"/>
-	<classpathentry kind="lib" path="lib-common/asm/asm.jar"/>
-	<classpathentry kind="lib" path="lib-common/asm/asm-attrs.jar"/>
+	<classpathentry kind="lib" path="lib-common/antlr/antlr-runtime-3.4.jar"/>
+	<classpathentry kind="lib" path="lib-common/asm/asm-2.2.3.jar"/>
+	<classpathentry kind="lib" path="lib-common/asm/asm-commons-2.2.3.jar"/>
+	<classpathentry kind="lib" path="lib-common/asm/asm-util-2.2.3.jar"/>
 	<classpathentry kind="lib" path="lib-common/c3p0/c3p0-0.9.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/cglib/cglib-2.1_3.jar"/>
+	<classpathentry kind="lib" path="lib-common/cglib/cglib-2.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/common-lib/simple-xml-1.6.1-mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/commons-beanutils/commons-beanutils-1.7.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/commons-beanutils/commons-beanutils-bean-collections-1.7.0.jar"/>
@@ -20,7 +22,6 @@
 	<classpathentry kind="lib" path="lib-common/dom4j/dom4j-1.6.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/dwr/dwr-1.1.3mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/ehcache/ehcache-1.2.4.jar"/>
-	<classpathentry kind="lib" path="lib-common/hl7api/hapi-0.5.1.jar" sourcepath="/hapi-0.5.1_source_core"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-log4j/log4j-1.2.13.jar"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-taglibs/taglibs-page-1.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/jakarta-taglibs/taglibs-request-1.1.jar"/>
@@ -42,10 +43,17 @@
 	<classpathentry kind="lib" path="lib-common/saxon/saxon8.jar"/>
 	<classpathentry kind="lib" path="lib-common/saxon/saxon8-dom.jar"/>
 	<classpathentry kind="lib" path="lib-common/simple/simple-xml-1.6-mod.jar"/>
-	<classpathentry kind="lib" path="lib-common/spring-framework/spring-2.5.1.jar" sourcepath="lib-common/spring-framework/spring-2.5.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/spring-framework/spring-mock.jar"/>
-	<classpathentry kind="lib" path="lib-common/spring-framework/spring-test.jar"/>
-	<classpathentry kind="lib" path="lib-common/spring-framework/spring-webmvc.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-aop-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-beans-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-context-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-core-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-jdbc-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-orm-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-oxm-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-test-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-tx-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-web-3.2.7.RELEASE.jar"/>
+	<classpathentry kind="lib" path="lib-common/spring-framework/spring-webmvc-3.2.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib-common/stax/stax-1.2.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/stax/stax-api-1.0.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/tomcat/servlet-api.jar"/>
