@@ -30,18 +30,18 @@
 	<classpathentry kind="lib" path="lib-common/jfreechart/jcommon-1.0.15.jar"/>
 	<classpathentry kind="lib" path="lib-common/jfreechart/jfreechart-1.0.12.jar"/>
 	<classpathentry kind="lib" path="lib-common/jstl/jstl-1.1.2.jar"/>
-	<classpathentry kind="lib" path="lib-common/jta/jta.jar"/>
-	<classpathentry kind="lib" path="lib-common/junit/dbunit-2.2.jar"/>
+	<classpathentry kind="lib" path="lib-common/jta/jta-1.1.jar"/>
+	<classpathentry kind="lib" path="lib-common/junit/dbunit-2.4.7.jar"/>
 	<classpathentry kind="lib" path="lib-common/junit/hsqldb.jar"/>
-	<classpathentry kind="lib" path="lib-common/mail/activation.jar"/>
-	<classpathentry kind="lib" path="lib-common/mail/mail.jar"/>
-	<classpathentry kind="lib" path="lib-common/mysql-connector-java/mysql-connector-java-3.1.10-bin.jar"/>
+	<classpathentry kind="lib" path="lib-common/mail/activation-1.1.jar"/>
+	<classpathentry kind="lib" path="lib-common/mail/mail-1.4.1.jar"/>
+	<classpathentry kind="lib" path="lib-common/mysql-connector-java/mysql-connector-java-5.1.28.jar"/>
 	<classpathentry kind="lib" path="lib-common/neal-reporting/Acme.jar"/>
 	<classpathentry kind="lib" path="lib-common/neal-reporting/itext-1.3.jar"/>
 	<classpathentry kind="lib" path="lib-common/neal-reporting/poi.jar"/>
 	<classpathentry kind="lib" path="lib-common/neal-reporting/reports.jar"/>
-	<classpathentry kind="lib" path="lib-common/saxon/saxon8.jar"/>
-	<classpathentry kind="lib" path="lib-common/saxon/saxon8-dom.jar"/>
+	<classpathentry kind="lib" path="lib-common/saxon/saxon-8.7.jar"/>
+	<classpathentry kind="lib" path="lib-common/saxon/saxon-dom-8.7.jar"/>
 	<classpathentry kind="lib" path="lib-common/simple/simple-xml-1.6-mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/spring-framework/spring-aop-3.2.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib-common/spring-framework/spring-beans-3.2.7.RELEASE.jar"/>
@@ -56,12 +56,13 @@
 	<classpathentry kind="lib" path="lib-common/spring-framework/spring-webmvc-3.2.7.RELEASE.jar"/>
 	<classpathentry kind="lib" path="lib-common/stax/stax-1.2.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/stax/stax-api-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/tomcat/servlet-api.jar"/>
-	<classpathentry kind="lib" path="lib-common/velocity/velocity-1.6-dev.jar"/>
-	<classpathentry kind="lib" path="lib-common/xerces/xercesImpl.jar"/>
-	<classpathentry kind="lib" path="lib-common/xerces/xml-apis.jar"/>
+	<classpathentry kind="lib" path="lib-common/tomcat/servlet-api-2.5.jar"/>
+	<classpathentry kind="lib" path="lib-common/velocity/velocity-1.6.2.jar"/>
+	<classpathentry kind="lib" path="lib-common/xerces/xercesImpl-2.8.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/xerces/xml-apis-1.3.03.jar"/>
+	<classpathentry kind="lib" path="lib-common/xerces/xml-resolver-1.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-cli-1.0.jar"/>
-	<classpathentry kind="lib" path="lib-common/junit/junit-4.4.jar"/>
+	<classpathentry kind="lib" path="lib-common/junit/junit-4.11.jar"/>
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-c3p0-3.6.5.Final.jar"/>
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-core-3.6.5.Final-mod.jar"/>
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-ehcache-3.6.5.Final.jar"/>
