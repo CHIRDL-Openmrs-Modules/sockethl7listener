@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.jfree.util.Log;
 import org.openmrs.Encounter;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
@@ -21,8 +20,6 @@ import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
 
-import ca.uhn.hl7v2.HL7Exception;
-import ca.uhn.hl7v2.model.DataTypeException;
 import ca.uhn.hl7v2.model.v231.datatype.NM;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
 import ca.uhn.hl7v2.model.v25.datatype.ED;
