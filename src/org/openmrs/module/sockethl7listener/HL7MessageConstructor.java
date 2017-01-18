@@ -2,10 +2,7 @@ package org.openmrs.module.sockethl7listener;
 
 import java.net.Socket;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -14,9 +11,7 @@ import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonAddress;
 import org.openmrs.PersonAttribute;
-import org.openmrs.User;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.ProviderService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
@@ -306,15 +301,15 @@ public class HL7MessageConstructor {
 			pv1.getAttendingDoctor(0).getGivenName().setValue("");
 
 			Provider prov = new Provider();
-			ProviderService providerService = Context.getProviderService();
-			Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider() is deprecated
-			org.openmrs.Provider openmrsProvider = null;
-			if(providers != null&& providers.size()>0){
-				Iterator<org.openmrs.Provider> iter = providers.iterator();
-				if(iter.hasNext()){
-					openmrsProvider = iter.next();
-				}
+			// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
+			org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
+			
+			if(openmrsProvider == null)
+			{
+				logger.error("Error while creating PV1 segment. Unable to locate provider for encounter: " + enc.getEncounterId());
+				return pv1;
 			}
+			
 			prov.setProvider(openmrsProvider);
 			String providerId = prov.getId();
 			// using npi
@@ -338,7 +333,8 @@ public class HL7MessageConstructor {
 					enc.getPatient().getPatientIdentifier().getIdentifier());
 
 			if (poc == null || poc.equals("")) {
-				PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
+				// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
+				PersonAttribute pocAttr = openmrsProvider.getPerson().getAttribute("POC");
 				if (pocAttr != null) {
 					poc = pocAttr.getValue();
 					if (poc != null && !poc.equals("")) {
@@ -355,7 +351,8 @@ public class HL7MessageConstructor {
 						.setValue(poc);
 			}
 
-			PersonAttribute facAttr = enc.getProvider().getAttribute(
+			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
+			PersonAttribute facAttr = openmrsProvider.getPerson().getAttribute(
 					"POC_FACILITY");
 			if (facAttr != null) {
 				String fac = facAttr.getValue();
@@ -363,18 +360,21 @@ public class HL7MessageConstructor {
 						.setValue(fac);
 			}
 
-			PersonAttribute roomAttr = enc.getProvider().getAttribute(
+			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
+			PersonAttribute roomAttr = openmrsProvider.getPerson().getAttribute(
 					"POC_ROOM");
 			if (roomAttr != null) {
 				String room = roomAttr.getValue();
 				pv1.getAssignedPatientLocation().getRoom().setValue(room);
 			}
-			PersonAttribute bedAttr = enc.getProvider().getAttribute("POC_BED");
+			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
+			PersonAttribute bedAttr = openmrsProvider.getPerson().getAttribute("POC_BED");
 			if (bedAttr != null) {
 				String bed = bedAttr.getValue();
 				pv1.getAssignedPatientLocation().getBed().setValue(bed);
 			}
-			PersonAttribute admitSource = enc.getProvider().getAttribute(
+			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
+			PersonAttribute admitSource = openmrsProvider.getPerson().getAttribute(
 					"ADMIT_SOURCE");
 			if (admitSource != null) {
 				pv1.getAdmitSource().setValue(admitSource.getValue());
@@ -474,15 +474,16 @@ public class HL7MessageConstructor {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
 			SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 			Provider prov = new Provider();
-			ProviderService providerService = Context.getProviderService();
-			Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider is deprecated
-			org.openmrs.Provider openmrsProvider = null;
-			if(providers != null&& providers.size()>0){
-				Iterator<org.openmrs.Provider> iter = providers.iterator();
-				if(iter.hasNext()){
-					openmrsProvider = iter.next();
-				}
+			
+			// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
+			org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
+			
+			if(openmrsProvider == null)
+			{
+				logger.error("Error while creating OBR segment. Unable to locate provider for encounter: " + enc.getEncounterId());
+				return obr;
 			}
+			
 			prov.setProvider(openmrsProvider);
 			String providerId = prov.getId();
 			// using npi

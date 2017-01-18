@@ -11,7 +11,6 @@ import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -23,6 +22,7 @@ import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
+import org.openmrs.EncounterRole;
 import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.Obs;
@@ -38,13 +38,13 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.ProviderService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
@@ -454,7 +454,9 @@ public class HL7SocketHandler implements Application {
 			if (resultPatient != null)
 			{
 				org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
-				newEncounter.setProvider(openmrsProvider.getPerson());
+				// CHICA-221 Use the new setProvider() method
+				EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
+				newEncounter.setProvider(encounterRole, openmrsProvider);
 				newEncounter.setPatient(resultPatient);
 				newEncounter.setPatientId(resultPatient.getPatientId());
 				es.saveEncounter(newEncounter);
@@ -524,19 +526,14 @@ public class HL7SocketHandler implements Application {
 
 			if (providerNameConcept != null) {
 				obsForName.setConcept(providerNameConcept);
-				ProviderService providerService = Context.getProviderService();
-				Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true);
-				org.openmrs.Provider prov = null;
-				if(providers != null&& providers.size()>0){
-					Iterator<org.openmrs.Provider> iter = providers.iterator();
-					if(iter.hasNext()){
-						prov = iter.next();
-					}
-				}
-				if (prov == null){
+				
+				// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
+				org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
+			
+				if (openmrsProvider == null){
 					obsForName.setValueText("");
 				} else {
-					obsForName.setValueText(provider.getFirstName() + " " + provider.getLastName());
+					obsForName.setValueText(openmrsProvider.getPerson().getGivenName() + " " + openmrsProvider.getPerson().getFamilyName());
 				}
 				os.saveObs(obsForName,null);
 				obsForName.setEncounter(enc);
@@ -905,20 +902,26 @@ public class HL7SocketHandler implements Application {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
-					org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
-					ProviderService providerService = Context.getProviderService();
-					Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider() is deprecated
-					org.openmrs.Provider encounterProvider = null;
-					if(providers != null&& providers.size()>0){
-						Iterator<org.openmrs.Provider> iter = providers.iterator();
-						if(iter.hasNext()){
-							encounterProvider = iter.next();
-						}
-					}
-					if ( ! openmrsProvider.equals( openmrsProvider.getId())){
-						enc.setProvider(openmrsProvider.getPerson());
-						es.saveEncounter(enc);
-					}
+					
+					// TODO CHICA-221 Review the logic in this section
+					// Is this section even needed. Take a look at createEncounter() method
+					//org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+					//ProviderService providerService = Context.getProviderService();
+					//Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider() is deprecated
+					//org.openmrs.Provider encounterProvider = null;
+					//if(providers != null&& providers.size()>0){
+						//Iterator<org.openmrs.Provider> iter = providers.iterator();
+						//if(iter.hasNext()){
+							//encounterProvider = iter.next();
+						//}
+					//}
+					//if ( ! openmrsProvider.equals( openmrsProvider.getId())){	
+						// enc.setProvider(openmrsProvider.getPerson()); // TODO CHICA-221 Remove old code
+						// CHICA-221 Use the new setProvider() method
+						//EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
+						//enc.setProvider(encounterRole, openmrsProvider);
+						//es.saveEncounter(enc);
+					//}
 				}else {
 					logger.warn("Encounter not created or provider is null ");
 				}

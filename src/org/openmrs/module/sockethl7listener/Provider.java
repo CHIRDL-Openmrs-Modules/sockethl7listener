@@ -1,22 +1,16 @@
 package org.openmrs.module.sockethl7listener;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
-import org.openmrs.Role;
-import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.ProviderService;
-import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 
 
@@ -29,8 +23,8 @@ public class Provider {
 
 	private String firstName;
 	private String lastName;
-	private String id;
-	private Integer providerId;
+	private String id; // NOTE: This is the id from the HL7 message
+	private Integer providerId; // NOTE: This is the value from the provider_id column in the provider table
 	private String poc;
 	private String pocFacility;
 	private String pocRoom;
@@ -60,9 +54,19 @@ public class Provider {
 		this.firstName = org.openmrs.module.chirdlutil.util.Util.toProperCase(firstName);
 		
 	}
+	
+	/**
+	 * // NOTE: This is the id from the HL7 message
+	 * @return
+	 */
 	public String getId() {
 		return id;
 	}
+	
+	/**
+	 * // NOTE: This is the id from the HL7 message
+	 * @param id to set
+	 */
 	public void setId(String id) {
 		this.id = id;
 	}
@@ -74,6 +78,7 @@ public class Provider {
 	}
 	
 	/**
+	 * // NOTE: This is the value from the provider_id column in the provider table
 	 * @return providerId
 	 */
 	public Integer getProviderId(){
@@ -81,6 +86,7 @@ public class Provider {
 	}
 	
 	/**
+	 * // NOTE: This is the value from the provider_id column in the provider table
 	 * @param providerId the providerId to set
 	 */
 	public void setProviderId(Integer providerId){
