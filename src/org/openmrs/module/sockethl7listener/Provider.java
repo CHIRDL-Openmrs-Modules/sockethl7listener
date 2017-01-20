@@ -347,7 +347,7 @@ public class Provider {
 //					}
 					savedProvider = providerService.saveProvider(openmrsProvider);
 				}else{
-					provider.setId(openmrsProvider.getId().toString());
+					provider.setProviderId(openmrsProvider.getId());
 					return openmrsProvider;
 				}
 
