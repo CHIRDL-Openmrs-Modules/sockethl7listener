@@ -332,54 +332,12 @@ public class HL7MessageConstructor {
 			pv1.getVisitNumber().getIDNumber().setValue(
 					enc.getPatient().getPatientIdentifier().getIdentifier());
 
-			if (poc == null || poc.equals("")) {
-				// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
-				PersonAttribute pocAttr = openmrsProvider.getPerson().getAttribute("POC");
-				if (pocAttr != null) {
-					poc = pocAttr.getValue();
-					if (poc != null && !poc.equals("")) {
-						pv1.getAssignedPatientLocation().getPointOfCare()
-								.setValue(poc);
-						pv1.getAssignedPatientLocation().getFacility()
-								.getNamespaceID().setValue(poc);
-					}
-				}
-			}
 			if (poc != null) {
 				pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
 				pv1.getAssignedPatientLocation().getFacility().getNamespaceID()
 						.setValue(poc);
 			}
-
-			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
-			PersonAttribute facAttr = openmrsProvider.getPerson().getAttribute(
-					"POC_FACILITY");
-			if (facAttr != null) {
-				String fac = facAttr.getValue();
-				pv1.getAssignedPatientLocation().getFacility().getUniversalID()
-						.setValue(fac);
-			}
-
-			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
-			PersonAttribute roomAttr = openmrsProvider.getPerson().getAttribute(
-					"POC_ROOM");
-			if (roomAttr != null) {
-				String room = roomAttr.getValue();
-				pv1.getAssignedPatientLocation().getRoom().setValue(room);
-			}
-			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
-			PersonAttribute bedAttr = openmrsProvider.getPerson().getAttribute("POC_BED");
-			if (bedAttr != null) {
-				String bed = bedAttr.getValue();
-				pv1.getAssignedPatientLocation().getBed().setValue(bed);
-			}
-			// TODO CHICA-221 This attribute is no longer created in Provider.createProvider() is it still needed?
-			PersonAttribute admitSource = openmrsProvider.getPerson().getAttribute(
-					"ADMIT_SOURCE");
-			if (admitSource != null) {
-				pv1.getAdmitSource().setValue(admitSource.getValue());
-			}
-
+			
 		} catch (Exception e) {
 			logger.error("Exception adding PV1 segment to hl7 "
 							+ enc.getEncounterId(), e);

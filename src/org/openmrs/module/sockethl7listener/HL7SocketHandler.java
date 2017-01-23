@@ -504,7 +504,7 @@ public class HL7SocketHandler implements Application {
 			obsForUserId.setObsDatetime(encDate);
 			Concept providerIDConcept = cs.getConceptByName("PROVIDER_ID");
 			Concept providerNameConcept = cs.getConceptByName("PROVIDER_NAME");
-			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID"); // TODO CHICA-221 This will no longer be user_id from the user table it will be provider_id from the provider table
+			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID"); // TODO CHICA-922 has been created to address this. This will no longer be user_id from the user table it will be provider_id from the provider table
              
 			if (providerIDConcept != null) {
 				if (provider.getId() != null &&  !provider.getId().equals("")){
@@ -545,7 +545,7 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			if (providerUseridConcept != null){
-				obsForUserId.setConcept(providerUseridConcept); // TODO CHICA-221 See above for comment related to this
+				obsForUserId.setConcept(providerUseridConcept); // TODO CHICA-922 has been created to address this. See above for comment related to this
 				obsForUserId.setValueNumeric( Double.valueOf(provider.getId()));
 				os.saveObs(obsForUserId,null);
 				obsForUserId.setEncounter(enc);
