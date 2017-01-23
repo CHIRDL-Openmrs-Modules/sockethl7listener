@@ -59,7 +59,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 					hl7ListService.getNPI(name.getGivenName(), name.getFamilyName());
 				}
 
-				provider.setId(id);
+				provider.setEhrProviderId(id);
 
 			}
 			

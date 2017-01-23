@@ -23,7 +23,7 @@ public class Provider {
 
 	private String firstName;
 	private String lastName;
-	private String id; // NOTE: This is the id from the HL7 message
+	private String ehrProviderId; // NOTE: This is the id from the HL7 message
 	private Integer providerId; // NOTE: This is the value from the provider_id column in the provider table
 	private String poc;
 	private String pocFacility;
@@ -38,14 +38,14 @@ public class Provider {
 	public Provider (){
 		firstName = "";
 		lastName = "";
-		id = "";
+		ehrProviderId = "";
 		
 	}
 	
 	public Provider (String observationName){
 		firstName = "";
 		lastName = "";
-		id = "";
+		ehrProviderId = "";
 	}
 	public String getFirstName() {
 		return firstName;
@@ -57,18 +57,18 @@ public class Provider {
 	
 	/**
 	 * // NOTE: This is the id from the HL7 message
-	 * @return
+	 * @return ehrProviderId
 	 */
-	public String getId() {
-		return id;
+	public String getEhrProviderId() {
+		return ehrProviderId;
 	}
 	
 	/**
 	 * // NOTE: This is the id from the HL7 message
-	 * @param id to set
+	 * @param ehrProviderId to set
 	 */
-	public void setId(String id) {
-		this.id = id;
+	public void setEhrProviderId(String ehrProviderId) {
+		this.ehrProviderId = ehrProviderId;
 	}
 	public String getLastName() {
 		return lastName;
@@ -161,7 +161,7 @@ public class Provider {
 		try {
 			String firstname = provider.getFirstName();
 			String lastname = provider.getLastName();
-			String providerId = provider.getId();
+			String providerId = provider.getEhrProviderId();
 			String fn = "";
 			String ln = "";
 			
@@ -224,13 +224,13 @@ public class Provider {
 				//Store the provider's id in the provider's person attribute.
 				PersonAttribute pattr = new PersonAttribute();
 				if (ps.getPersonAttributeTypeByName(PROVIDER_ID) != null&&
-						provider.id!=null&&provider.id.length()>0){
+						provider.ehrProviderId!=null&&provider.ehrProviderId.length()>0){
 					PersonAttribute attr = openmrsProvider.getPerson().getAttribute(
 						ps.getPersonAttributeTypeByName(PROVIDER_ID));
 					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(provider.id)) {
+					if (attr == null || !attr.getValue().equals(provider.ehrProviderId)) {
 						pattr.setAttributeType(ps.getPersonAttributeTypeByName(PROVIDER_ID));
-						pattr.setValue(provider.id);
+						pattr.setValue(provider.ehrProviderId);
 						pattr.setCreator(Context.getAuthenticatedUser());
 						pattr.setDateCreated(new Date());
 						openmrsProvider.getPerson().addAttribute(pattr);
@@ -297,10 +297,10 @@ public class Provider {
 	    setLastName(person.getFamilyName());
 	    PersonAttribute providerId = openmrsProvider.getPerson().getAttribute(PROVIDER_ID);
 	    if (providerId == null) {
-	    	setId("");
+	    	setEhrProviderId("");
 	    }
 	    else{
-	    	setId(providerId.getValue());
+	    	setEhrProviderId(providerId.getValue());
 	    }
 	
 	}

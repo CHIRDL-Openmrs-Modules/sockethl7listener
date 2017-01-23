@@ -275,9 +275,9 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
 		if (provider.createProvider(provider) == null){
-			logger.error("Could not create a user or find an existing user for provider: firstname=" 
+			logger.error("Could not create a provider or find an existing provider for: firstname=" 
 					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
-					+ provider.getId()  );
+					+ provider.getEhrProviderId()  );
 			return null;
 		}
 		 
@@ -359,12 +359,12 @@ public class HL7SocketHandler implements Application {
 				// using npi for provider id
 				if (provider != null){
 					
-					String id = provider.getId();
+					String id = provider.getEhrProviderId();
 					if (id == null || id.equals(""))
 					{
 						String npi = hl7ListService.getNPI(provider.getFirstName(),
 								provider.getLastName());
-						provider.setId(npi);
+						provider.setEhrProviderId(npi);
 					}
 					
 					Encounter newEncounter = new Encounter();
@@ -507,9 +507,9 @@ public class HL7SocketHandler implements Application {
 			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID"); // TODO CHICA-922 has been created to address this. This will no longer be user_id from the user table it will be provider_id from the provider table
              
 			if (providerIDConcept != null) {
-				if (provider.getId() != null &&  !provider.getId().equals("")){
+				if (provider.getEhrProviderId() != null &&  !provider.getEhrProviderId().equals("")){
 					obsForID.setConcept(providerIDConcept);
-					obsForID.setValueText(provider.getId());
+					obsForID.setValueText(provider.getEhrProviderId());
 					os.saveObs(obsForID,null);
 					enc.addObs(obsForID);
 					
@@ -546,7 +546,7 @@ public class HL7SocketHandler implements Application {
 			
 			if (providerUseridConcept != null){
 				obsForUserId.setConcept(providerUseridConcept); // TODO CHICA-922 has been created to address this. See above for comment related to this
-				obsForUserId.setValueNumeric( Double.valueOf(provider.getId()));
+				obsForUserId.setValueNumeric( Double.valueOf(provider.getProviderId()));
 				os.saveObs(obsForUserId,null);
 				obsForUserId.setEncounter(enc);
 				enc.addObs(obsForUserId);

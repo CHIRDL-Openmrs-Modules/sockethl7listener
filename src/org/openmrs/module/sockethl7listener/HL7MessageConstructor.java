@@ -311,7 +311,7 @@ public class HL7MessageConstructor {
 			}
 			
 			prov.setProvider(openmrsProvider);
-			String providerId = prov.getId();
+			String providerId = prov.getEhrProviderId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
 				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
@@ -443,7 +443,7 @@ public class HL7MessageConstructor {
 			}
 			
 			prov.setProvider(openmrsProvider);
-			String providerId = prov.getId();
+			String providerId = prov.getEhrProviderId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
 				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
