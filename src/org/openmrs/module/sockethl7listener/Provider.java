@@ -12,6 +12,8 @@ import org.openmrs.api.AdministrationService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.ProviderService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.openmrs.module.chirdlutilbackports.service.ChirdlUtilBackportsService;
 
 
 /**
@@ -33,6 +35,7 @@ public class Provider {
 	public AdministrationService as;
 	private static final String PROVIDER_ID = "Provider ID";
 	private Log log =  LogFactory.getLog(this.getClass());
+	private static final String VOIDED_REASON_PERSON_NAME_CHANGE = "voided due to name update in HL7 message";
 	
 	
 	public Provider (){
@@ -154,16 +157,12 @@ public class Provider {
 	 */
 	public org.openmrs.Provider createProvider(Provider provider)  {
 
-		org.openmrs.Provider savedProvider = null;
-		boolean changed = false;
-		PersonService ps = Context.getPersonService();
+		org.openmrs.Provider openmrsProvider = null;
 		
 		try {
 			String firstname = provider.getFirstName();
 			String lastname = provider.getLastName();
 			String providerId = provider.getEhrProviderId();
-			String fn = "";
-			String ln = "";
 			
 			if(firstname == null){
 				firstname = "";
@@ -174,89 +173,62 @@ public class Provider {
 			if(providerId == null){
 				providerId = "";
 			}
-			if(firstname.contains(" ")){
-				fn = firstname.replace(" ", "_");
-			}
-			else {
-				fn = firstname;
-			}
-			if(lastname.contains(" ")){
-				ln = lastname.replace(" ", "_");
-			}
-			else{
-				ln = lastname;
-			}
 				
-			
 			// Determine if the provider already exists
-			ProviderService providerService = Context.getProviderService();
-			List<org.openmrs.Provider> providers = providerService.getAllProviders();
-			org.openmrs.Provider openmrsProvider = null;
-
-			// Match provider on first and last name
-			// TODO CHICA-221 What about cases where the name may or may not contain spaces
-			// Some users in the EHR has multiple user names because of names that contain spaces
-			// TODO CHICA-221 Fix inconsistency between what is stored in the DB and what we are checking here using fn and ln variable. 
-			// Below stores the name using firstname and lastname variables, which would contain spaces instead of "_" as shown above
-			for(org.openmrs.Provider currProvider : providers){
-				Person person = currProvider.getPerson();
-				if(fn.toLowerCase().equals(person.getGivenName().toLowerCase()) && ln.toLowerCase().equals(person.getFamilyName().toLowerCase())){
-					openmrsProvider = currProvider;
-					break;
+			// Look the provider up using the provider id found in the HL7 message
+			if(!providerId.isEmpty())
+			{
+				ProviderService providerService = Context.getProviderService();
+				
+				// Identifier is now stored in the provider table. This was migrated as part of the openmrs upgrade
+				openmrsProvider = providerService.getProviderByIdentifier(providerId); 
+				if(openmrsProvider == null)
+				{
+					// Provider does not exist, create a new one
+					openmrsProvider = new org.openmrs.Provider();
+					Person newPerson = new Person();
+					newPerson.setGender(ChirdlUtilConstants.GENDER_UNKNOWN);
+					PersonName newName = new PersonName(firstname, "", lastname);
+					newPerson.addName(newName);
+					openmrsProvider.setPerson(newPerson);
+					openmrsProvider.setIdentifier(providerId);
+					openmrsProvider = providerService.saveProvider(openmrsProvider);	
 				}
-			}
-
-			if(openmrsProvider == null){
-				openmrsProvider = new org.openmrs.Provider();
-				openmrsProvider.setPerson(new Person());
-				changed = true;
-			}
-
-			//Set user for
-			if (provider != null){
-
-				PersonName providerName = new PersonName(firstname, "", lastname);
-				providerName.isPreferred();
-				openmrsProvider.getPerson().addName(providerName);
-				openmrsProvider.getPerson().setGender("U");
-				openmrsProvider.setRetired(false);
-
-				//Store the provider's id in the provider's person attribute.
-				PersonAttribute pattr = new PersonAttribute();
-				if (ps.getPersonAttributeTypeByName(PROVIDER_ID) != null&&
-						provider.ehrProviderId!=null&&provider.ehrProviderId.length()>0){
-					PersonAttribute attr = openmrsProvider.getPerson().getAttribute(
-						ps.getPersonAttributeTypeByName(PROVIDER_ID));
-					//only update if this is truly a new attribute value
-					if (attr == null || !attr.getValue().equals(provider.ehrProviderId)) {
-						pattr.setAttributeType(ps.getPersonAttributeTypeByName(PROVIDER_ID));
-						pattr.setValue(provider.ehrProviderId);
-						pattr.setCreator(Context.getAuthenticatedUser());
-						pattr.setDateCreated(new Date());
-						openmrsProvider.getPerson().addAttribute(pattr);
-						changed = true;
+				else
+				{
+					Person person = openmrsProvider.getPerson();
+					PersonName personName = person.getPersonName();
+					
+					// Make sure the name matches. If it does not, void the current one and create a new one
+					if(!personName.getFamilyName().equalsIgnoreCase(lastname) || !personName.getGivenName().equalsIgnoreCase(firstname))
+					{
+						// Name has changed, retire the current name and create a new one
+						personName.setVoided(true);
+						personName.setPreferred(false);
+						personName.setVoidedBy(Context.getAuthenticatedUser());
+						personName.setDateVoided(new Date());
+						personName.setVoidReason(VOIDED_REASON_PERSON_NAME_CHANGE);
+							
+						PersonName newName = new PersonName(firstname, "", lastname);
+						newName.setPreferred(true);
+						newName.setCreator(Context.getAuthenticatedUser());
+						
+						person.addName(newName);
+						
+						openmrsProvider = providerService.saveProvider(openmrsProvider);
 					}
 				}
-
-				if(changed){
-					savedProvider = providerService.saveProvider(openmrsProvider);
-				}else{
+				
+				if(openmrsProvider != null && openmrsProvider.getId() != null)
+				{
 					provider.setProviderId(openmrsProvider.getId());
-					return openmrsProvider;
-				}
-
-				if (savedProvider != null  && savedProvider.getId() != null) {
-					provider.providerId = savedProvider.getId();
 				}
 			}
-
 		} catch (Exception e){
-			log.error("Error while creating or updating a user for provider.", e);
+			log.error("Error while creating or updating a provider.", e);
 		}
-
-
-
-		return savedProvider;
+		
+		return openmrsProvider;
 	}
 
 	/**
