@@ -158,6 +158,7 @@ public class Provider {
 	public org.openmrs.Provider createProvider(Provider provider)  {
 
 		org.openmrs.Provider openmrsProvider = null;
+		ProviderService providerService = Context.getProviderService();
 		
 		try {
 			String firstname = provider.getFirstName();
@@ -178,8 +179,6 @@ public class Provider {
 			// Look the provider up using the provider id found in the HL7 message
 			if(!providerId.isEmpty())
 			{
-				ProviderService providerService = Context.getProviderService();
-				
 				// Identifier is now stored in the provider table. This was migrated as part of the openmrs upgrade
 				openmrsProvider = providerService.getProviderByIdentifier(providerId); 
 				if(openmrsProvider == null)
@@ -223,6 +222,28 @@ public class Provider {
 				{
 					provider.setProviderId(openmrsProvider.getId());
 				}
+			}
+			else
+			{
+				// Use the global property to determine which provider to use when the attending provider field is empty in the HL7 message
+				AdministrationService adminService = Context.getAdministrationService();
+				String unknownProviderIdString = adminService.getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
+				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0)
+				{
+					log.error("No value set for global property: " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+					return null;
+				}
+				
+				try
+				{
+					Integer unknownProviderId = Integer.parseInt(unknownProviderIdString);
+					openmrsProvider = providerService.getProvider(unknownProviderId);
+				}
+				catch(NumberFormatException nfe)
+				{
+					log.error("Invalid number format for global property " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+					return null;
+				}	
 			}
 		} catch (Exception e){
 			log.error("Error while creating or updating a provider.", e);
