@@ -305,7 +305,7 @@ references patient(patient_id);
 			WHERE NOT EXISTS (SELECT user_id FROM users WHERE username = '..');
 
 			INSERT INTO provider(person_id, creator, date_created, uuid)
-			SELECT * FROM (MAX(person_id), 1, NOW(), UUID() FROM person) AS tmp
+			SELECT * FROM (SELECT MAX(person_id), 1, NOW(), UUID() FROM person) AS tmp
 			WHERE NOT EXISTS (SELECT user_id FROM users WHERE username = '..');
 		</sql>
 	</diff>
