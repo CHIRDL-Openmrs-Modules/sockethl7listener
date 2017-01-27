@@ -902,26 +902,6 @@ public class HL7SocketHandler implements Application {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
-					
-					// TODO CHICA-221 Review the logic in this section
-					// Is this section even needed. Take a look at createEncounter() method
-					//org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
-					//ProviderService providerService = Context.getProviderService();
-					//Collection<org.openmrs.Provider> providers = providerService.getProvidersByPerson(enc.getProvider(), true); // TODO CHICA-221 enc.getProvider() is deprecated
-					//org.openmrs.Provider encounterProvider = null;
-					//if(providers != null&& providers.size()>0){
-						//Iterator<org.openmrs.Provider> iter = providers.iterator();
-						//if(iter.hasNext()){
-							//encounterProvider = iter.next();
-						//}
-					//}
-					//if ( ! openmrsProvider.equals( openmrsProvider.getId())){	
-						// enc.setProvider(openmrsProvider.getPerson()); // TODO CHICA-221 Remove old code
-						// CHICA-221 Use the new setProvider() method
-						//EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
-						//enc.setProvider(encounterRole, openmrsProvider);
-						//es.saveEncounter(enc);
-					//}
 				}else {
 					logger.warn("Encounter not created or provider is null ");
 				}
