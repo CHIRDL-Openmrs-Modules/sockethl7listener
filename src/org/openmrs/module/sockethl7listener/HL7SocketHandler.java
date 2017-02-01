@@ -119,7 +119,7 @@ public class HL7SocketHandler implements Application {
 	 * @returns true
 	 */
 	public boolean canProcess(Message message) {
-		return true; // message != null && "ORU_R01".equals(message.getName()); // TODO CHICA-221 
+		return true; // message != null && "ORU_R01".equals(message.getName()); // TODO CHICA-221 Created CHICA-934 to fix this
 	}
 
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
