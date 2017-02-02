@@ -33,7 +33,6 @@ public class Provider {
 	private String pocBed;
 	private String admitSource;
 	public AdministrationService as;
-	private static final String PROVIDER_ID = "Provider ID";
 	private Log log =  LogFactory.getLog(this.getClass());
 	private static final String VOIDED_REASON_PERSON_NAME_CHANGE = "voided due to name update in HL7 message";
 	
@@ -288,12 +287,12 @@ public class Provider {
 		Person person = openmrsProvider.getPerson();
 	    setFirstName(person.getGivenName());
 	    setLastName(person.getFamilyName());
-	    PersonAttribute providerId = openmrsProvider.getPerson().getAttribute(PROVIDER_ID);
-	    if (providerId == null) {
+	    String identifier = openmrsProvider.getIdentifier();
+	    if (identifier == null) {
 	    	setEhrProviderId("");
 	    }
 	    else{
-	    	setEhrProviderId(providerId.getValue());
+	    	setEhrProviderId(identifier);
 	    }
 	
 	}

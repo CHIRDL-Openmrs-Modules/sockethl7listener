@@ -276,7 +276,7 @@ public class HL7SocketHandler implements Application {
 		PatientService patientService = Context.getPatientService();
 		if (provider.createProvider(provider) == null){
 			logger.error("Could not create a provider or find an existing provider for: firstname=" 
-					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
+					+ provider.getFirstName() + " lastname=" + provider.getLastName() + " id=" 
 					+ provider.getEhrProviderId()  );
 			return null;
 		}
