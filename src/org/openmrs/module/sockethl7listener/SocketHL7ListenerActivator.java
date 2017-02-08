@@ -39,9 +39,7 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 		try
 		{
 			AdministrationService adminService = Context.getAdministrationService();
-			Context.authenticate(adminService
-				.getGlobalProperty("scheduler.username"), adminService
-				.getGlobalProperty("scheduler.password"));
+			 
 			Iterator<GlobalProperty> properties = adminService
 					.getAllGlobalProperties().iterator();
 			GlobalProperty currProperty = null;

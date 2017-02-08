@@ -13,6 +13,7 @@
 			Accepts and processes hl7 messages
 	</description>
 
+	<require_version>1.12.*</require_version>
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
 		<require_module version="1.12.0">org.openmrs.module.chirdlutil</require_module>
@@ -57,7 +58,10 @@
         <property>sockethl7listener.hapiCharacterEncoding</property>
         <description>Sets the character encoding Hapi will use to parse HL7 messages.  If not set, Hapi's default encoding will be used.</description>
     </globalProperty>  
-	
+	<globalProperty>
+        <property>sockethl7listener.unknownProviderId</property>
+        <description>The provider.provider_id of the provider to use when an attending provider is not set in the HL7 message. If not set, encounters will not be created from HL7 messages that do not contain an attending provider.</description>
+    </globalProperty>
 	
 	<!-- Internationalization -->
 	<!-- All message codes should start with @MODULE_ID@.* -->

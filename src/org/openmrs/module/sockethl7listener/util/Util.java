@@ -17,7 +17,7 @@ import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
-import ca.uhn.hl7v2.sourcegen.SourceGenerator;
+import ca.uhn.hl7v2.parser.DefaultModelClassFactory;
 import ca.uhn.hl7v2.util.MessageIDGenerator;
 import ca.uhn.hl7v2.util.Terser;
 
@@ -87,7 +87,8 @@ public class Util
 		if (version == null)
 			version = VERSION_2_5;
 
-		String ackClassName = SourceGenerator.getVersionPackageName(version)
+		// CHICA-221 Method was moved from SourceGenerator to DefaultModuleClassFactory in newer versions of hapi
+		String ackClassName = DefaultModelClassFactory.getVersionPackageName(version)
 		+ "message.ACK";
 
 		Message ackMessage = null;

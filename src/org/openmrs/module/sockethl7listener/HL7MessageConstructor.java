@@ -3,7 +3,6 @@ package org.openmrs.module.sockethl7listener;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -12,9 +11,7 @@ import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonAddress;
 import org.openmrs.PersonAttribute;
-import org.openmrs.User;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.IOUtil;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
@@ -287,6 +284,11 @@ public class HL7MessageConstructor {
 
 	}
 
+	/**
+	 * CHICA-221 Updated method to use ProviderService and org.openmrs.Provider
+	 * @param enc
+	 * @return
+	 */
 	public PV1 AddSegmentPV1(Encounter enc) {
 
 		SocketHL7ListenerService hl7ListService = Context
@@ -299,14 +301,17 @@ public class HL7MessageConstructor {
 			pv1.getAttendingDoctor(0).getGivenName().setValue("");
 
 			Provider prov = new Provider();
-			UserService userService = Context.getUserService();
-			List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-			User provider = null;
-			if(providers != null&& providers.size()>0){
-				provider = providers.get(0);
+			// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
+			org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
+			
+			if(openmrsProvider == null)
+			{
+				logger.error("Error while creating PV1 segment. Unable to locate provider for encounter: " + enc.getEncounterId());
+				return pv1;
 			}
-			prov.setProviderfromUser(provider);
-			String providerId = prov.getId();
+			
+			prov.setProvider(openmrsProvider);
+			String providerId = prov.getEhrProviderId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
 				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
@@ -327,49 +332,12 @@ public class HL7MessageConstructor {
 			pv1.getVisitNumber().getIDNumber().setValue(
 					enc.getPatient().getPatientIdentifier().getIdentifier());
 
-			if (poc == null || poc.equals("")) {
-				PersonAttribute pocAttr = enc.getProvider().getAttribute("POC");
-				if (pocAttr != null) {
-					poc = pocAttr.getValue();
-					if (poc != null && !poc.equals("")) {
-						pv1.getAssignedPatientLocation().getPointOfCare()
-								.setValue(poc);
-						pv1.getAssignedPatientLocation().getFacility()
-								.getNamespaceID().setValue(poc);
-					}
-				}
-			}
 			if (poc != null) {
 				pv1.getAssignedPatientLocation().getPointOfCare().setValue(poc);
 				pv1.getAssignedPatientLocation().getFacility().getNamespaceID()
 						.setValue(poc);
 			}
-
-			PersonAttribute facAttr = enc.getProvider().getAttribute(
-					"POC_FACILITY");
-			if (facAttr != null) {
-				String fac = facAttr.getValue();
-				pv1.getAssignedPatientLocation().getFacility().getUniversalID()
-						.setValue(fac);
-			}
-
-			PersonAttribute roomAttr = enc.getProvider().getAttribute(
-					"POC_ROOM");
-			if (roomAttr != null) {
-				String room = roomAttr.getValue();
-				pv1.getAssignedPatientLocation().getRoom().setValue(room);
-			}
-			PersonAttribute bedAttr = enc.getProvider().getAttribute("POC_BED");
-			if (bedAttr != null) {
-				String bed = bedAttr.getValue();
-				pv1.getAssignedPatientLocation().getBed().setValue(bed);
-			}
-			PersonAttribute admitSource = enc.getProvider().getAttribute(
-					"ADMIT_SOURCE");
-			if (admitSource != null) {
-				pv1.getAdmitSource().setValue(admitSource.getValue());
-			}
-
+			
 		} catch (Exception e) {
 			logger.error("Exception adding PV1 segment to hl7 "
 							+ enc.getEncounterId(), e);
@@ -434,6 +402,14 @@ public class HL7MessageConstructor {
 		return raceID;
 	}
 
+	/**
+	 * CHICA-221 Updated method to use ProviderService and org.openmrs.Provider
+	 * @param enc
+	 * @param univServiceId
+	 * @param univServIdName
+	 * @param orderRep
+	 * @return
+	 */
 	public OBR AddSegmentOBR(Encounter enc, String univServiceId,
 			String univServIdName, int orderRep) {
 
@@ -456,14 +432,18 @@ public class HL7MessageConstructor {
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddHHmm");
 			SimpleDateFormat dayFormat = new SimpleDateFormat("yyyyMMdd");
 			Provider prov = new Provider();
-			UserService userService = Context.getUserService();
-			List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-			User provider = null;
-			if(providers != null&& providers.size()>0){
-				provider = providers.get(0);
+			
+			// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
+			org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
+			
+			if(openmrsProvider == null)
+			{
+				logger.error("Error while creating OBR segment. Unable to locate provider for encounter: " + enc.getEncounterId());
+				return obr;
 			}
-			prov.setProviderfromUser(provider);
-			String providerId = prov.getId();
+			
+			prov.setProvider(openmrsProvider);
+			String providerId = prov.getEhrProviderId();
 			// using npi
 			if (providerId == null || providerId.equals("")) {
 				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
