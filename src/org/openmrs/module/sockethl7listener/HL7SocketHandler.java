@@ -113,13 +113,12 @@ public class HL7SocketHandler implements Application {
 	}
 	
 	/**
-	 * Always returns true,assuming that the router calling this handler will
-	 * only call this handler with ORU_R01 messages.
+	 * Returns true if the message is not null and is an instance of ADT_A01 (which A04 and A08 are since hapi uses the same message structure for all A0x messages)
 	 * 
 	 * @returns true
 	 */
 	public boolean canProcess(Message message) {
-		return true; // message != null && "ORU_R01".equals(message.getName()); // TODO CHICA-221 Created CHICA-934 to fix this
+		return message != null && message instanceof ca.uhn.hl7v2.model.v25.message.ADT_A01;
 	}
 
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
