@@ -293,7 +293,6 @@ public class HL7SocketHandler implements Application {
 		
 		if (encounter == null) return null;
 		
-		createObsForProvider(encounter,provider);
 		int reps = hl7ObsHandler.getReps(message);// number of obs 
 
 		if (message instanceof ORU_R01)
@@ -468,95 +467,6 @@ public class HL7SocketHandler implements Application {
 
 		}
 		return null;
-
-	}
-
-
-	/**
-	 * Create an observation for the Riley provider information.
-	 * 
-	 * @param enc
-	 */
-	private void createObsForProvider(Encounter enc, Provider provider) {
-
-		PersonService personService = Context.getPersonService();
-		ConceptService cs = Context.getConceptService();
-		ObsService os = Context.getObsService();
-		Obs obsForID = new Obs();
-		Obs obsForName = new Obs();
-		Obs obsForUserId = new Obs();
-		try {
-			Person patient = personService.getPerson(enc.getPatient().getPatientId());
-
-			obsForID.setPerson(patient);
-			obsForName.setPerson(patient);
-			obsForUserId.setPerson(patient);
-			obsForID.setEncounter(enc);
-			obsForName.setEncounter(enc);
-			obsForUserId.setEncounter(enc);
-			obsForID.setLocation(enc.getLocation());
-			obsForName.setLocation(enc.getLocation());
-			obsForUserId.setLocation(enc.getLocation());
-			Date encDate = enc.getEncounterDatetime();
-			obsForID.setObsDatetime(encDate);
-			obsForName.setObsDatetime(encDate);
-			obsForUserId.setObsDatetime(encDate);
-			Concept providerIDConcept = cs.getConceptByName("PROVIDER_ID");
-			Concept providerNameConcept = cs.getConceptByName("PROVIDER_NAME");
-			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID"); // TODO CHICA-922 has been created to address this. This will no longer be user_id from the user table it will be provider_id from the provider table
-             
-			if (providerIDConcept != null) {
-				if (provider.getEhrProviderId() != null &&  !provider.getEhrProviderId().equals("")){
-					obsForID.setConcept(providerIDConcept);
-					obsForID.setValueText(provider.getEhrProviderId());
-					os.saveObs(obsForID,null);
-					enc.addObs(obsForID);
-					
-				} else {
-					
-					npiLogger.warn("No NPI found for provider: " + provider.getFirstName() + " " 
-							+ provider.getLastName() + "; Openmrs userid = " 
-							+ provider.getProviderId() + "; Enc date: " + enc.getEncounterDatetime() + ";");
-				}
-
-			} else {
-				logger.warn("No observation created for provider id. Concept PROVIDER_ID does not exist in concept table");
-			}
-
-			if (providerNameConcept != null) {
-				obsForName.setConcept(providerNameConcept);
-				
-				// CHICA-221 Use the provider that has the "Attending Provider" role for the encounter
-				org.openmrs.Provider openmrsProvider = org.openmrs.module.chirdlutil.util.Util.getProviderByAttendingProviderEncounterRole(enc);
-			
-				if (openmrsProvider == null){
-					obsForName.setValueText("");
-				} else {
-					obsForName.setValueText(openmrsProvider.getPerson().getGivenName() + " " + openmrsProvider.getPerson().getFamilyName());
-				}
-				os.saveObs(obsForName,null);
-				obsForName.setEncounter(enc);
-				enc.addObs(obsForName);
-				
-			} else {
-				logger.warn("No observation created for provider name. Concept PROVIDER_NAME does not exist in concept table");
-
-			}
-			
-			if (providerUseridConcept != null){
-				obsForUserId.setConcept(providerUseridConcept); // TODO CHICA-922 has been created to address this. See above for comment related to this
-				obsForUserId.setValueNumeric( Double.valueOf(provider.getProviderId()));
-				os.saveObs(obsForUserId,null);
-				obsForUserId.setEncounter(enc);
-				enc.addObs(obsForUserId);
-			} else {
-				logger.warn("No observation created for provider userid. Concept PROVIDER_USER_ID does not exist in concept table");
-
-			}
-
-		} catch (APIException e) {
-			// obs not created
-		}
 
 	}
 
