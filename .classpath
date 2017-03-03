@@ -69,8 +69,6 @@
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-search-3.4.2.Final.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
 	<classpathentry kind="lib" path="lib-common/logic-0.5.0.1.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutil-1.12.0.jar"/>
-	<classpathentry kind="lib" path="lib-common/chirdlutilbackports-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT-tests.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-tests.jar"/>
@@ -86,5 +84,7 @@
 	<classpathentry kind="lib" path="lib-common/slf4j/jcl-over-slf4j-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/slf4j/slf4j-api-1.6.0.jar"/>
 	<classpathentry kind="lib" path="lib-common/slf4j/slf4j-log4j12-1.6.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutil-1.13.0.jar"/>
+	<classpathentry kind="lib" path="lib-common/chirdlutilbackports-2.7.0.jar"/>
 	<classpathentry kind="output" path="build"/>
 </classpath>
