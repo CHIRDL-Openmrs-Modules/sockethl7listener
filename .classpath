@@ -68,7 +68,6 @@
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-ehcache-3.6.5.Final.jar"/>
 	<classpathentry kind="lib" path="lib-common/hibernate/hibernate-search-3.4.2.Final.jar"/>
 	<classpathentry kind="lib" path="lib-common/patientmatching-1.2.2.jar"/>
-	<classpathentry kind="lib" path="lib-common/logic-0.5.0.1.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-api-1.12.1-SNAPSHOT-tests.jar"/>
 	<classpathentry kind="lib" path="lib-common/openmrs-tests.jar"/>
