@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
@@ -18,7 +19,6 @@ import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
-import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
@@ -510,7 +510,11 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		String citizenString = " ";
 		for (CE cectz : ceCitizen)
 		{
-			citizenString = cectz.getText().toString();
+			ST citizenSt = cectz.getCe1_Identifier();
+			if (citizenSt != null && StringUtils.isNotBlank(citizenSt.toString())) 
+			{
+				citizenString = citizenSt.toString();
+			}
 		}
 		return citizenString;
 	}
