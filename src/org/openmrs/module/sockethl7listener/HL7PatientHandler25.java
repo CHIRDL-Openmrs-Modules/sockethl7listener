@@ -506,17 +506,25 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	{
 		PID pid = getPID(message);
 		CE[] ceCitizen = null;
-		ceCitizen = pid.getCitizenship();
-		String citizenString = " ";
-		for (CE cectz : ceCitizen)
+		try 
 		{
-			ST citizenSt = cectz.getCe1_Identifier();
-			if (citizenSt != null && StringUtils.isNotBlank(citizenSt.toString())) 
+			ceCitizen = pid.getCitizenship();
+		} catch (RuntimeException e)
+		{
+			logger.warn("Unable to parse citizenship from PID.", e);
+		}
+		
+		if (ceCitizen != null) {
+			try
 			{
-				citizenString = citizenSt.toString();
+				return ceCitizen[0].getIdentifier().toString();
+			} catch (RuntimeException e1)
+			{
+				logger.debug("Warning: Citizenship information not available in PID segment.", e1);
 			}
 		}
-		return citizenString;
+		
+		return null;
 	}
 
 	public Set<PatientIdentifier> getIdentifiers(Message message)
