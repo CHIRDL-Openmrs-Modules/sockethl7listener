@@ -18,7 +18,6 @@ import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
-import org.openmrs.module.chirdlutil.util.Util;
 
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
@@ -506,13 +505,25 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	{
 		PID pid = getPID(message);
 		CE[] ceCitizen = null;
-		ceCitizen = pid.getCitizenship();
-		String citizenString = " ";
-		for (CE cectz : ceCitizen)
+		try 
 		{
-			citizenString = cectz.getText().toString();
+			ceCitizen = pid.getCitizenship();
+		} catch (RuntimeException e)
+		{
+			logger.warn("Unable to parse citizenship from PID.", e);
 		}
-		return citizenString;
+		
+		if (ceCitizen != null) {
+			try
+			{
+				return ceCitizen[0].getIdentifier().toString();
+			} catch (RuntimeException e1)
+			{
+				logger.debug("Warning: Citizenship information not available in PID segment.", e1);
+			}
+		}
+		
+		return null;
 	}
 
 	public Set<PatientIdentifier> getIdentifiers(Message message)
