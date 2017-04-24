@@ -22,6 +22,7 @@ import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptNumeric;
 import org.openmrs.Encounter;
+import org.openmrs.EncounterRole;
 import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.Obs;
@@ -29,7 +30,6 @@ import org.openmrs.Patient;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
-import org.openmrs.User;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
@@ -38,13 +38,13 @@ import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
-import org.openmrs.api.UserService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
 import org.openmrs.hl7.HL7InQueue;
 import org.openmrs.hl7.HL7Service;
 import org.openmrs.hl7.HL7Source;
+import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
@@ -113,13 +113,12 @@ public class HL7SocketHandler implements Application {
 	}
 	
 	/**
-	 * Always returns true,assuming that the router calling this handler will
-	 * only call this handler with ORU_R01 messages.
+	 * Returns true if the message is not null and is an instance of ADT_A01 (which A04 and A08 are since hapi uses the same message structure for all A0x messages)
 	 * 
 	 * @returns true
 	 */
 	public boolean canProcess(Message message) {
-		return message != null && "ORU_R01".equals(message.getName());
+		return message != null && message instanceof ca.uhn.hl7v2.model.v25.message.ADT_A01;
 	}
 
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
@@ -274,10 +273,10 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
-		if (provider.createUserForProvider(provider) == null){
-			logger.error("Could not create a user or find an existing user for provider: firstname=" 
-					+ provider.getFirstName() + " lastname=" + provider.getLastName() + "id=" 
-					+ provider.getId()  );
+		if (provider.createProvider(provider) == null){
+			logger.error("Could not create a provider or find an existing provider for: firstname=" 
+					+ provider.getFirstName() + " lastname=" + provider.getLastName() + " id=" 
+					+ provider.getEhrProviderId()  );
 			return null;
 		}
 		 
@@ -294,7 +293,6 @@ public class HL7SocketHandler implements Application {
 		
 		if (encounter == null) return null;
 		
-		createObsForProvider(encounter,provider);
 		int reps = hl7ObsHandler.getReps(message);// number of obs 
 
 		if (message instanceof ORU_R01)
@@ -359,12 +357,12 @@ public class HL7SocketHandler implements Application {
 				// using npi for provider id
 				if (provider != null){
 					
-					String id = provider.getId();
+					String id = provider.getEhrProviderId();
 					if (id == null || id.equals(""))
 					{
 						String npi = hl7ListService.getNPI(provider.getFirstName(),
 								provider.getLastName());
-						provider.setId(npi);
+						provider.setEhrProviderId(npi);
 					}
 					
 					Encounter newEncounter = new Encounter();
@@ -433,6 +431,8 @@ public class HL7SocketHandler implements Application {
 	 * Create encounter from patient, provider,location, datetime. Create
 	 * observation containing provider information.
 	 * 
+	 * CHICA-221 Updated method to use org.openmrs.Provider
+	 * 
 	 * @param pid
 	 * @param pv1
 	 * @param obr
@@ -451,8 +451,10 @@ public class HL7SocketHandler implements Application {
 
 			if (resultPatient != null)
 			{
-				User providerUser = provider.getUserForProvider(provider);
-				newEncounter.setProvider(providerUser);
+				org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+				// CHICA-221 Use the new setProvider() method
+				EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
+				newEncounter.setProvider(encounterRole, openmrsProvider);
 				newEncounter.setPatient(resultPatient);
 				newEncounter.setPatientId(resultPatient.getPatientId());
 				es.saveEncounter(newEncounter);
@@ -465,97 +467,6 @@ public class HL7SocketHandler implements Application {
 
 		}
 		return null;
-
-	}
-
-
-	/**
-	 * Create an observation for the Riley provider information.
-	 * 
-	 * @param enc
-	 */
-	private void createObsForProvider(Encounter enc, Provider provider) {
-
-		PersonService personService = Context.getPersonService();
-		ConceptService cs = Context.getConceptService();
-		ObsService os = Context.getObsService();
-		Obs obsForID = new Obs();
-		Obs obsForName = new Obs();
-		Obs obsForUserId = new Obs();
-		try {
-			Person patient = personService.getPerson(enc.getPatient().getPatientId());
-
-			obsForID.setPerson(patient);
-			obsForName.setPerson(patient);
-			obsForUserId.setPerson(patient);
-			obsForID.setEncounter(enc);
-			obsForName.setEncounter(enc);
-			obsForUserId.setEncounter(enc);
-			obsForID.setLocation(enc.getLocation());
-			obsForName.setLocation(enc.getLocation());
-			obsForUserId.setLocation(enc.getLocation());
-			Date encDate = enc.getEncounterDatetime();
-			obsForID.setObsDatetime(encDate);
-			obsForName.setObsDatetime(encDate);
-			obsForUserId.setObsDatetime(encDate);
-			Concept providerIDConcept = cs.getConceptByName("PROVIDER_ID");
-			Concept providerNameConcept = cs.getConceptByName("PROVIDER_NAME");
-			Concept providerUseridConcept = cs.getConceptByName("PROVIDER_USER_ID");
-             
-			if (providerIDConcept != null) {
-				if (provider.getId() != null &&  !provider.getId().equals("")){
-					obsForID.setConcept(providerIDConcept);
-					obsForID.setValueText(provider.getId());
-					os.saveObs(obsForID,null);
-					enc.addObs(obsForID);
-					
-				} else {
-					
-					npiLogger.warn("No NPI found for provider: " + provider.getFirstName() + " " 
-							+ provider.getLastName() + "; Openmrs userid = " 
-							+ provider.getUserId() + "; Enc date: " + enc.getEncounterDatetime() + ";");
-				}
-
-			} else {
-				logger.warn("No observation created for provider id. Concept PROVIDER_ID does not exist in concept table");
-			}
-
-			if (providerNameConcept != null) {
-				obsForName.setConcept(providerNameConcept);
-				UserService userService = Context.getUserService();
-				List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-				User prov = null;
-				if(providers != null&& providers.size()>0){
-					prov = providers.get(0);
-				}
-				if (prov == null){
-					obsForName.setValueText("");
-				} else {
-					obsForName.setValueText(provider.getFirstName() + " " + provider.getLastName());
-				}
-				os.saveObs(obsForName,null);
-				obsForName.setEncounter(enc);
-				enc.addObs(obsForName);
-				
-			} else {
-				logger.warn("No observation created for provider name. Concept PROVIDER_NAME does not exist in concept table");
-
-			}
-			
-			if (providerUseridConcept != null){
-				obsForUserId.setConcept(providerUseridConcept);
-				obsForUserId.setValueNumeric( Double.valueOf(provider.getUserId()));
-				os.saveObs(obsForUserId,null);
-				obsForUserId.setEncounter(enc);
-				enc.addObs(obsForUserId);
-			} else {
-				logger.warn("No observation created for provider userid. Concept PROVIDER_USER_ID does not exist in concept table");
-
-			}
-
-		} catch (APIException e) {
-			// obs not created
-		}
 
 	}
 
@@ -692,14 +603,6 @@ public class HL7SocketHandler implements Application {
 		}
 		
 		obs.setConcept(concept);
-
-		// set date started
-		Date sdt = hl7ObsHandler.getDateStarted(message);
-		obs.setDateStarted(sdt);
-
-		//set date stopped (null if not present)
-		Date edt = hl7ObsHandler.getDateStopped(message);
-		obs.setDateStopped(edt);
 
 		// Meeting on 3/20/07 - only one set of data in field 5. There will be
 		// no "~"
@@ -838,6 +741,16 @@ public class HL7SocketHandler implements Application {
 		return loc;
 	}
 	
+	/**
+	 * CHICA-221 Updated method to use ProviderService and org.openmrs.Provider
+	 * @param incomingMessageString
+	 * @param p
+	 * @param encDate
+	 * @param newEncounter
+	 * @param provider
+	 * @param parameters
+	 * @return
+	 */
 	protected Encounter processEncounter(String incomingMessageString, Patient p, 
 			Date encDate, Encounter newEncounter , Provider provider,
 			HashMap<String,Object> parameters){
@@ -898,17 +811,6 @@ public class HL7SocketHandler implements Application {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
-					User providerUser = provider.getUserForProvider(provider);
-					UserService userService = Context.getUserService();
-					List<User> providers = userService.getUsersByPerson(enc.getProvider(), true);
-					User encounterProvider = null;
-					if(providers != null&& providers.size()>0){
-						encounterProvider = providers.get(0);
-					}
-					if ( ! providerUser.equals( encounterProvider.getUserId())){
-						enc.setProvider(provider.getUserForProvider(provider));
-						es.saveEncounter(enc);
-					}
 				}else {
 					logger.warn("Encounter not created or provider is null ");
 				}
@@ -1173,10 +1075,8 @@ public class HL7SocketHandler implements Application {
 					nte = true;
 			}
 			
-		} catch (HL7Exception e) {
-			logger.error("HL7Exception while extracting NTE segment from hl7",e);
-		} catch (Exception e){
-			logger.error("",e);
+		} catch (Exception e) {
+			logger.error("Exception while extracting NTE segment from hl7",e);
 		}
 		return nte;
 		

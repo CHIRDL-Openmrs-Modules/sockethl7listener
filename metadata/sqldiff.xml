@@ -286,4 +286,27 @@ references patient(patient_id);
 
 	</sql>
 	</diff>
+	<diff>
+		<version>1.0.9</version>
+		<author>David Ely</author>
+		<date>January 25, 2017</date>
+		<description>
+			Add a new person, person_name, and provider record that will be used as the "Unknown" provider when the HL7 message does not contain an attending provider
+			A new record will only be inserted if the database does not contain a record where the users.username = '..' This is the record used in current production when 
+			a message is received without an attending provider
+		</description>
+		<sql>
+			INSERT INTO person(gender, creator, date_created, uuid)
+			SELECT 'U', 1, NOW(), UUID() FROM dual
+			WHERE NOT EXISTS(SELECT user_id FROM users WHERE username = '..');
+
+			INSERT INTO person_name(preferred, person_id, family_name, creator, date_created, uuid)
+			SELECT * FROM (SELECT true, MAX(person_id), 'OTHER', 1, NOW(), UUID() FROM person) AS tmp
+			WHERE NOT EXISTS (SELECT user_id FROM users WHERE username = '..');
+
+			INSERT INTO provider(person_id, creator, date_created, uuid)
+			SELECT * FROM (SELECT MAX(person_id), 1, NOW(), UUID() FROM person) AS tmp
+			WHERE NOT EXISTS (SELECT user_id FROM users WHERE username = '..');
+		</sql>
+	</diff>
 </sqldiff>
