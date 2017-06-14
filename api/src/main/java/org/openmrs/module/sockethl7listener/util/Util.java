@@ -9,14 +9,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.openmrs.Concept;
-import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
-import org.openmrs.module.chica.hibernateBeans.Encounter;
-import org.openmrs.module.chica.service.EncounterService;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
-import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
-import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
