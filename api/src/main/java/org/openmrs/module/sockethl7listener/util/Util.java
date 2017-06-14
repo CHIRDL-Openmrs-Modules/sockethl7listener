@@ -9,15 +9,21 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.openmrs.Concept;
+import org.openmrs.api.AdministrationService;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.chica.hibernateBeans.Encounter;
+import org.openmrs.module.chica.service.EncounterService;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
+import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.primitive.CommonTS;
 import ca.uhn.hl7v2.parser.DefaultModelClassFactory;
+import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.util.MessageIDGenerator;
 import ca.uhn.hl7v2.util.Terser;
 
@@ -178,5 +184,18 @@ public class Util
 		// DWE CHICA-616 Populate MSA-2 with the Message Control ID(MSH-10) from the inbound message
 		Terser.set(msa, 2, 0, 1, 1, Terser.get(inboundHeader, 10, 0, 1, 1));
 	}
-
+	
+	/**
+	 * CHICA-1070 Returns the HL7 message string
+	 * @param message
+	 * @return HL7 message string
+	 * @throws HL7Exception
+	 */
+	public static String getMessage(Message message) throws HL7Exception
+	{
+		PipeParser pipeParser = new PipeParser();
+		String msg = null;
+		msg = pipeParser.encode(message);
+		return msg;
+	}
 }
