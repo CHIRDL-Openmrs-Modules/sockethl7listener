@@ -262,4 +262,14 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		}
 		return null;	
 	}
+	
+	/**
+	 * CHICA-982
+	 * Get location from PV1-3.1
+	 */
+	public String getLocation(Message message)
+	{
+		PV1 pv1 = getPV1(message);
+		return pv1.getAssignedPatientLocation().getPointOfCare().getValue();
+	}
 }
