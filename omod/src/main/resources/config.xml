@@ -73,8 +73,6 @@
 	
 	<mappingFiles>
 	hl7Out.hbm.xml
-	InstProv.hbm.xml
-	NPI.hbm.xml
 	PatientMessage.hbm.xml
 	</mappingFiles>
 </module>

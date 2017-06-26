@@ -309,4 +309,16 @@ references patient(patient_id);
 			WHERE NOT EXISTS (SELECT user_id FROM users WHERE username = '..');
 		</sql>
 	</diff>
+	<diff>
+		<version>1.1.0</version>
+		<author>Seema Sarala</author>
+		<date>June 26, 2017</date>
+		<description>
+			Remove sockethl7listener_institution_provider and sockethl7listener_npi tables since the tables are empty on production. 
+		</description>
+		<sql>
+			drop table sockethl7listener_institution_provider;
+			drop table sockethl7listener_npi;
+		</sql>
+	</diff>
 </sqldiff>

@@ -71,7 +71,6 @@ public class HL7SocketHandler implements Application {
 	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
 	private static final Logger conceptNotFoundLogger = Logger.getLogger("ConceptNotFoundLogger");
-	private static final Logger npiLogger = Logger.getLogger("NPILogger");
 		
 	protected PatientHandler patientHandler;
 	protected HL7ObsHandler hl7ObsHandler = null;
@@ -354,17 +353,8 @@ public class HL7SocketHandler implements Application {
 				
 				// Extract provider information for provider observations.
 				Provider provider = hl7EncounterHandler.getProvider(message);
-				// using npi for provider id
+
 				if (provider != null){
-					
-					String id = provider.getEhrProviderId();
-					if (id == null || id.equals(""))
-					{
-						String npi = hl7ListService.getNPI(provider.getFirstName(),
-								provider.getLastName());
-						provider.setEhrProviderId(npi);
-					}
-					
 					Encounter newEncounter = new Encounter();
 					newEncounter.setLocation(encounterLocation);
 					newEncounter.setEncounterDatetime(encounterDate);

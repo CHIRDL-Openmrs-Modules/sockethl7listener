@@ -6,8 +6,6 @@
 <hibernate-configuration>
 	<session-factory>
 		<mapping resource="hl7Out.hbm.xml" />
-		<mapping resource="InstProv.hbm.xml" />
-		<mapping resource="NPI.hbm.xml" />
 		<mapping resource="PatientMessage.hbm.xml" />
 	</session-factory>
 </hibernate-configuration>
