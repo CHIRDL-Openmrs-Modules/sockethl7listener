@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
@@ -27,17 +26,14 @@ import org.openmrs.EncounterType;
 import org.openmrs.Location;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
-import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
-import org.openmrs.api.ConceptService;
 import org.openmrs.api.EncounterService;
 import org.openmrs.api.LocationService;
 import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
-import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7Constants;
@@ -49,7 +45,6 @@ import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
-
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
 import ca.uhn.hl7v2.app.ApplicationException;
@@ -135,15 +130,6 @@ public class HL7SocketHandler implements Application {
 			} catch (HL7Exception e2) 
 			{
 				e2.printStackTrace();
-			}
-			try 
-			{
-				message.addNonstandardSegment("ZLR");
-				ZLR zlr = new ZLR(message);
-				zlr.loadZLRSegment(incomingMessageString);
-			} catch (HL7Exception e1) 
-			{
-				e1.printStackTrace();
 			}
 						
 			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
@@ -319,8 +305,6 @@ public class HL7SocketHandler implements Application {
 		validate(message);
 		boolean error = false;
 
-		//new
-		ZLR zlr = new ZLR(message);
 		MSH msh = HL7ObsHandler25.getMSH(message);
 		parameters.put("sendingApplication", msh.getSendingApplication().getNamespaceID().getValue());
 		parameters.put("sendingFacility", msh.getSendingFacility().getNamespaceID().getValue());
@@ -346,8 +330,8 @@ public class HL7SocketHandler implements Application {
 			//If duplicate message string, do not process 
 			if (! isDuplicateHL7){
 				
-				String institutionId = zlr.getOrderingFacilityIDNum();
-				Location encounterLocation = setLocation(institutionId);
+				String locationString = hl7EncounterHandler.getLocation(message); // CHICA-982 Get location from PV1 instead of ZLR segment
+				Location encounterLocation = setLocation(locationString);
 				Date encounterDate = hl7EncounterHandler.getEncounterDate(message);
 				Patient hl7Patient = patientHandler.setPatientFromHL7(message,encounterDate,encounterLocation,hl7PatientHandler);
 				

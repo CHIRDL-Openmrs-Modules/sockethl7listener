@@ -20,4 +20,6 @@ public interface HL7EncounterHandler
 	public String getVisitNumber(Message message); // DWE CHICA-633
 	
 	public String getLocationDescription(Message message); // DWE CHICA-751
+	
+	public String getLocation(Message message); // DWE CHICA-982
 }
