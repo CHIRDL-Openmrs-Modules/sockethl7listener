@@ -36,7 +36,6 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 
 	public Provider getProvider(Message message)
 	{
-		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		Provider provider = new Provider();
 		XCN doctor = null;
 		PV1 pv1 = getPV1(message);
@@ -55,10 +54,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 				if (doctor.getIDNumber() != null)
 				{
 					id = doctor.getIDNumber().toString();
-				}else {
-					hl7ListService.getNPI(name.getGivenName(), name.getFamilyName());
 				}
-
 				provider.setEhrProviderId(id);
 
 			}

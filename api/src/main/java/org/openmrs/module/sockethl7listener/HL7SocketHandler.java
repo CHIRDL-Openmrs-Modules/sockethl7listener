@@ -337,17 +337,8 @@ public class HL7SocketHandler implements Application {
 				
 				// Extract provider information for provider observations.
 				Provider provider = hl7EncounterHandler.getProvider(message);
-				// using npi for provider id
+
 				if (provider != null){
-					
-					String id = provider.getEhrProviderId();
-					if (id == null || id.equals(""))
-					{
-						String npi = hl7ListService.getNPI(provider.getFirstName(),
-								provider.getLastName());
-						provider.setEhrProviderId(npi);
-					}
-					
 					Encounter newEncounter = new Encounter();
 					newEncounter.setLocation(encounterLocation);
 					newEncounter.setEncounterDatetime(encounterDate);
