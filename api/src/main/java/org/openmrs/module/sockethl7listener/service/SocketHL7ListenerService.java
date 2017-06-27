@@ -26,13 +26,9 @@ public interface SocketHL7ListenerService
 	public void setHl7Message(Integer pid, Integer encounter_id,  String message, boolean dup_string,
 			boolean dup_enc, Integer port);
 
-	public String getNPI(String firstName, String lastName);
-	
 	public boolean checkMD5(String incoming, Integer port);
 	
 	public void messageProcessed(Encounter encounter,HashMap<String,Object> parameters);
-	
-	public String getFaxNumber(String firstName, String lastName);
 
 	public PatientMessage getPatientMessageByEncounter(Integer encounterId);
 	

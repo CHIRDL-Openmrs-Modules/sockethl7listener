@@ -10,10 +10,8 @@ import org.hibernate.SQLQuery;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.Restrictions;
 import org.openmrs.module.chirdlutil.util.Util;
-import org.openmrs.module.chirdlutilbackports.hibernateBeans.EncounterAttribute;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
-import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 
 
@@ -58,19 +56,6 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO
 	{
 		this.sessionFactory.getCurrentSession().save(patientMessage);
 		return patientMessage;
-	}
-
-	public List<NPI> getNPIByName(String firstName, String lastName)
-	{
-		String sqlSelect = "SELECT * "
-				+ " from sockethl7listener_npi  WHERE NPI_LN = :ln and NPI_FN = :fn";
-		SQLQuery query = this.sessionFactory.getCurrentSession()
-				.createSQLQuery(sqlSelect);
-		query.setString("ln", lastName);
-		query.setString("fn", firstName);
-		query.addEntity(NPI.class);
-
-		return query.list();
 	}
 	
 	public List<PatientMessage> checkMD5(String incoming)
