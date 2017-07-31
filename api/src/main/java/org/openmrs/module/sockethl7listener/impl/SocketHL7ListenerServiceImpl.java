@@ -12,7 +12,6 @@ import org.openmrs.Encounter;
 import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
-import org.openmrs.module.sockethl7listener.hibernateBeans.NPI;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 
@@ -107,44 +106,6 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 		}
 		
 		return;
-	}
-
-	public String getNPI(String firstName, String lastName)
-	{
-		List<NPI> matchingNPIs = getSocketHL7ListenerDAO().getNPIByName(firstName, lastName);
-		
-		String npi = "";
-		
-		try
-		{
-			for(NPI currNPI:matchingNPIs)
-			{
-				String row = currNPI.getNpi();
-				if (row != null)
-				{
-					npi = row;
-				}
-			}
-		} catch (RuntimeException e)
-		{
-
-			e.printStackTrace();
-		}
-
-		return npi;
-	}
-	
-	public String getFaxNumber(String firstName, String lastName)
-	{
-		List<NPI> matchingNPIs = getSocketHL7ListenerDAO().getNPIByName(firstName, lastName);
-				
-		if(matchingNPIs.size()>0)
-		{
-			NPI npi = matchingNPIs.get(0);
-			return npi.getFaxNumber();
-		}
-
-		return null;
 	}
 
 	public boolean checkMD5(String incoming, Integer port)

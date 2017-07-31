@@ -16,8 +16,8 @@
 	<require_version>1.12.*</require_version>
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
-		<require_module version="1.13.0">org.openmrs.module.chirdlutil</require_module>
-		<require_module version="2.7.0">org.openmrs.module.chirdlutilbackports</require_module>
+		<require_module version="1.14.0">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="2.8.0">org.openmrs.module.chirdlutilbackports</require_module>
 	</require_modules>
 	<extension>
 		<point>org.openmrs.admin.list</point>
@@ -73,8 +73,6 @@
 	
 	<mappingFiles>
 	hl7Out.hbm.xml
-	InstProv.hbm.xml
-	NPI.hbm.xml
 	PatientMessage.hbm.xml
 	</mappingFiles>
 </module>

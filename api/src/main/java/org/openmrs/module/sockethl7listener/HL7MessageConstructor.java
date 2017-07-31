@@ -312,13 +312,6 @@ public class HL7MessageConstructor {
 			
 			prov.setProvider(openmrsProvider);
 			String providerId = prov.getEhrProviderId();
-			// using npi
-			if (providerId == null || providerId.equals("")) {
-				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
-						.getLastName());
-				providerId = npi;
-			}
-
 			pv1.getAttendingDoctor(0).getFamilyName().getSurname().setValue(
 					prov.getLastName());
 			pv1.getAttendingDoctor(0).getGivenName().setValue(
@@ -444,12 +437,6 @@ public class HL7MessageConstructor {
 			
 			prov.setProvider(openmrsProvider);
 			String providerId = prov.getEhrProviderId();
-			// using npi
-			if (providerId == null || providerId.equals("")) {
-				String npi = hl7ListService.getNPI(prov.getFirstName(), prov
-						.getLastName());
-				providerId = npi;
-			}
 			String encDateStr = "";
 			String encDateOnly = "";
 			if (encDt != null) {
