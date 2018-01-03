@@ -799,10 +799,10 @@
   <patient patient_id="105" creator="1" date_created="2009-03-20 14:34:22.0" changed_by="1" date_changed="2009-03-20 14:34:25.0" voided="0"/>
   <patient patient_id="106" creator="1" date_created="2009-03-20 14:36:19.0" changed_by="1" date_changed="2009-03-20 14:36:21.0" voided="0"/>
   <patient patient_id="107" creator="1" date_created="2009-03-23 15:36:48.0" changed_by="1" date_changed="2009-03-23 15:38:14.0" voided="0"/>
-  <patient_identifier_type patient_identifier_type_id="1" name="OpenMRS Identification Number" description="Unique number used in OpenMRS" format="" check_digit="1" creator="1" date_created="2005-09-22 00:00:00.0" required="0" validator="org.openmrs.patient.impl.LuhnIdentifierValidator" retired="0"/>
-  <patient_identifier_type patient_identifier_type_id="2" name="Old Identification Number" description="Number given out prior to the OpenMRS system (No check digit)" format="" check_digit="0" creator="1" date_created="2005-09-22 00:00:00.0" required="0" retired="0"/>
-  <patient_identifier_type patient_identifier_type_id="3" name="MRN_OTHER" description="other medical record number" check_digit="1" creator="1" date_created="2009-02-01 22:18:43.0" required="0" validator="org.openmrs.patient.impl.LuhnIdentifierValidator" retired="0"/>
-  <patient_identifier_type patient_identifier_type_id="4" name="SSN" description="social security number" check_digit="1" creator="1" date_created="2009-02-01 22:21:08.0" required="0" validator="org.openmrs.module.chica.hl7.SSNValidator" retired="0"/>
+  <patient_identifier_type patient_identifier_type_id="1" name="OpenMRS Identification Number" description="Unique number used in OpenMRS" format="" creator="1" date_created="2005-09-22 00:00:00.0" required="0" validator="org.openmrs.patient.impl.LuhnIdentifierValidator" retired="0"/>
+  <patient_identifier_type patient_identifier_type_id="2" name="Old Identification Number" description="Number given out prior to the OpenMRS system (No check digit)" format="" creator="1" date_created="2005-09-22 00:00:00.0" required="0" retired="0"/>
+  <patient_identifier_type patient_identifier_type_id="3" name="MRN_OTHER" description="other medical record number" creator="1" date_created="2009-02-01 22:18:43.0" required="0" validator="org.openmrs.patient.impl.LuhnIdentifierValidator" retired="0"/>
+  <patient_identifier_type patient_identifier_type_id="4" name="SSN" description="social security number" creator="1" date_created="2009-02-01 22:21:08.0" required="0" validator="org.openmrs.module.chica.hl7.SSNValidator" retired="0"/>
   <location location_id="2" name="LOC2" creator="1" date_created="2007-02-01 22:21:08.0" retired="false" uuid="asdk829827s90a07df"/>
   <location location_id="3" name="LOC3" creator="1" date_created="2007-02-01 22:21:08.0" retired="false" uuid="asdk829827s90a07dg"/>
   <location location_id="4" name="LOC4" creator="1" date_created="2007-02-01 22:21:08.0" retired="false" uuid="asdk829827s90a07dh"/>

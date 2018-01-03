@@ -45,6 +45,8 @@ import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
+import org.openmrs.util.PrivilegeConstants;
+
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
 import ca.uhn.hl7v2.app.ApplicationException;
@@ -152,8 +154,8 @@ public class HL7SocketHandler implements Application {
 				Context.authenticate(adminService
 				.getGlobalProperty("scheduler.username"), adminService
 				        .getGlobalProperty("scheduler.password"));
-				Context.addProxyPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE);
-				if (!Context.hasPrivilege(HL7Constants.PRIV_ADD_HL7_IN_QUEUE)) {
+				Context.addProxyPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE); // CHICA-1151 replaced HL7Constants.PRIV_ADD_HL7_IN_QUEUE with PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE
+				if (!Context.hasPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE)) {
 					logger.error("You do not have HL7 add privilege!!");
 					System.exit(0);
 				}
@@ -383,7 +385,7 @@ public class HL7SocketHandler implements Application {
 		Patient resultPatient = new Patient();
 		
 		try {
-			Patient matchedPatient = patientService.findPatient(hl7Patient);
+			Patient matchedPatient = patientService.getPatientByExample(hl7Patient); // CHICA-1151 Replace findPatient() with getPatientByExample()
 			if (matchedPatient == null) {
 				resultPatient = createPatient(hl7Patient);
 			}
@@ -430,7 +432,7 @@ public class HL7SocketHandler implements Application {
 				EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
 				newEncounter.setProvider(encounterRole, openmrsProvider);
 				newEncounter.setPatient(resultPatient);
-				newEncounter.setPatientId(resultPatient.getPatientId());
+				// newEncounter.setPatient(resultPatient); // CHICA-1151 remove call to setPatientId() the setPatient() method called above already does this
 				es.saveEncounter(newEncounter);
 				return newEncounter;
 			}
@@ -764,7 +766,7 @@ public class HL7SocketHandler implements Application {
 			cal.add(Calendar.MINUTE, -timeWindow);
 			Date fromDate = cal.getTime();
 
-			List<Encounter> encounters = es.getEncounters(p,null, fromDate, encDate,null,null,null,false);
+			List<Encounter> encounters = es.getEncounters(p,null, fromDate, encDate,null,null,null,null,null,false); // CHICA-1151 Add null parameters for Collection<VisitType> and Collection<Visit>
 					
 			Iterator <Encounter> it = encounters.iterator();
 			if (it.hasNext()){

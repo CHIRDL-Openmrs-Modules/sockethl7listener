@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.openmrs.module</groupId>
 		<artifactId>sockethl7listener</artifactId>
-		<version>1.9.0</version>
+		<version>1.10.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>sockethl7listener-omod</artifactId>
 	<packaging>jar</packaging>
@@ -49,6 +49,15 @@
 			<groupId>org.openmrs.test</groupId>
 			<artifactId>openmrs-test</artifactId>
 			<type>pom</type>
+		</dependency>
+		<dependency>
+			<groupId>org.openmrs.module</groupId>
+			<artifactId>legacyui-omod</artifactId>
+			<type>jar</type>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>			
 		</dependency>
 	</dependencies>
 
