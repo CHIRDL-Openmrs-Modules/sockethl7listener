@@ -771,6 +771,11 @@ public class HL7SocketHandler implements Application {
 				// The patient already has an encounter for the day at this location, treat this message as an update
 				enc = encounters.get(0);
 				
+				// Update the provider as needed
+				org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+				EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
+				enc.setProvider(encounterRole, openmrsProvider);
+				
 				// Store the PatientMessage
 				hl7ListService.setHl7Message(pid, enc.getEncounterId(), incomingMessageString,
 						false, false, this.port);
