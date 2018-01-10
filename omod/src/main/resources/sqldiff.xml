@@ -321,4 +321,15 @@ references patient(patient_id);
 			drop table sockethl7listener_npi;
 		</sql>
 	</diff>
+	<diff>
+		<version>1.1.1</version>
+		<author>David Ely</author>
+		<date>January 10, 2018</date>
+		<description>
+			Removed unused global properties related to checking for duplicate HL7 messages that would create duplicate encounters
+		</description>
+		<sql>
+			Delete From global_property WHERE property IN ('sockethl7listener.encounterDateTimeWindow', 'sockethl7listener.ignoreDuplicateEncounter');
+		</sql>
+	</diff>
 </sqldiff>
