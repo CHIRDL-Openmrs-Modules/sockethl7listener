@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import org.apache.log4j.Logger;
@@ -278,7 +277,19 @@ public class HL7SocketHandler implements Application {
 		Encounter encounter = processEncounter(incomingMessageString,pat,
 					encounterDate, newEncounter, provider,parameters);
 		
-		if (encounter == null) return null;
+		// CHICA-1157
+		// Use this to determine if we should return from here or continue on, 
+		// which will run TriggerPatientAfterAdvice when .messageProcessed() is called below
+		// This parameter will be set to false when we already had an encounter for the day,
+		// possibly created from the A10 message that was converted to an A04
+		boolean newEncounterCreated = true;
+		Object newEncounterCreatedObject = parameters.get(ChirdlUtilConstants.PARAMETER_NEW_ENCOUNTER_CREATED);
+		if(newEncounterCreatedObject != null && newEncounterCreatedObject instanceof Boolean)
+		{
+			newEncounterCreated = (boolean)newEncounterCreatedObject;
+		}
+		
+		if (encounter == null || !newEncounterCreated) return null;
 		
 		int reps = hl7ObsHandler.getReps(message);// number of obs 
 
@@ -733,56 +744,44 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = 
 			Context.getService(SocketHL7ListenerService.class);
-		AdministrationService adminService = Context.getAdministrationService();	
-		String window = adminService
-		   .getGlobalProperty("sockethl7listener.encounterDateTimeWindow");
-		String ignoreDuplicateEncounter = adminService
-		   .getGlobalProperty("sockethl7listener.ignoreDuplicateEncounter");
+			
+		parameters.put(ChirdlUtilConstants.PARAMETER_NEW_ENCOUNTER_CREATED, true); // CHICA-1157 Use this parameter to determine if TriggerPatientAfterAdvice should run, which creates new patient states
 		
 		EncounterService es = Context.getEncounterService();
 		Encounter enc = null;
 		int pid = 0;
-		boolean isDuplicateDateTime = false;
 		int encid = 0;
 		
 		try {
 			pid = p.getPatientId();
 		
-			//Check for any encounter with the same encounter date/time 
-			//or within a specified window of this encounter date/time.
-			Integer timeWindow = 0;
-			
+			// CHICA-1157 We'll look for encounters starting from the beginning of the day for the location
+			// received in the registration message. If we need to allow more than one encounter per day at the given
+			// location, we should use the visit number to determine if it is a duplicate, if it is a new visit number,
+			// we should be able to assume that it safe to create a new encounter
+			// However, visit number is only available at Eskenazi, IUH does not send us visit number
 			Calendar cal = Calendar.getInstance();
-			if (window != null) {
-				try {
-					timeWindow = Integer.valueOf(window);
-				} catch (NumberFormatException e) {
-					//global property string is not an Integer 
-					//set time window = 0
-				}
-			}
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
 			
-			cal.setTime(encDate);
-			cal.add(Calendar.MINUTE, -timeWindow);
-			Date fromDate = cal.getTime();
-
-			List<Encounter> encounters = es.getEncounters(p,null, fromDate, encDate,null,null,null,null,null,false); // CHICA-1151 Add null parameters for Collection<VisitType> and Collection<Visit>
-					
-			Iterator <Encounter> it = encounters.iterator();
-			if (it.hasNext()){
-				enc = encounters.iterator().next();
-				isDuplicateDateTime = true;
-				encid = enc.getEncounterId();
-				if (ignoreDuplicateEncounter  != null 
-						&& (ignoreDuplicateEncounter.equalsIgnoreCase("true")
-								|| ignoreDuplicateEncounter.equalsIgnoreCase("0") 
-								||  ignoreDuplicateEncounter.equalsIgnoreCase("yes"))){
-					hl7ListService.setHl7Message(pid, encid, incomingMessageString,
-							false, isDuplicateDateTime, this.port);
-					logger.error("Encounter occurred within " + window 
-							+ " minutes of a previous encounter (" + encid + ") for patient " + pid);
-					return null;
-				}
+			List<Encounter> encounters = es.getEncounters(p,newEncounter.getLocation(), cal.getTime(), encDate,null,null,null,null,null,false); // CHICA-1151 Add null parameters for Collection<VisitType> and Collection<Visit> CHICA-1157 Add parameter for location
+			
+			if(encounters.size() > 0){ 
+				// The patient already has an encounter for the day at this location, treat this message as an update
+				enc = encounters.get(0);
+				
+				// Update the provider as needed
+				org.openmrs.Provider openmrsProvider = provider.getProvider(provider);
+				EncounterRole encounterRole = es.getEncounterRoleByName(ChirdlUtilConstants.ENCOUNTER_ROLE_ATTENDING_PROVIDER);
+				enc.setProvider(encounterRole, openmrsProvider);
+				
+				// Store the PatientMessage
+				hl7ListService.setHl7Message(pid, enc.getEncounterId(), incomingMessageString,
+						false, false, this.port);
+				
+				// From here, updates will occur in the child.processEncounter() method
+				parameters.put(ChirdlUtilConstants.PARAMETER_NEW_ENCOUNTER_CREATED, false); // Use this parameter to determine if TriggerPatientAfterAdvice should run, which creates new patient states	
 			}else {
 				enc = createEncounter(p,newEncounter,provider,parameters);
 				if (enc != null && provider != null){
@@ -790,12 +789,9 @@ public class HL7SocketHandler implements Application {
 				}else {
 					logger.warn("Encounter not created or provider is null ");
 				}
-						
+				hl7ListService.setHl7Message(pid, encid, incomingMessageString,
+						false, false, this.port);
 			}
-			hl7ListService.setHl7Message(pid, encid, incomingMessageString,
-					false, isDuplicateDateTime, this.port);
-			
-			
 		} catch (RuntimeException e) {
 			logger.error("Exception when checking encounter date/time. ",e);
 		} 
