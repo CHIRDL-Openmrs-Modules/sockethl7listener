@@ -23,6 +23,7 @@ import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.PV1;
+import ca.uhn.hl7v2.model.v25.segment.PV2;
 
 /**
  * @author tmdugan
@@ -267,5 +268,45 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 	{
 		PV1 pv1 = getPV1(message);
 		return pv1.getAssignedPatientLocation().getPointOfCare().getValue();
+	}
+	
+	/**
+	 * CHICA-1160
+	 * Get PV2 segment
+	 * @param message
+	 * @return
+	 */
+	private PV2 getPV2(Message message)
+	{
+		if (message instanceof ADT_A01)
+		{
+			return getPV2((ADT_A01) message);
+		}
+		return null;
+	}
+
+	/**
+	 * CHICA-1160
+	 * Get PV2 segment from ADT message
+	 * @param adt
+	 * @return
+	 */
+	private PV2 getPV2(ADT_A01 adt)
+	{
+		return adt.getPV2();
+	}
+	
+	/**
+	 * CHICA-1160
+	 * Get visit type (visit description) from PV2-12
+	 */
+	public String getVisitType(Message message)
+	{
+		PV2 pv2 = getPV2(message);
+		if(pv2 != null)
+		{
+			return pv2.getVisitDescription().getValue();
+		}
+		return null;
 	}
 }
