@@ -44,6 +44,8 @@ import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
+import org.openmrs.parameter.EncounterSearchCriteria;
+import org.openmrs.parameter.EncounterSearchCriteriaBuilder;
 import org.openmrs.util.PrivilegeConstants;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -765,8 +767,11 @@ public class HL7SocketHandler implements Application {
 			cal.set(Calendar.MINUTE, 0);
 			cal.set(Calendar.SECOND, 0);
 			
-			List<Encounter> encounters = es.getEncounters(p,newEncounter.getLocation(), cal.getTime(), encDate,null,null,null,null,null,false); // CHICA-1151 Add null parameters for Collection<VisitType> and Collection<Visit> CHICA-1157 Add parameter for location
-			
+			//MES CHICA-1156 Replace deprecated getEncounters method by using new Openmrs EncounterSearchCriteria class
+			EncounterSearchCriteria encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setPatient(p).setFromDate(cal.getTime())
+					.setToDate(encDate).setLocation(newEncounter.getLocation()).setIncludeVoided(false).createEncounterSearchCriteria();
+			List<org.openmrs.Encounter> encounters = Context.getService(EncounterService.class).getEncounters(encounterSearchCriteria); 
+				
 			if(encounters.size() > 0){ 
 				// The patient already has an encounter for the day at this location, treat this message as an update
 				enc = encounters.get(0);
