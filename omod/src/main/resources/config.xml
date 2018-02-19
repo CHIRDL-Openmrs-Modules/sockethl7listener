@@ -13,11 +13,12 @@
 			Accepts and processes hl7 messages
 	</description>
 
-	<require_version>1.12.*</require_version>
+	<require_version>2.0.6</require_version>
 	<activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_modules>
-		<require_module version="1.14.0">org.openmrs.module.chirdlutil</require_module>
-		<require_module version="2.8.0">org.openmrs.module.chirdlutilbackports</require_module>
+		<require_module version="1.17.0">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="2.9.0">org.openmrs.module.chirdlutilbackports</require_module>
+		<require_module version="1.3.1">org.openmrs.module.legacyui</require_module>
 	</require_modules>
 	<extension>
 		<point>org.openmrs.admin.list</point>
@@ -43,17 +44,7 @@
 		<property>sockethl7listener.exportFileType</property>
 		<defaultValue>tif</defaultValue>
    		<description>File type for export form</description>
-	</globalProperty>	
-	<globalProperty>
-        <property>sockethl7listener.encounterDateTimeWindow</property>
-        <defaultValue>0</defaultValue>
-        <description>Allowable time window (minutes) to be considered a duplicate encounter. </description>
-    </globalProperty>   
-    <globalProperty>
-        <property>sockethl7listener.ignoreDuplicateEncounter</property>
-        <defaultValue>true</defaultValue>
-        <description>Ignore hl7 message if it is for the same encounter. </description>
-    </globalProperty>   
+	</globalProperty>	   
     <globalProperty>
         <property>sockethl7listener.hapiCharacterEncoding</property>
         <description>Sets the character encoding Hapi will use to parse HL7 messages.  If not set, Hapi's default encoding will be used.</description>

@@ -216,7 +216,7 @@ public class PatientHandler
 			for (PersonAddress address : addresses)
 			{
 				hl7Patient.addAddress(address);
-				address.setDateCreated(encounterDate);
+				address.setDateCreated(new Date()); // CHICA-1157 Change the create date to current time so that the address can be updated if we receive an A10 then A04 with two different values
 				address.setCreator(Context.getAuthenticatedUser());
 			}
 
