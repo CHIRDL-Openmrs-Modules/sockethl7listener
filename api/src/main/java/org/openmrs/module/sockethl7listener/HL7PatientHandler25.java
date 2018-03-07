@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
@@ -32,6 +33,7 @@ import ca.uhn.hl7v2.model.v25.datatype.XPN;
 import ca.uhn.hl7v2.model.v25.datatype.XTN;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
+import ca.uhn.hl7v2.model.v25.segment.IN1;
 import ca.uhn.hl7v2.model.v25.segment.NK1;
 import ca.uhn.hl7v2.model.v25.segment.PID;
 
@@ -412,15 +414,22 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		return TranslateDate(tsLastUpdate);
 	}
 
+	/**
+	 * This method will parse next of kin from the NK1 segment
+	 * 
+	 * @param message
+	 * @return String with a value of "firstName|lastName" or empty if both first and last name fields were empty
+	 * 
+	 */
 	public String getNextOfKin(Message message){
-		String nextOfKin = "";	
+		String nextOfKin = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING;	
 		NK1 nk1 = getNK1(message);	
 
 		try
 		{
 			XPN[] list = null;
 			list = nk1.getNKName();
-			String nkln = "", nkfn = "";
+			String nkln = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING, nkfn = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING;
 
 			if (list != null)
 			{
@@ -434,10 +443,16 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			}
 
 			if (nkln == null)
-				nkln = "";
+				nkln = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING;
 			if (nkfn == null)
-				nkfn = "";		
-			nextOfKin = nkfn + "|" + nkln;
+				nkfn = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING;
+			
+			if(StringUtils.isNotBlank(nkln) || StringUtils.isNotBlank(nkln)) 	
+			{
+				// CHICA-1185 Only add the pipe delimiter if there is a value in at least the first OR last name field
+				// If both fields are empty, this method will return an empty string
+				nextOfKin = nkfn + ChirdlUtilConstants.GENERAL_INFO_PIPE_DELIMITER + nkln;
+			}
 		} catch (RuntimeException e)
 		{
 			logger.error("Exception while extracting next-of-kin. Message: "
