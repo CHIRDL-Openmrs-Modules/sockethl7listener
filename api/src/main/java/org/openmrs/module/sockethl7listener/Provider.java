@@ -132,19 +132,6 @@ public class Provider {
 		return provName;
    }
 	
-	public boolean equals(Provider p){
-		boolean ret = false;
-        if (p!= null){
-			if (firstName.equalsIgnoreCase(p.getFirstName().trim())
-					&& lastName.equalsIgnoreCase(p.getLastName().trim())){
-				ret = true;
-			}
-        }
-	
-		return ret;
-	}
-	
-	
 	/**
 	 * CHICA-221 Updated method to use the ProviderService
 	 * @param provider
