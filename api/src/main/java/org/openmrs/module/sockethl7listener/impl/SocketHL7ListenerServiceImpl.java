@@ -22,7 +22,7 @@ import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
  *
  */
 public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
-	private static final Logger socketHandlerLogger = Logger.getLogger("SocketHandlerLogger");
+	private static final Logger LOGGER = Logger.getLogger("SocketHandlerLogger");
 
 	private SocketHL7ListenerDAO dao;
 
@@ -102,7 +102,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			
 		} catch (HibernateException e)
 		{
-			socketHandlerLogger.error("Exception inserting hl7message. ", e);
+			LOGGER.error("Exception inserting hl7message. ", e);
 		}
 		
 		return;
@@ -119,7 +119,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			if (it.hasNext()){
 				PatientMessage pm = it.next();
 				duplicate = true;
-				socketHandlerLogger.warn("Duplicate message for patient=" + pm.getPatient_id() +
+				LOGGER.warn("Duplicate message for patient=" + pm.getPatient_id() +
 						"; encounterID= " + pm.getEncounter_id());
 				
 				setHl7Message(pm.getPatient_id(), pm.getEncounter_id(), 
@@ -128,12 +128,10 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 
 		} catch (HibernateException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		} catch (RuntimeException e)
 		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			LOGGER.error(e);
 		}
 
 		return duplicate;

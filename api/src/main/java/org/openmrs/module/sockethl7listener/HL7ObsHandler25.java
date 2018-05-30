@@ -34,7 +34,7 @@ import org.openmrs.hl7.HL7Util;
  */
 public class HL7ObsHandler25 implements HL7ObsHandler
 {
-	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
+	private static final Logger LOGGER = Logger.getLogger("SocketHandlerLogger");
 	public static MSH getMSH(Message message)
 	{
 		if (message instanceof ORU_R01)
@@ -82,7 +82,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		} catch (Exception e)
 		{
 
-			logger.error("Exception" ,e);
+			LOGGER.error("Exception" ,e);
 		}
 
 		return obx;
@@ -105,7 +105,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		}
 		catch(Exception e)
 		{
-			logger.error("Exception" ,e);
+			LOGGER.error("Exception" ,e);
 		}
 		
 		return obx;
@@ -131,7 +131,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 					.getOBR();
 		} catch (Exception e)
 		{
-			logger.error("Exception" ,e);
+			LOGGER.error("Exception" ,e);
 		}
 
 		return obr;
@@ -154,7 +154,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 				}
 			}	
 		}  catch (HL7Exception e) {
-			logger.error("Error converting TS timestamp to Date due to parsing error. Time string: " + timeString);
+			LOGGER.error("Error converting TS timestamp to Date due to parsing error. Time string: " + timeString);
 		}
 		
 		return datetime;
@@ -290,7 +290,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 					dVal = Double.parseDouble(nmvalue);
 				} catch (Exception ex)
 				{
-					ex.printStackTrace();
+					LOGGER.error(ex);
 				}
 			}
 		}

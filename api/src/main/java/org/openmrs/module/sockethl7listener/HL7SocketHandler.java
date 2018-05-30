@@ -131,7 +131,7 @@ public class HL7SocketHandler implements Application {
 				incomingMessageString = this.parser.encode(message);
 			} catch (HL7Exception e2) 
 			{
-				e2.printStackTrace();
+				logger.error(e2);
 			}
 						
 			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
@@ -832,7 +832,7 @@ public class HL7SocketHandler implements Application {
 			
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 
@@ -1089,7 +1089,7 @@ public class HL7SocketHandler implements Application {
 				
 				
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 
 

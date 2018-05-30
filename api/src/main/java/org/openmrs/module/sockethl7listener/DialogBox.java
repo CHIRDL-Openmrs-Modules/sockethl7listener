@@ -19,6 +19,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.apache.log4j.Logger;
+
 import ca.uhn.hl7v2.app.HL7ServerTestHelper;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -27,6 +29,8 @@ import java.io.FileReader;
 
 public class DialogBox 
 {
+
+	private static final Logger LOGGER = Logger.getLogger("DialogBox");
 
 	private static Socket socket = null;
 	private static OutputStream os = null;
@@ -133,7 +137,7 @@ public class DialogBox
 				   	
 					
 					} catch (Exception e){
-						e.printStackTrace();
+						LOGGER.error(e);
 					}
 
 				}
@@ -169,14 +173,11 @@ public class DialogBox
 					
 					
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.error(e);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.error(e);
 				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					LOGGER.error(e);
 				} finally {
 					closeSocket();
 				}
