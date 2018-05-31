@@ -253,10 +253,6 @@ public class PatientHandler
 		if (attributeType == null)
 		{
 			attributeType = createAttributeType(attributeTypeName);
-			if (attributeType == null){
-				logger.error("Unable to create attribute: " + attributeTypeName);
-				return;
-			}
 		}
 		
 		PersonAttribute attr = new PersonAttribute(attributeType, value);

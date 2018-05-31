@@ -583,7 +583,7 @@ public class HL7SocketHandler implements Application {
 		}else
 		{
 			// DWE CHICA-635
-			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
+			if(HL7Constants.HL7_NUMERIC.equals(obsValueType)){
 				concept = new ConceptNumeric();
 			}else{
 				concept = new Concept();
@@ -636,10 +636,11 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			//create the obs
-			if(okToCreateObs&&saveToDatabase)
-			{
+			if(okToCreateObs&&saveToDatabase){
 				os.saveObs(obs,null);
-				enc.addObs(obs);
+				if(enc != null){
+				    enc.addObs(obs);
+				}
 			}
 		}
 		
