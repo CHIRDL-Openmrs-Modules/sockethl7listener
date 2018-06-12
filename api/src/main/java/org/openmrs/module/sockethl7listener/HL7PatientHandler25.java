@@ -447,7 +447,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			if (nkfn == null)
 				nkfn = ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING;
 			
-			if(StringUtils.isNotBlank(nkln) || StringUtils.isNotBlank(nkln)) 	
+			if(StringUtils.isNotBlank(nkfn) || StringUtils.isNotBlank(nkln)) 	
 			{
 				// CHICA-1185 Only add the pipe delimiter if there is a value in at least the first OR last name field
 				// If both fields are empty, this method will return an empty string
