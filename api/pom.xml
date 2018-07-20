@@ -12,6 +12,10 @@
 	<description>API project for sockethl7listener</description>
 
 	<dependencies>
+        <dependency>
+            <groupId>org.openmrs.module</groupId>
+            <artifactId>logic-api</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.openmrs.module</groupId>
 			<artifactId>chirdlutilbackports-api</artifactId>
@@ -25,6 +29,12 @@
 			<groupId>org.openmrs.api</groupId>
 			<artifactId>openmrs-api</artifactId>
 			<type>jar</type>
+            <exclusions>
+                <exclusion>
+                    <artifactId>commons-logging</artifactId>
+                    <groupId>commons-logging</groupId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.openmrs.api</groupId>
@@ -51,6 +61,10 @@
 			<artifactId>legacyui-omod</artifactId>
 			<type>jar</type>
 		</dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>          
+        </dependency>
 	</dependencies>
 
 	<build>
