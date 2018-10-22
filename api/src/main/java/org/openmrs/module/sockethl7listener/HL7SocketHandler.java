@@ -131,7 +131,7 @@ public class HL7SocketHandler implements Application {
 				incomingMessageString = this.parser.encode(message);
 			} catch (HL7Exception e2) 
 			{
-				e2.printStackTrace();
+				logger.error(e2);
 			}
 						
 			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
@@ -583,7 +583,7 @@ public class HL7SocketHandler implements Application {
 		}else
 		{
 			// DWE CHICA-635
-			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
+			if(HL7Constants.HL7_NUMERIC.equals(obsValueType)){
 				concept = new ConceptNumeric();
 			}else{
 				concept = new Concept();
@@ -636,10 +636,11 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			//create the obs
-			if(okToCreateObs&&saveToDatabase)
-			{
+			if(okToCreateObs&&saveToDatabase){
 				os.saveObs(obs,null);
-				enc.addObs(obs);
+				if(enc != null){
+				    enc.addObs(obs);
+				}
 			}
 		}
 		
@@ -832,7 +833,7 @@ public class HL7SocketHandler implements Application {
 			
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 
@@ -1089,7 +1090,7 @@ public class HL7SocketHandler implements Application {
 				
 				
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 
 

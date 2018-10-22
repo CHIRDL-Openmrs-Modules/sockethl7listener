@@ -1,7 +1,6 @@
 package org.openmrs.module.sockethl7listener;
 
 import java.util.Date;
-import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Person;
@@ -9,11 +8,9 @@ import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
 import org.openmrs.api.APIException;
 import org.openmrs.api.AdministrationService;
-import org.openmrs.api.PersonService;
 import org.openmrs.api.ProviderService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
-import org.openmrs.module.chirdlutilbackports.service.ChirdlUtilBackportsService;
 
 
 /**
@@ -32,8 +29,7 @@ public class Provider {
 	private String pocRoom;
 	private String pocBed;
 	private String admitSource;
-	public AdministrationService as;
-	private Log log =  LogFactory.getLog(this.getClass());
+	private static final Log LOG =  LogFactory.getLog(Provider.class);
 	private static final String VOIDED_REASON_PERSON_NAME_CHANGE = "voided due to name update in HL7 message";
 	
 	
@@ -118,16 +114,16 @@ public class Provider {
    public PersonName parseProviderNameFromAttribute(PersonAttribute provNameAttr) {
 		
 
-		String ProvNameValue = provNameAttr.getValue();
+		String provNameValue = provNameAttr.getValue();
 		String firstname = "";
 		String lastname = "";
 		
-		int index1 =ProvNameValue.indexOf(".");
+		int index1 =provNameValue.indexOf(".");
 		if (index1 != -1){
-			firstname = ProvNameValue.substring(0,index1);
-			lastname = ProvNameValue.substring(index1 + 1);
+			firstname = provNameValue.substring(0,index1);
+			lastname = provNameValue.substring(index1 + 1);
 		}else {
-			firstname = ProvNameValue;
+			firstname = provNameValue;
 		}
 		PersonName provName = new PersonName();
 		provName.setFamilyName(lastname);
@@ -135,19 +131,6 @@ public class Provider {
 		
 		return provName;
    }
-	
-	public boolean equals(Provider p){
-		boolean ret = false;
-        if (p!= null){
-			if (firstName.equalsIgnoreCase(p.getFirstName().trim())
-					&& lastName.equalsIgnoreCase(p.getLastName().trim())){
-				ret = true;
-			}
-        }
-	
-		return ret;
-	}
-	
 	
 	/**
 	 * CHICA-221 Updated method to use the ProviderService
@@ -176,12 +159,10 @@ public class Provider {
 				
 			// Determine if the provider already exists
 			// Look the provider up using the provider id found in the HL7 message
-			if(!providerId.isEmpty())
-			{
+			if(!providerId.isEmpty()){
 				// Identifier is now stored in the provider table. This was migrated as part of the openmrs upgrade
 				openmrsProvider = providerService.getProviderByIdentifier(providerId); 
-				if(openmrsProvider == null)
-				{
+				if(openmrsProvider == null){
 					// Provider does not exist, create a new one
 					openmrsProvider = new org.openmrs.Provider();
 					Person newPerson = new Person();
@@ -192,14 +173,12 @@ public class Provider {
 					openmrsProvider.setIdentifier(providerId);
 					openmrsProvider = providerService.saveProvider(openmrsProvider);	
 				}
-				else
-				{
+				else{
 					Person person = openmrsProvider.getPerson();
 					PersonName personName = person.getPersonName();
 					
 					// Make sure the name matches. If it does not, void the current one and create a new one
-					if(!personName.getFamilyName().equalsIgnoreCase(lastname) || !personName.getGivenName().equalsIgnoreCase(firstname))
-					{
+					if(!personName.getFamilyName().equalsIgnoreCase(lastname) || !personName.getGivenName().equalsIgnoreCase(firstname)){
 						// Name has changed, retire the current name and create a new one
 						personName.setVoided(true);
 						personName.setPreferred(false);
@@ -217,35 +196,30 @@ public class Provider {
 					}
 				}
 				
-				if(openmrsProvider != null && openmrsProvider.getId() != null)
-				{
+				if(openmrsProvider != null && openmrsProvider.getId() != null){
 					provider.setProviderId(openmrsProvider.getId());
 				}
 			}
-			else
-			{
+			else{
 				// Use the global property to determine which provider to use when the attending provider field is empty in the HL7 message
 				AdministrationService adminService = Context.getAdministrationService();
 				String unknownProviderIdString = adminService.getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
-				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0)
-				{
-					log.error("No value set for global property: " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0){
+					LOG.error("No value set for global property: " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
 					return null;
 				}
 				
-				try
-				{
+				try{
 					Integer unknownProviderId = Integer.parseInt(unknownProviderIdString);
 					openmrsProvider = providerService.getProvider(unknownProviderId);
 				}
-				catch(NumberFormatException nfe)
-				{
-					log.error("Invalid number format for global property " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+				catch(NumberFormatException nfe){
+					LOG.error("Invalid number format for global property " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
 					return null;
 				}	
 			}
 		} catch (Exception e){
-			log.error("Error while creating or updating a provider.", e);
+			LOG.error("Error while creating or updating a provider.", e);
 		}
 		
 		return openmrsProvider;
@@ -290,8 +264,7 @@ public class Provider {
 	    String identifier = openmrsProvider.getIdentifier();
 	    if (identifier == null) {
 	    	setEhrProviderId("");
-	    }
-	    else{
+	    }else{
 	    	setEhrProviderId(identifier);
 	    }
 	
