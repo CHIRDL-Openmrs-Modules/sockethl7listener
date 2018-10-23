@@ -10,9 +10,10 @@ import org.openmrs.PersonAttribute;
 import org.openmrs.PersonAttributeType;
 import org.openmrs.PersonName;
 import org.openmrs.api.context.Context;
+import org.openmrs.test.BaseModuleContextSensitiveTest;
 import org.openmrs.test.Verifies;
 
-public class MatchHandlerTest {
+public class MatchHandlerTest extends BaseModuleContextSensitiveTest {
 	/**
 	 * @see {@link MatchHandler#getBestName(Patient,Patient,Date)}
 	 * 
