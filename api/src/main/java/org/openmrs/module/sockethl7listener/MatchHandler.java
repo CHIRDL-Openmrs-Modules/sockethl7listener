@@ -582,7 +582,7 @@ public class MatchHandler {
 			bestTel.setCreator(Context.getAuthenticatedUser());
 		}
 		
-		if  (resolvedTel.equals(PIDTel))
+		if  (resolvedTel!=null&&resolvedTel.equals(PIDTel))
 		{
 			bestTel = hl7;
 			bestTel.setDateCreated(encounterDate);

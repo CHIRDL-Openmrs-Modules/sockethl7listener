@@ -54,6 +54,7 @@ import ca.uhn.hl7v2.app.ApplicationException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
+import ca.uhn.hl7v2.model.v25.segment.EVN;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.NTE;
 import ca.uhn.hl7v2.util.Terser;
@@ -132,7 +133,7 @@ public class HL7SocketHandler implements Application {
 				incomingMessageString = this.parser.encode(message);
 			} catch (HL7Exception e2) 
 			{
-				e2.printStackTrace();
+				logger.error(e2);
 			}
 						
 			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
@@ -321,8 +322,13 @@ public class HL7SocketHandler implements Application {
 		boolean error = false;
 
 		MSH msh = HL7ObsHandler25.getMSH(message);
-		parameters.put("sendingApplication", msh.getSendingApplication().getNamespaceID().getValue());
-		parameters.put("sendingFacility", msh.getSendingFacility().getNamespaceID().getValue());
+		parameters.put(ChirdlUtilConstants.PARAMETER_SENDING_APPLICATION, msh.getSendingApplication().getNamespaceID().getValue());
+		parameters.put(ChirdlUtilConstants.PARAMETER_SENDING_FACILITY, msh.getSendingFacility().getNamespaceID().getValue());
+		
+		// CHICA-1185 Determine if this message was an A10 that was converted to an A04
+		HL7EventTypeHandler hl7EventHandler = new HL7EventTypeHandler25();
+		String eventTypeCode = hl7EventHandler.getEventTypeCode(message);
+		parameters.put(ChirdlUtilConstants.PARAMETER_HL7_EVENT_TYPE_CODE, eventTypeCode);
 		
 		// Obtain message control id (unique ID for message from sending
 		// application)
@@ -348,7 +354,7 @@ public class HL7SocketHandler implements Application {
 				String locationString = hl7EncounterHandler.getLocation(message); // CHICA-982 Get location from PV1 instead of ZLR segment
 				Location encounterLocation = setLocation(locationString);
 				Date encounterDate = hl7EncounterHandler.getEncounterDate(message);
-				Patient hl7Patient = patientHandler.setPatientFromHL7(message,encounterDate,encounterLocation,hl7PatientHandler);
+				Patient hl7Patient = patientHandler.setPatientFromHL7(message,encounterDate,encounterLocation,hl7PatientHandler, parameters); // CHICA-1185 Add parameters
 				
 				// Extract provider information for provider observations.
 				Provider provider = hl7EncounterHandler.getProvider(message);
@@ -404,7 +410,7 @@ public class HL7SocketHandler implements Application {
 			}
 			else {
 				resultPatient = updatePatient(matchedPatient,
-						hl7Patient,encounterDate);
+						hl7Patient,encounterDate, parameters); // CHICA-1185 Add parameters
 			}
 			
 			
@@ -579,7 +585,7 @@ public class HL7SocketHandler implements Application {
 		}else
 		{
 			// DWE CHICA-635
-			if(obsValueType.equals(HL7Constants.HL7_NUMERIC)){
+			if(HL7Constants.HL7_NUMERIC.equals(obsValueType)){
 				concept = new ConceptNumeric();
 			}else{
 				concept = new Concept();
@@ -632,10 +638,11 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			//create the obs
-			if(okToCreateObs&&saveToDatabase)
-			{
+			if(okToCreateObs&&saveToDatabase){
 				os.saveObs(obs,null);
-				enc.addObs(obs);
+				if(enc != null){
+				    enc.addObs(obs);
+				}
 			}
 		}
 		
@@ -686,7 +693,7 @@ public class HL7SocketHandler implements Application {
 	}
 	
 	protected Patient updatePatient(Patient mp,
-			Patient hl7Patient,Date encounterDate){
+			Patient hl7Patient,Date encounterDate, HashMap<String,Object> parameters){ // CHICA-1185 Add parameters
 	
 		PatientService patientService = Context.getPatientService();
 		MatchHandler matchHandler = new MatchHandler();
@@ -831,7 +838,7 @@ public class HL7SocketHandler implements Application {
 			
 			
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.error(e);
 		}
 
 
@@ -1088,7 +1095,7 @@ public class HL7SocketHandler implements Application {
 				
 				
 			} catch (IOException e) {
-				e.printStackTrace();
+				logger.error(e);
 			}
 
 
@@ -1276,8 +1283,6 @@ public class HL7SocketHandler implements Application {
 	public void setSocket(Socket socket) {
 		this.socket = socket;
 	}
-
-	
 }
 
 

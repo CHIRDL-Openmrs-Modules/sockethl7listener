@@ -4,8 +4,6 @@ package org.openmrs.module.sockethl7listener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,14 +17,17 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.apache.log4j.Logger;
+
 import ca.uhn.hl7v2.app.HL7ServerTestHelper;
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
 
 public class DialogBox 
 {
+
+	private static final Logger LOGGER = Logger.getLogger("DialogBox");
 
 	private static Socket socket = null;
 	private static OutputStream os = null;
@@ -133,7 +134,7 @@ public class DialogBox
 				   	
 					
 					} catch (Exception e){
-						e.printStackTrace();
+						LOGGER.error(e);
 					}
 
 				}
@@ -141,25 +142,22 @@ public class DialogBox
 			
 			public void process(File file, String host, Integer port, Integer sleep){
 				
-				String outputString = null;
 				StringBuffer fileData = new StringBuffer(1000);
 				
 				try {
 					openSocket(host,port);
-					BufferedInputStream in = 
-						new BufferedInputStream(new FileInputStream(file));
-
-					BufferedReader reader = new BufferedReader(
-					        new FileReader(file.getAbsolutePath()));
-					char[] buf = new char[1024];
-					String readData = null;
-					int numRead=0;
-					while((numRead=reader.read(buf)) != -1){
-					    readData = String.valueOf(buf, 0, numRead);
-					    fileData.append(readData);
-					    buf = new char[1024];
-					}
-					reader.close();
+					
+                    try (BufferedReader reader = new BufferedReader(new FileReader(file.getAbsolutePath()))) {
+                        
+                        char[] buf = new char[1024];
+                        String readData = null;
+                        int numRead = 0;
+                        while ((numRead = reader.read(buf)) != -1) {
+                            readData = String.valueOf(buf, 0, numRead);
+                            fileData.append(readData);
+                            buf = new char[1024];
+                        }
+                    }
 					
 					String[] messages = HL7ServerTestHelper.getHL7Messages(fileData.toString());
 			    	for (int i = 0; i < messages.length; i++) {
@@ -168,15 +166,8 @@ public class DialogBox
 			    	}
 					
 					
-				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				} catch (Exception e) {
+					LOGGER.error(e);
 				} finally {
 					closeSocket();
 				}

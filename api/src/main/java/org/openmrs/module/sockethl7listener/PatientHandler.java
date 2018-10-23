@@ -1,9 +1,11 @@
 package org.openmrs.module.sockethl7listener;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.openmrs.Location;
 import org.openmrs.Patient;
@@ -42,7 +44,7 @@ public class PatientHandler
 	}
 
 	public Patient setPatientFromHL7(Message message, Date encounterDate,
-			Location encounterLocation, HL7PatientHandler hl7PatientHandler)
+			Location encounterLocation, HL7PatientHandler hl7PatientHandler, HashMap<String,Object> parameters) // CHICA-1185 Added parameters
 	{
 		Patient hl7Patient = new Patient();
 
@@ -56,10 +58,21 @@ public class PatientHandler
 		// Race
 		setRace(message, hl7Patient, encounterDate, hl7PatientHandler);
 
-		// next of kin
-		addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN, hl7PatientHandler
-						.getNextOfKin(message), encounterDate);
+		// CHICA-1185 Get HL7 event type code to determine if this was an A10 converted to an A04
+		String eventTypeCode = parameters.get(ChirdlUtilConstants.PARAMETER_HL7_EVENT_TYPE_CODE) == null ? ChirdlUtilConstants.GENERAL_INFO_EMPTY_STRING : (String)parameters.get(ChirdlUtilConstants.PARAMETER_HL7_EVENT_TYPE_CODE);
 				
+		// next of kin
+		// CHICA-1185 Don't do anything with next of kin if this is an A10
+		if(!ChirdlUtilConstants.HL7_EVENT_CODE_A10.equalsIgnoreCase(eventTypeCode))
+		{
+			// Don't add an empty attribute
+			String nextOfKin = hl7PatientHandler.getNextOfKin(message);
+			if(StringUtils.isNotBlank(nextOfKin))
+			{
+				addAttribute(hl7Patient, ChirdlUtilConstants.PERSON_ATTRIBUTE_NEXT_OF_KIN, nextOfKin, encounterDate);
+			}		
+		}
+			
 		// birthdate
 		hl7Patient.setBirthdate(hl7PatientHandler.getBirthdate(message));
 
@@ -240,10 +253,6 @@ public class PatientHandler
 		if (attributeType == null)
 		{
 			attributeType = createAttributeType(attributeTypeName);
-			if (attributeType == null){
-				logger.error("Unable to create attribute: " + attributeTypeName);
-				return;
-			}
 		}
 		
 		PersonAttribute attr = new PersonAttribute(attributeType, value);
