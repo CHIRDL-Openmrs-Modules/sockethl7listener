@@ -52,7 +52,6 @@ import ca.uhn.hl7v2.app.ApplicationException;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
-import ca.uhn.hl7v2.model.v25.segment.EVN;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.NTE;
 import ca.uhn.hl7v2.util.Terser;
@@ -63,7 +62,9 @@ import ca.uhn.hl7v2.util.Terser;
  */
 @SuppressWarnings("deprecation")
 public class HL7SocketHandler implements Application {
-	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
+	private static final int PROCESSING = 1;
+    private static final int PROCESSED = 2;
+    private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
 	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS = "yyyyMMddHHmmss";
 	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
 	protected static final Logger logger = Logger.getLogger("SocketHandlerLogger");
@@ -109,7 +110,8 @@ public class HL7SocketHandler implements Application {
 	}
 	
 	/**
-	 * Returns true if the message is not null and is an instance of ADT_A01 (which A04 and A08 are since hapi uses the same message structure for all A0x messages)
+	 * Returns true if the message is not null and is an instance of ADT_A01 (which A04 and A08 are since hapi
+	 *  uses the same message structure for all A0x messages)
 	 * 
 	 * @returns true
 	 */
@@ -117,13 +119,18 @@ public class HL7SocketHandler implements Application {
 		return message != null && message instanceof ca.uhn.hl7v2.model.v25.message.ADT_A01;
 	}
 
+	/**
+	 * Processes incoming hl7 messages based on message type. Creates and returns an ACK message response.
+	 * @param message
+	 * @param parameters
+	 * @return
+	 */
 	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
 		Message response = null;
 		boolean error = false;
 		
 		try {
 			HL7Service hl7Service = Context.getHL7Service();
-			AdministrationService adminService = Context.getAdministrationService();
 			Context.openSession();
 			String incomingMessageString = "";
 			try 
@@ -150,15 +157,16 @@ public class HL7SocketHandler implements Application {
 				logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
 			
 			try {
-				
-				Context.authenticate(adminService
-				.getGlobalProperty("scheduler.username"), adminService
-				        .getGlobalProperty("scheduler.password"));
-				Context.addProxyPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE); // CHICA-1151 replaced HL7Constants.PRIV_ADD_HL7_IN_QUEUE with PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE
-				if (!Context.hasPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE)) {
-					logger.error("You do not have HL7 add privilege!!");
-					System.exit(0);
-				}
+			    
+	            Context.authenticate(
+	                    org.openmrs.module.chirdlutilbackports.util.Util.decryptGlobalProperty(ChirdlUtilConstants.GLOBAL_PROPERTY_SCHEDULER_USERNAME),
+	                    org.openmrs.module.chirdlutilbackports.util.Util.decryptGlobalProperty(ChirdlUtilConstants.GLOBAL_PROPERTY_SCHEDULER_PASSPHRASE));
+
+			    Context.addProxyPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE); // CHICA-1151 replaced HL7Constants.PRIV_ADD_HL7_IN_QUEUE with PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE
+			    if (!Context.hasPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE)) {
+			        logger.error("You do not have HL7 add privilege!!");
+			        System.exit(0);
+			    }
 				
 				HL7Source hl7Source = new HL7Source();
 				
@@ -174,7 +182,7 @@ public class HL7SocketHandler implements Application {
 				hl7inQ.setHL7Source(hl7Source);
 				hl7inQ.setHL7Data(incomingMessageString);
 				//MessageState 0=pending, 1=processing, 2=processed, 3=error
-				hl7inQ.setMessageState(1);
+				hl7inQ.setMessageState(PROCESSING);
 				HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
 				
 				archiveHL7Message(incomingMessageString);
@@ -205,7 +213,7 @@ public class HL7SocketHandler implements Application {
 				
 				Context.clearSession();
 				
-				savedHl7.setMessageState(2);
+				savedHl7.setMessageState(PROCESSED);
 				Context.getHL7Service().saveHL7InQueue(savedHl7);
 				
 			}catch (ContextAuthenticationException e) {
