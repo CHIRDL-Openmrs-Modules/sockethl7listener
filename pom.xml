@@ -4,7 +4,7 @@
 
 	<groupId>org.openmrs.module</groupId>
 	<artifactId>sockethl7listener</artifactId>
-	<version>1.13.0-SNAPSHOT</version>
+	<version>1.14.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	<name>sockethl7listener</name>
 	<description>Parent project for sockethl7listener</description>
