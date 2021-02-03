@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+
 import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
@@ -35,22 +36,18 @@ import org.openmrs.api.ObsService;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
+import org.openmrs.api.context.Daemon;
 import org.openmrs.hl7.HL7Constants;
-import org.openmrs.hl7.HL7InQueue;
-import org.openmrs.hl7.HL7Service;
-import org.openmrs.hl7.HL7Source;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
-import org.openmrs.util.PrivilegeConstants;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
 import ca.uhn.hl7v2.app.ApplicationException;
 import ca.uhn.hl7v2.model.Message;
-import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.NTE;
@@ -62,8 +59,6 @@ import ca.uhn.hl7v2.util.Terser;
  */
 @SuppressWarnings("deprecation")
 public class HL7SocketHandler implements Application {
-	private static final int PROCESSING = 1;
-    private static final int PROCESSED = 2;
     private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM = "yyyyMMddHHmm";
 	private static final String DATE_FORMAT_YYYY_MM_DD_HH_MM_SS = "yyyyMMddHHmmss";
 	private static final String DATE_FORMAT_YYYY_MM_DD = "yyyyMMdd";
@@ -125,129 +120,25 @@ public class HL7SocketHandler implements Application {
 	 * @param parameters
 	 * @return
 	 */
-	protected Message processMessage(Message message, HashMap<String, Object> parameters) {
-		Message response = null;
-		boolean error = false;
-		
+	protected Message processMessage(Message message, HashMap<String, Object> parameters) throws ApplicationException { 
+		ProcessMessageRunnable processMessageRunnable = new ProcessMessageRunnable(message, this, 
+			this.hl7EncounterHandler, this.parser, this.filters, parameters);
+		Thread messageProcessThread = 
+				Daemon.runInDaemonThread(processMessageRunnable, Util.getDaemonToken());
 		try {
-			HL7Service hl7Service = Context.getHL7Service();
-			Context.openSession();
-			String incomingMessageString = "";
-			try 
-			{
-				incomingMessageString = this.parser.encode(message);
-			} catch (HL7Exception e2) 
-			{
-				logger.error(e2);
-			}
-						
-			if (!(message instanceof ORU_R01) && !(message instanceof ADT_A01)) 
-			{
-				String messageType = "";
-				
-				if (message.getParent() != null) {
-					messageType = message.getParent().getName();
-				}
-				throw new ApplicationException(
-
-				"Invalid message type (" + messageType
-				        + ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
-			}
-			if (logger.isDebugEnabled())
-				logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
-			
-			try {
-			    
-	            Context.authenticate(
-	                    org.openmrs.module.chirdlutilbackports.util.Util.decryptGlobalProperty(ChirdlUtilConstants.GLOBAL_PROPERTY_SCHEDULER_USERNAME),
-	                    org.openmrs.module.chirdlutilbackports.util.Util.decryptGlobalProperty(ChirdlUtilConstants.GLOBAL_PROPERTY_SCHEDULER_PASSPHRASE));
-
-			    Context.addProxyPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE); // CHICA-1151 replaced HL7Constants.PRIV_ADD_HL7_IN_QUEUE with PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE
-			    if (!Context.hasPrivilege(PrivilegeConstants.PRIV_ADD_HL7_IN_QUEUE)) {
-			        logger.error("You do not have HL7 add privilege!!");
-			        System.exit(0);
-			    }
-				
-				HL7Source hl7Source = new HL7Source();
-				
-				if (hl7Service.getHL7SourceByName(port.toString()) == null) {
-					hl7Source.setName(String.valueOf(port));
-					hl7Source.setDescription("Port for hl7 message.");
-					hl7Service.saveHL7Source(hl7Source);
-				} else {
-					hl7Source = hl7Service.getHL7SourceByName(port.toString());
-				}
-				
-				HL7InQueue hl7inQ = new HL7InQueue();
-				hl7inQ.setHL7Source(hl7Source);
-				hl7inQ.setHL7Data(incomingMessageString);
-				//MessageState 0=pending, 1=processing, 2=processed, 3=error
-				hl7inQ.setMessageState(PROCESSING);
-				HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
-				
-				archiveHL7Message(incomingMessageString);
-				
-				boolean ignoreMessage = false;
-				
-				if (this.filters != null) {
-					for (HL7Filter filter : filters) {
-						if (filter.ignoreMessage(hl7EncounterHandler, 
-						message, incomingMessageString)) {
-							ignoreMessage = true;
-							break;
-						}
-					}
-				}
-				
-				if (!ignoreMessage) {
-					error = processMessageSegments(message, incomingMessageString, parameters);
-				}
-				try {
-					MSH msh = HL7ObsHandler25.getMSH(message);
-					response = Util.makeACK(msh, error, null, null);
-				}catch (IOException e) {
-					logger.error("Error generating message id for ACK message" + e.getMessage());
-				}catch (HL7Exception e){
-					logger.error("Error during ACK message construction",e);
-				}
-				
-				Context.clearSession();
-				
-				savedHl7.setMessageState(PROCESSED);
-				Context.getHL7Service().saveHL7InQueue(savedHl7);
-				
-			}catch (ContextAuthenticationException e) {
-				logger.error("Context Authentication exception: ", e);
-				Context.closeSession();
-				System.exit(0);
-			}catch (ClassCastException e) {
-				logger.error("Error casting to " + message.getClass().getName() + " ",
-				 e);
-				throw new ApplicationException("Invalid message type for handler");
-			}catch (HL7Exception e) {
-				logger.error("Error while processing hl7 message", e);
-				throw new ApplicationException(e);
-			}finally {
-				Context.closeSession();
-			}
+			messageProcessThread.join();
 		}
-		catch (Exception e) {
-			logger.error("", e);
-		}
-		finally {
-			if (response == null) {
-				try {
-					error = true;
-					MSH msh = HL7ObsHandler25.getMSH(message);
-					response = Util.makeACK(msh, error, null, null);
-				}
-				catch (Exception e) {
-					logger.error("Could not send acknowledgement", e);
-				}
-			}
+		catch (InterruptedException e) {
+			logger.error("Process message thread interrupted.", e);
+			Thread.currentThread().interrupt();
 		}
 		
-		return response;
+		Exception exception = processMessageRunnable.getException();
+		if (exception instanceof ApplicationException) {
+			throw (ApplicationException)exception;
+		}
+		
+		return processMessageRunnable.getResult();
 	}
 	
 	/**
@@ -317,7 +208,7 @@ public class HL7SocketHandler implements Application {
 		return encounter;
 	}
 
-	private boolean processMessageSegments(Message message,String incomingMessageString,HashMap<String,Object> parameters) throws HL7Exception {
+	protected boolean processMessageSegments(Message message,String incomingMessageString,HashMap<String,Object> parameters) throws HL7Exception {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		EncounterService encounterService = Context.getEncounterService();
@@ -815,7 +706,7 @@ public class HL7SocketHandler implements Application {
 		return enc;
 	}
 	
-	private void archiveHL7Message(String message){
+	protected void archiveHL7Message(String message){
 		AdministrationService adminService = Context.getAdministrationService();
 		
 		

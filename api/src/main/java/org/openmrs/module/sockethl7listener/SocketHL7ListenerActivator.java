@@ -9,7 +9,10 @@ import org.openmrs.GlobalProperty;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.BaseModuleActivator;
+import org.openmrs.module.DaemonToken;
+import org.openmrs.module.DaemonTokenAware;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.openmrs.module.sockethl7listener.util.Util;
 
 /**
  * Purpose: Checks that module specific global properties have been set 
@@ -17,13 +20,14 @@ import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
  * @author Tammy Dugan
  *
  */
-public class SocketHL7ListenerActivator extends BaseModuleActivator {
+public class SocketHL7ListenerActivator extends BaseModuleActivator implements DaemonTokenAware {
 
 	private Log log = LogFactory.getLog(this.getClass());
 
 	/**
 	 * @see org.openmrs.module.BaseModuleActivator#started()
 	 */
+	@Override
 	public void started() {
 		this.log.info("Starting HL7 Listener Module");
 		
@@ -62,8 +66,7 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 			}
 		} catch (Exception e)
 		{
-			this.log.error("Error checking global properties for hl7 listener module");
-
+			this.log.error("Error checking global properties for hl7 listener module", e);
 		}
 	}
 	
@@ -73,7 +76,7 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 	private void configureHapi() {
 		String charEncoding = Context.getAdministrationService().getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING);
 		if (StringUtils.isEmpty(charEncoding) || StringUtils.isWhitespace(charEncoding)) {
-			log.warn("Global property " + ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING + " is not set.  Hapi's default " +
+			this.log.warn("Global property " + ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING + " is not set.  Hapi's default " +
 				"character encoding will be used.");
 		} else {
 			System.setProperty(ChirdlUtilConstants.HAPI_CHARSET_PROPERTY_KEY, charEncoding);
@@ -83,8 +86,18 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator {
 	/**
 	 * @see org.openmrs.module.BaseModuleActivator#stopped()
 	 */
+	@Override
 	public void stopped() {
 		this.log.info("Shutting down HL7 Listener Module");
+	}
+
+	/**
+	 * 
+	 * @see org.openmrs.module.DaemonTokenAware#setDaemonToken(org.openmrs.module.DaemonToken)
+	 */
+	@Override
+	public void setDaemonToken(DaemonToken token) {
+		Util.setDaemonToken(token);
 	}
 
 }
