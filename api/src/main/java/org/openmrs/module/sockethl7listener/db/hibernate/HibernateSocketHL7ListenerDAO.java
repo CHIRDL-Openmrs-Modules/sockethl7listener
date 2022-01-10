@@ -57,7 +57,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 	
 	public List<PatientMessage> checkMD5(String incoming){
 		String sqlSelect = "SELECT * from sockethl7listener_patient_message "
-		+ " where md5  = ?"; 
+		+ " where md5 = :incomingMD5"; 
 		
 		try{
 			String incomingMD5 = null;
@@ -68,7 +68,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 			
 			SQLQuery query = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sqlSelect);
-			query.setString(0, incomingMD5);
+			query.setString("incomingMD5", incomingMD5);
 			query.addEntity(PatientMessage.class);
 			return query.list();
 		} catch (Exception e){
@@ -79,12 +79,12 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 	
 	public PatientMessage getPatientMessageByEncounter(Integer encounterId){
 		String sqlSelect = "SELECT * from sockethl7listener_patient_message "
-		+ " where encounter_id  = ? and duplicate_string=0 and duplicate_datetime=0"; 
+		+ " where encounter_id = :encounterId and duplicate_string=0 and duplicate_datetime=0"; 
 		
 		try{
 			SQLQuery query = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sqlSelect);
-			query.setInteger(0, encounterId);
+			query.setInteger("encounterId", encounterId);
 			query.addEntity(PatientMessage.class);
 			return (PatientMessage) query.uniqueResult();
 		} catch (Exception e){

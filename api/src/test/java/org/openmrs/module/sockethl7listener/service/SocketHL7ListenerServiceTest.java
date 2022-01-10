@@ -5,8 +5,9 @@ import java.lang.reflect.Modifier;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
 import org.openmrs.annotation.Authorized;
-import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.openmrs.test.SkipBaseSetup;
 
 /**
@@ -23,7 +24,7 @@ public class SocketHL7ListenerServiceTest extends BaseModuleContextSensitiveTest
 		for (Method method : allMethods) {
 		    if (Modifier.isPublic(method.getModifiers())) {
 		        Authorized authorized = method.getAnnotation(Authorized.class);
-		        Assert.assertNotNull("Authorized annotation not found on method " + method.getName(), authorized);
+		        Assert.assertNotNull(authorized);
 		    }
 		}
 	}

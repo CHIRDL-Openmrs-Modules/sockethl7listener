@@ -90,7 +90,7 @@ public class MatchHandler {
 		PersonAddress bestAddress = getBestAddress(hl7Patient, resolvedPatient,
 				encounterDate);
 		
-		if (hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
+		if (hl7Patient.getPersonAddress() != null && hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
 		    resolvedPatient.getPersonAddress().setDateCreated(encounterDate);
 		}
 		else if (bestAddress != null)
