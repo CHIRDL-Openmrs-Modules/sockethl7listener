@@ -2,8 +2,6 @@ package org.openmrs.module.sockethl7listener.db.hibernate;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
@@ -13,6 +11,8 @@ import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -22,7 +22,7 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
  */
 public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 
-	private static final Log LOG =  LogFactory.getLog(HibernateSocketHL7ListenerDAO.class);
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 	
 	/**
 	 * Hibernate session factory
@@ -72,7 +72,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 			query.addEntity(PatientMessage.class);
 			return query.list();
 		} catch (Exception e){
-			LOG.error(e.getMessage(),e);
+			log.error("Error getting PatientMessage by MD5 string.",e);
 		}
 		return null;
 	}
@@ -88,7 +88,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 			query.addEntity(PatientMessage.class);
 			return (PatientMessage) query.uniqueResult();
 		} catch (Exception e){
-			LOG.error(e.getMessage(),e);
+			log.error(String.format("Error getting patient hl7 message by encounter. EncounterId:  %d", encounterId), e);
 		}
 		return null;
 	}

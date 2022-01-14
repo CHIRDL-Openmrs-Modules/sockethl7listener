@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
@@ -19,6 +18,8 @@ import org.openmrs.api.PatientService;
 import org.openmrs.api.PersonService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.uhn.hl7v2.model.Message;
 
@@ -33,9 +34,7 @@ public class PatientHandler
 
 	protected PatientService patientService;
 	protected PersonService personService;
-
-	protected static final Logger logger = Logger
-			.getLogger("SocketHandlerLogger");
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 	
 	public PatientHandler()
 	{
@@ -136,7 +135,7 @@ public class PatientHandler
 
 		} catch (APIException e)
 		{
-			logger.error("Error setting patient identifiers. ", e);
+			log.error("Error setting patient identifiers. ", e);
 		}
 	}
 
@@ -169,23 +168,14 @@ public class PatientHandler
 		int raceID = 0;
 		String race = "";
 
-		try
-		{
+		try{
 			raceID = Integer.parseInt(hl7PatientHandler.getRace(message));
-		} catch (NumberFormatException e1)
-		{
-			logger
-					.warn("Warning: Race ID from the PID could not be converted to integer. The value from hl7 was probably null, so default of 0 was used");
-			raceID = 0;
-		} catch (RuntimeException e1)
-		{
-			logger
-					.debug("Warning: Race information not available in PID segment.");
+		} catch (Exception e){
+			log.warn("Unable to parse race from PID.", e);
 		}
 
 		// Set values based on NBS specific codes
-		switch (raceID)
-		{
+		switch (raceID){
 
 		case 1:
 			race = "WHITE";
@@ -235,8 +225,7 @@ public class PatientHandler
 
 		} catch (RuntimeException e)
 		{
-			logger.error("Error parsing address: " + e.getMessage());
-			logger.error(e.getStackTrace());
+			log.error("Exception parsing address from PID.",e);
 		}
 
 	}
@@ -280,8 +269,7 @@ public class PatientHandler
 			personService.savePersonAttributeType(personAttr);
 		} catch (RuntimeException e)
 		{
-			logger.error("Unable to create new attribute type:" + patString);
-			logger.error(e.getStackTrace());
+			log.error(String.format("Unable to create new attribute type for attribute type %s", patString), e);
 		}
 		return personAttr;
 

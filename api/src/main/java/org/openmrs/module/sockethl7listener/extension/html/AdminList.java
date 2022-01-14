@@ -28,7 +28,7 @@ public class AdminList extends AdministrationSectionExt {
 	@Override
 	public Map<String, String> getLinks() {
 		
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<>();
 		
 		return map;
 	}

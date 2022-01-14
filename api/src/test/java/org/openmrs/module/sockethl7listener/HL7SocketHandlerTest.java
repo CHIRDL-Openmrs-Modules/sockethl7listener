@@ -1,10 +1,10 @@
 package org.openmrs.module.sockethl7listener;
 
-
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import java.util.Calendar;
-import org.apache.log4j.Logger;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openmrs.Location;
@@ -18,23 +18,22 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 
-public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest{
-	
+public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest {
+
 	protected static final String DATASET_XML = "dbunit/BasicTest.xml";
-	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
-	
+
 	@BeforeEach
-	public void runBeforeEachTest() throws Exception
-	{
-	    // create the basic user and give it full rights
+	public void runBeforeEachTest() throws Exception {
+		// create the basic user and give it full rights
 		initializeInMemoryDatabase();
 		executeDataSet(DATASET_XML);
-		 //authenticate to the temp database
+		// authenticate to the temp database
 		authenticate();
 	}
-	
+
 	/**
-	 * @see HL7SocketHandler#updatePatient(Patient mp, Patient hl7Patient,Date encounterDate, HashMap<String,Object> parameters) 
+	 * @see HL7SocketHandler#updatePatient(Patient mp, Patient hl7Patient,Date
+	 *      encounterDate, HashMap<String,Object> parameters)
 	 */
 	@Test
 	public void testUpdateAnExistingPatient() throws Exception {
@@ -48,7 +47,6 @@ public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest{
 		patient.addIdentifier(new PatientIdentifier("1313-4", new PatientIdentifierType(1), new Location(1)));
 		Patient savedPatient = patientSerivce.savePatient(patient);
 		assertNotNull(savedPatient);
-		
 
 		Patient newPatient = new Patient();
 		newPatient.setGender("F");
@@ -65,14 +63,25 @@ public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest{
 		assertNotNull(updatedPatient);
 
 	}
-	
+
 	@Test
 	public void testGetPatientMessageByIdentifier() throws Exception {
 
 		SocketHL7ListenerService service = Context.getService(SocketHL7ListenerService.class);
 		PatientMessage message = service.getPatientMessageByEncounter(1);
 		assertNotNull(message);
-		
+
 	}
-	
+
+	@Test
+	public void testCheckMD5() throws Exception {
+
+		SocketHL7ListenerService service = Context.getService(SocketHL7ListenerService.class);
+		int port = 5555;
+		String message = "PIDTestString";
+		boolean md5IsCorrect = service.checkMD5(message, port);
+		assertTrue(md5IsCorrect);
+
+	}
+
 }

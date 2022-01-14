@@ -5,8 +5,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.openmrs.Encounter;
 import org.openmrs.module.chirdlutil.util.Util;
@@ -22,7 +23,8 @@ import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
  *
  */
 public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
-	private static final Logger LOGGER = Logger.getLogger("SocketHandlerLogger");
+	 
+	private static final Logger log = LoggerFactory.getLogger("SocketHandlerLogger");
 
 	private SocketHL7ListenerDAO dao;
 
@@ -88,21 +90,15 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			pm.setDateCreated(new Date());
 			pm.setEncounter_id(encounter_id);
 			pm.setHl7source(port.toString());
-			try
-			{
-				int index = message.indexOf("PID");
-				if(index >=0)
-				{
-					pm.setMd5(Util.computeMD5(message.substring(index)));
-				}
-			} catch (DigestException e)
-			{
+			int index = message.indexOf("PID");
+			if(index >=0){
+				pm.setMd5(Util.computeMD5(message.substring(index)));
 			}
-			pm = getSocketHL7ListenerDAO().savePatientMessage(pm);
+			getSocketHL7ListenerDAO().savePatientMessage(pm);
 			
-		} catch (HibernateException e)
+		} catch (Exception e)
 		{
-			LOGGER.error("Exception inserting hl7message. ", e);
+			log.error(String.format("Error saving hl7 message for encounter id %d", encounter_id), e);
 		}
 		
 		return;
@@ -119,8 +115,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			if (it.hasNext()){
 				PatientMessage pm = it.next();
 				duplicate = true;
-				LOGGER.warn("Duplicate message for patient=" + pm.getPatient_id() +
-						"; encounterID= " + pm.getEncounter_id());
+				log.error(String.format("Duplicate message for patient: %d encounter: %d", pm.getPatient_id(), pm.getEncounter_id()));
 				
 				setHl7Message(pm.getPatient_id(), pm.getEncounter_id(), 
 							incoming, duplicate, duplicate, port);
@@ -128,10 +123,10 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 
 		} catch (HibernateException e)
 		{
-			LOGGER.error(e);
+			log.error("Error saving hl7 message after MD5 check.",e);
 		} catch (RuntimeException e)
 		{
-			LOGGER.error(e);
+			log.error("Exception checking for MD5.", e);
 		}
 
 		return duplicate;
