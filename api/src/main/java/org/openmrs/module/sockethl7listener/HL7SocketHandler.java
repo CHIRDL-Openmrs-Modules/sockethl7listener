@@ -15,10 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.openmrs.Concept;
 import org.openmrs.ConceptName;
 import org.openmrs.ConceptNumeric;
@@ -45,6 +42,8 @@ import org.openmrs.module.chirdlutil.util.DateUtil;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
 import org.openmrs.module.sockethl7listener.util.Util;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.app.Application;
@@ -161,14 +160,15 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
-		if (provider.createProvider(provider) == null){
-			log.error("Could not create Provider object from provider {}",  provider.getEhrProviderId());
+		if (provider == null || provider.createProvider(provider) == null){
+			log.error("Unable to create a provider for tis encounter.");
 			return null;
 		}
 		 
 		Patient resultPatient = findPatient(patient,encounterDate,parameters);	
 		if (resultPatient == null || resultPatient.getPatientId() == null){
 			hl7ListService.setHl7Message(0, 0, incomingMessageString, false, false, this.port);
+			log.error("Unable to create or update patient based on hl7 patient message.");
 			return null;
 		}
 		
@@ -306,10 +306,9 @@ public class HL7SocketHandler implements Application {
 				resultPatient = updatePatient(matchedPatient,
 						hl7Patient,encounterDate, parameters); // CHICA-1185 Add parameters
 			}
-			
-			
+					
 		} catch (RuntimeException e) {
-			log.error(String.format("Exception creating or updating patient %d ", resultPatient.getPatientId()),e);
+			log.error("Exception creating or updating patient.",e);
 		}
 		return resultPatient;
 
@@ -350,7 +349,7 @@ public class HL7SocketHandler implements Application {
 			}
 		} catch (Exception e)
 		{
-			log.error(" createEncounter() or createUser() api failed. ", e);
+			log.error("Unable to create encounter.", e);
 			return null;
 
 		}
@@ -379,7 +378,7 @@ public class HL7SocketHandler implements Application {
 		if (!saveToDatabase){
 			return new Obs();
 		}
-	
+		
 		// Get obsv type
 		String obsValueType = this.hl7ObsHandler.getObsValueType(message, orderRep,obxRep);
 		if (obsValueType == null) {
@@ -446,9 +445,7 @@ public class HL7SocketHandler implements Application {
 		
 		// Set the encounter based on the encounter id
 		obs.setEncounter(enc);
-		
-		String conceptName = null;
-
+	
 		// Get observation question/concept from field 3 Always CE type
 		// Assumption that first field is always a string representing an
 		// integer
@@ -457,19 +454,19 @@ public class HL7SocketHandler implements Application {
 		int conceptId = 0;
 
 		// if the conceptId isn't there, lookup the code by name
-		conceptName = this.hl7ObsHandler.getConceptName(message, orderRep, obxRep);
+		String conceptName = this.hl7ObsHandler.getConceptName(message, orderRep, obxRep);
 		try{
 			conceptId = Integer.parseInt(stConceptId);
 		} catch (NumberFormatException e){
-			log.error( "Unable to parse integer from OBX", e);
-			return obs;
+			log.error( "Unable to parse integer from OBX.", e);
+			return new Obs();
 		}
 		
 		
 		Concept concept = Util.lookupConcept(conceptId, conceptName);
 		
 		if(concept == null){
-			return obs;
+			return new Obs();
 		}
 		
 		// DWE CHICA-635
@@ -489,31 +486,30 @@ public class HL7SocketHandler implements Application {
 	
 		if (obsValueType.equals("CWE")  && !processCWEType(obs, message, orderRep,
 					obxRep, pIdentifierString, stConceptId,obsValueType)){
-				return obs;
+			return new Obs();
 		}
 		if (obsValueType.equals("CE")  && !processCEType(obs, message, orderRep,
 				obxRep, pIdentifierString, stConceptId,obsValueType)){
-			return obs;
+			return new Obs();
 		}
-		
 		if (obsValueType.equals("NM")  && !processNMType(obs, message, orderRep,obxRep)){
-			return obs;
+			return new Obs();
 		}
 		if (obsValueType.equals("TS")  && !processTSType(obs, message, orderRep,obxRep)){
-			return obs;
+			return new Obs();
 		}
 		if (obsValueType.equals("ST")  && !processSTType(obs, message, orderRep,obxRep)){
-			return obs;
+			return new Obs();
 		}
 		if (obsValueType.equals("TX")  && !processTXType(obs, message, orderRep,obxRep)){
-			return obs;
+			return new Obs();
 		}
 		
 		//create the obs
 		os.saveObs(obs,null);
+		
 		if(enc != null){
-		    enc.addObs(obs);
-			
+		    enc.addObs(obs);	
 		}
 			
 		return obs;
@@ -542,7 +538,7 @@ public class HL7SocketHandler implements Application {
 				locationService.saveLocation(newLocation);
 				return newLocation;
 		} catch (Exception e) {
-			log.warn("Unable to parse the sending facility location from MSH. Message:",e);
+			log.error("Unable to parse the sending facility location from MSH.",e);
 		}
 		
 		return null;
@@ -658,7 +654,7 @@ public class HL7SocketHandler implements Application {
 				if (enc != null && provider != null){
 					encid = enc.getEncounterId();
 				}else {
-					log.warn("Unable to create encount.");
+					log.error("Unable to create encounter.");
 				}
 				hl7ListService.setHl7Message(pid, encid, incomingMessageString,
 						false, false, this.port);
@@ -819,7 +815,7 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			return true;
-		} catch (APIException e)
+		} catch (Exception e)
 		{
 			log.error("Exception creating observation for type NM. ", e);
 		}
@@ -838,7 +834,7 @@ public class HL7SocketHandler implements Application {
 				obs.setValueDatetime(date);
 				return true;
 			}
-		} catch (RuntimeException e)
+		} catch (Exception e)
 		{
 			log.error("Exception creating observation for type TS.", e);
 		}
@@ -870,7 +866,7 @@ public class HL7SocketHandler implements Application {
 			}
 			
 			return true;
-		} catch (APIException e)
+		} catch (Exception e)
 		{
 			log.error("Exception creating observation for type ST. ", e);
 		}
@@ -888,7 +884,7 @@ public class HL7SocketHandler implements Application {
 		boolean nte = false;
 		String value = null;
 		//This will only be used for 2.3, however sockethandler is designed for 2.5
-		// The methods used for acquiring segments/fields of message are different for 2.3 and 2.5;
+		//The methods used for acquiring segments/fields of message are different for 2.3 and 2.5;
 		String version = message.getVersion();
 		ca.uhn.hl7v2.model.v23.message.ORU_R01 oru23;
 		ca.uhn.hl7v2.model.v25.message.ORU_R01 oru25;
@@ -983,17 +979,17 @@ public class HL7SocketHandler implements Application {
 	 */
 	public Date sendMessage(Encounter encounter , String host, Integer port, 
 			String message, Integer timeoutSec) throws IOException{
-		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
+		if (timeoutSec == null || timeoutSec == 0) timeoutSec = 5;
 		
-		String Hl7StartMessage = "\u000b";
-		String Hl7EndMessage = "\u001c";
+		String hl7StartMessage = "\u000b";
+		String hl7EndMessage = "\u001c";
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
 		if (this.os != null){
-			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write( hl7StartMessage.getBytes() );
 			this.os.write(message.getBytes());
-	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write( hl7EndMessage.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
@@ -1090,7 +1086,7 @@ public class HL7SocketHandler implements Application {
 			this.is = this.socket.getInputStream();
 			
 		} catch (Exception e) {
-			log.error("Open socket failed for host= " + host + " port= " + port, e);
+			log.error(String.format("Open socket failed for host=%1$s port=%2$s", host, port), e);
 		}
     } 
 	

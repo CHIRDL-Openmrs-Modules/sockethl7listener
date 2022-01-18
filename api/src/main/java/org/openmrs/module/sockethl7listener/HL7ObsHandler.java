@@ -19,7 +19,6 @@ import ca.uhn.hl7v2.model.Message;
  */
 public interface HL7ObsHandler
 {
-	
 	public String getSendingFacility(Message message);
 
 	public Date getDateStarted(Message message);

@@ -228,7 +228,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			} 
 			catch (RuntimeException e)
 			{
-				log.error("Visit number id not  in PV1-19 visit number field. ", e);
+				log.error("Unable to parse visit number id not  in PV1-19 visit number field. ", e);
 			}
 		}
 		return null;	

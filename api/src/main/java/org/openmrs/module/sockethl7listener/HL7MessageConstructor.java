@@ -299,7 +299,7 @@ public class HL7MessageConstructor {
 			
 			if(openmrsProvider == null)
 			{
-				log.error("Error getting the attending provider for encounter");
+				log.error("Error getting the attending provider for the encounter.");
 				return pv1;
 			}
 			
@@ -364,7 +364,7 @@ public class HL7MessageConstructor {
 			msh.getMessageControlID().setValue(
 					this.ourApplication + "-" + formattedDate);
 		} catch (Exception e) {
-			log.error(String.format("Exception constructing MSH segment for export message. EncounterId: %s ", enc.getEncounterId()), e);
+			log.error(String.format("Exception constructing MSH segment for export message. EncounterId: %d ", enc.getEncounterId()), e);
 		}
 
 		return msh;

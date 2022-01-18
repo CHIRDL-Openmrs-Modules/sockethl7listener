@@ -205,7 +205,7 @@ public class Provider {
 				AdministrationService adminService = Context.getAdministrationService();
 				String unknownProviderIdString = adminService.getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0){
-					log.error(String.format("No value exists for global property %s.", ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID));
+					log.error("No value exists for global property {}.", ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 					return null;
 				}
 				

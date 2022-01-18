@@ -75,7 +75,7 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator implements D
 	private void configureHapi() {
 		String charEncoding = Context.getAdministrationService().getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING);
 		if (StringUtils.isEmpty(charEncoding) || StringUtils.isWhitespace(charEncoding)) {
-			log.warn(String.format("Global property %s is not set. Hapi default character encoding will be used.", ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING));
+			log.error("Global property {} is not set. Hapi default character encoding will be used.", ChirdlUtilConstants.GLOBAL_PROP_HAPI_CHARACTER_ENCODING);
 		} else {
 			System.setProperty(ChirdlUtilConstants.HAPI_CHARSET_PROPERTY_KEY, charEncoding);
 		}

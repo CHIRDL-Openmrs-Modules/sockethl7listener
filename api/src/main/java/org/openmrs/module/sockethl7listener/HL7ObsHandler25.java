@@ -50,39 +50,39 @@ public class HL7ObsHandler25 implements HL7ObsHandler
         return null;
     }
 
-    private static MSH getMSH(ORU_R01 oru)
-    {
-        return oru.getMSH();
-    }
+	private static MSH getMSH(ORU_R01 oru)
+	{
+		return oru.getMSH();
+	}
 
-    private static MSH getMSH(ADT_A01 adt)
-    {
-        return adt.getMSH();
-    }
+	private static MSH getMSH(ADT_A01 adt)
+	{
+		return adt.getMSH();
+	}
 
-    public static OBX getOBX(Message message, int orderRe, int obRep)
-    {
-        if (message instanceof ORU_R01)
-        {
-            return getOBX((ORU_R01) message, orderRe, obRep);
-        }
-        else if ((message instanceof ADT_A01)) // DWE CHICA-635 Handle instance of ADT_A01
-        {
-            return getOBX((ADT_A01) message, orderRe, obRep);
-        }
-        return null;
-    }
+	public static OBX getOBX(Message message, int orderRe, int obRep)
+	{
+		if (message instanceof ORU_R01)
+		{
+			return getOBX((ORU_R01) message, orderRe, obRep);
+		}
+		else if ((message instanceof ADT_A01)) // DWE CHICA-635 Handle instance of ADT_A01
+		{
+			return getOBX((ADT_A01) message, orderRe, obRep);
+		}
+		return null;
+	}
 
-    private static OBX getOBX(ORU_R01 oru, int orderRep, int obRep)
-    {
+	private static OBX getOBX(ORU_R01 oru, int orderRep, int obRep)
+	{
 
-        OBX obx = null;
-        try
-        {
-            obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
-                    .getOBSERVATION(obRep).getOBX();
-        } catch (Exception e)
-        {
+		OBX obx = null;
+		try
+		{
+			obx = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
+					.getOBSERVATION(obRep).getOBX();
+		} catch (Exception e)
+		{
 
             log.error("Exception getting OBX segment from ORU_R01 message." ,e);
         }
@@ -113,18 +113,18 @@ public class HL7ObsHandler25 implements HL7ObsHandler
         return obx;
     }
 
-    public static OBR getOBR(Message message, int orderRep)
-    {
-        if (message instanceof ORU_R01)
-        {
-            return getOBR((ORU_R01) message, orderRep);
-        }
+	public static OBR getOBR(Message message, int orderRep)
+	{
+		if (message instanceof ORU_R01)
+		{
+			return getOBR((ORU_R01) message, orderRep);
+		}
 
-        return null;
-    }
+		return null;
+	}
 
-    private static OBR getOBR(ORU_R01 oru, int orderRep)
-    {
+	private static OBR getOBR(ORU_R01 oru, int orderRep)
+	{
 
         OBR obr = null;
         try
@@ -136,8 +136,8 @@ public class HL7ObsHandler25 implements HL7ObsHandler
             log.error("Exception getting OBR segment from ORU_R01 message.", e);
         }
 
-        return obr;
-    }
+		return obr;
+	}
 
     
     /**
@@ -164,142 +164,144 @@ public class HL7ObsHandler25 implements HL7ObsHandler
         
     }
 
-    public String getSendingFacility(Message message)
-    {
-        if (!(message instanceof ORU_R01))
-        {
-            return null;
-        }
+	public String getSendingFacility(Message message)
+	{
+		if (!(message instanceof ORU_R01))
+		{
+			return null;
+		}
 
-        MSH msh = getMSH((ORU_R01) message);
-        return msh.getSendingFacility().getNamespaceID().getValue();
-    }
+		MSH msh = getMSH((ORU_R01) message);
+		return msh.getSendingFacility().getNamespaceID().getValue();
+	}
 
-    public Date getDateStarted(Message message)
-    {
-        if (!(message instanceof ORU_R01))
-        {
-            return null;
-        }
-        // OBR segment --Observation start time
-        OBR obr = getOBR((ORU_R01) message, 0);
-        Date sdt = null;
-        if(obr != null){
-            TS tsObsvStartDateTime = obr.getObservationDateTime();
-            if (tsObsvStartDateTime.getTime().getValue() == null){
-                tsObsvStartDateTime = getMSH((ORU_R01) message)
-                        .getDateTimeOfMessage();
-            }
-            sdt = TranslateDate(tsObsvStartDateTime);
-        }
-        return sdt;
-    }
+	public Date getDateStarted(Message message)
+	{
+		if (!(message instanceof ORU_R01))
+		{
+			return null;
+		}
+		// OBR segment --Observation start time
+		OBR obr = getOBR((ORU_R01) message, 0);
+		Date sdt = null;
+		if(obr != null){
+		    TS tsObsvStartDateTime = obr.getObservationDateTime();
+		    if (tsObsvStartDateTime.getTime().getValue() == null){
+		        tsObsvStartDateTime = getMSH((ORU_R01) message)
+		                .getDateTimeOfMessage();
+		    }
+		    sdt = TranslateDate(tsObsvStartDateTime);
+		}
+		return sdt;
+	}
 
-    public Date getDateStopped(Message message)
-    {
-        if (!(message instanceof ORU_R01))
-        {
-            return null;
-        }
+	public Date getDateStopped(Message message)
+	{
+		if (!(message instanceof ORU_R01))
+		{
+			return null;
+		}
 
-        // OBR Segment Observation stop time - usually not present
-        Date edt = null;
-        OBR obr = getOBR((ORU_R01) message, 0);
-        if(obr != null){
-            TS tsObsvEndDateTime = obr.getObservationEndDateTime();
-            if (tsObsvEndDateTime.getTime().getValue() != null){
-                edt = TranslateDate(tsObsvEndDateTime);
-            }
-        }
-        return edt;
-    }
+		// OBR Segment Observation stop time - usually not present
+		Date edt = null;
+		OBR obr = getOBR((ORU_R01) message, 0);
+		if(obr != null){
+		    TS tsObsvEndDateTime = obr.getObservationEndDateTime();
+		    if (tsObsvEndDateTime.getTime().getValue() != null){
+		        edt = TranslateDate(tsObsvEndDateTime);
+		    }
+		}
+		return edt;
+	}
 
-    public String getObsValueType(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        if(obx != null){
-            ID valueType = obx.getValueType();
-            if(valueType != null){
-                return valueType.toString();
-            }
-        }
-        return null;
-    }
+	public String getObsValueType(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    if(obx != null){
+	        ID valueType = obx.getValueType();
+	        if(valueType != null){
+	            return valueType.toString();
+	        }
+	    }
+		return null;
+	}
 
-    public Date getObsDateTime(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        Date obsDateTime = null;
-        if(obx != null){
-            TS tsObsDateTime = obx.getDateTimeOfTheObservation();
-            obsDateTime = TranslateDate(tsObsDateTime);
-        }
-        return obsDateTime;
-    }
+	public Date getObsDateTime(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    Date obsDateTime = null;
+	    if(obx != null){
+	        TS tsObsDateTime = obx.getDateTimeOfTheObservation();
+	        obsDateTime = TranslateDate(tsObsDateTime);
+	    }
+		return obsDateTime;
+	}
 
-    public String getConceptId(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        if(obx != null){
-            CE ceObsIdentifier = obx.getObservationIdentifier();
-            return ceObsIdentifier.getIdentifier().toString();
-        }
-        return null;
-    }
+	public String getConceptId(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    if(obx != null){
+	        CE ceObsIdentifier = obx.getObservationIdentifier();
+	        return ceObsIdentifier.getIdentifier().toString();
+	    }
+		return null;
+	}
 
-    public String getConceptName(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        if(obx != null){
-            CE ceObsIdentifier = obx.getObservationIdentifier();
-            return ceObsIdentifier.getText().toString();
-        }
-        return null;
-    }
+	public String getConceptName(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    if(obx != null){
+	        CE ceObsIdentifier = obx.getObservationIdentifier();
+	        return ceObsIdentifier.getText().toString();
+	    }
+	    return null;
+	}
 
-    public String getTextResult(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        if(obx != null){
-            Varies[] values = obx.getObservationValue();
-            Varies value = null;
-            if (values.length > 0){
-                value = values[0];
+	public String getTextResult(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    if(obx != null){
+	        Varies[] values = obx.getObservationValue();
+	        Varies value = null;
+	        if (values.length > 0){
+	            value = values[0];
 
-                ST data = (ST) value.getData();
-                return data.getValue();
-            }
-        }
-        return null;
-    }
+	            ST data = (ST) value.getData();
+	            String dataString = data.getValue();
+	            return dataString;
+	        }
+	    }
+		return null;
+	}
 
-    public Date getDateResult(Message message, int orderRep, int obxRep)
-    {
-        OBX obx = getOBX(message, orderRep, obxRep);
-        
-        if(obx != null){
-            Varies[] values = obx.getObservationValue();
-            Varies value = null;
-            if (values.length > 0){
+	public Date getDateResult(Message message, int orderRep, int obxRep)
+	{
+	    OBX obx = getOBX(message, orderRep, obxRep);
+	    
+	    if(obx != null){
+	        Varies[] values = obx.getObservationValue();
+		    Varies value = null;
+		    if (values.length > 0){
 
-                value = values[0];
-                TS ts = (TS) value.getData();
-                return TranslateDate(ts);
-            }
-        }
-        return null;
-    }
+		        value = values[0];
+		        TS ts = (TS) value.getData();
+		        Date date = TranslateDate(ts);
+		        return date;
+		    }
+	    }
+		return null;
+	}
 
-    public Double getNumericResult(Message message, int orderRep, int obxRep)
-    {
-        double dVal = 0;
-        OBX obx = getOBX(message, orderRep, obxRep);
-        if(obx != null){
-            Varies[] values = obx.getObservationValue();
-            Varies value = null;
-            if (values.length > 0){
-                value = values[0];
-                String nmvalue = ((NM) value.getData()).getValue();
+	public Double getNumericResult(Message message, int orderRep, int obxRep)
+	{
+		double dVal = 0;
+		OBX obx = getOBX(message, orderRep, obxRep);
+		if(obx != null){
+		    Varies[] values = obx.getObservationValue();
+		    Varies value = null;
+		    if (values.length > 0){
+		        value = values[0];
+		        String nmvalue = ((NM) value.getData()).getValue();
 
                 if (nmvalue != null){
                     try{
@@ -347,7 +349,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
                 return answer;
             }
         } catch (RuntimeException e){
-            log.error(String.format("Exception parsing CET concept for concept name %s", conceptName), e);
+            log.error(String.format("Exception parsing CET concept for concept name %1$s", conceptName), e);
         }
         
         return null;

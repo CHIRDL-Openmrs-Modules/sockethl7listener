@@ -87,6 +87,7 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 				messageType = this.message.getParent().getName();
 			}
 			log.error(String.format("Invalid message type (%s). Only ORU_R01 and ADT_A01 valid.", messageType));
+			log.error("Invalid message type {}. Only ORU_R01 and ADT_A01 valid.", messageType);
 			return;
 		}
 			

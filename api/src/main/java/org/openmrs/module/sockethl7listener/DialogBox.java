@@ -142,7 +142,7 @@ public class DialogBox
 			
 			public void process(File file, String host, Integer port, Integer sleep){
 				
-				StringBuilder fileData = new StringBuilder(1000);
+				StringBuffer fileData = new StringBuffer(1000);
 				
 				try {
 					openSocket(host,port);
