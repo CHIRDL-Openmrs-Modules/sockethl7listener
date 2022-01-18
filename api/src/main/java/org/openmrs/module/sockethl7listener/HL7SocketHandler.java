@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,7 @@ public class HL7SocketHandler implements Application {
 			PatientHandler patientHandler, HL7ObsHandler hl7ObsHandler,
 			HL7EncounterHandler hl7EncounterHandler,
 			HL7PatientHandler hl7PatientHandler,
-			ArrayList<HL7Filter> filters)
+			List<HL7Filter> filters)
 	{
 		
 		this.patientHandler = patientHandler;
@@ -102,7 +103,7 @@ public class HL7SocketHandler implements Application {
 		this.hl7ObsHandler = hl7ObsHandler;
 		this.hl7EncounterHandler = hl7EncounterHandler;
 		this.hl7PatientHandler = hl7PatientHandler;
-		this.filters = filters;
+		this.filters = (ArrayList<HL7Filter>) filters;
 	}
 	
 	/**
@@ -112,7 +113,7 @@ public class HL7SocketHandler implements Application {
 	 * @returns true
 	 */
 	public boolean canProcess(Message message) {
-		return message != null && message instanceof ca.uhn.hl7v2.model.v25.message.ADT_A01;
+		return message instanceof ca.uhn.hl7v2.model.v25.message.ADT_A01;
 	}
 
 	/**
@@ -161,7 +162,7 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
 		if (provider.createProvider(provider) == null){
-			log.error(String.format("Could not create Provider object from provider %s",  provider.getEhrProviderId()));
+			log.error("Could not create Provider object from provider {}",  provider.getEhrProviderId());
 			return null;
 		}
 		 
@@ -183,7 +184,7 @@ public class HL7SocketHandler implements Application {
 		// possibly created from the A10 message that was converted to an A04
 		boolean newEncounterCreated = true;
 		Object newEncounterCreatedObject = parameters.get(ChirdlUtilConstants.PARAMETER_NEW_ENCOUNTER_CREATED);
-		if(newEncounterCreatedObject != null && newEncounterCreatedObject instanceof Boolean)
+		if(newEncounterCreatedObject instanceof Boolean)
 		{
 			newEncounterCreated = (boolean)newEncounterCreatedObject;
 		}
@@ -413,7 +414,8 @@ public class HL7SocketHandler implements Application {
 						} else if (datetime != null && datetime.length() == 14){
 							obsDateTime = DateUtil.parseDate(datetime, DATE_FORMAT_YYYY_MM_DD_HH_MM_SS);
 						} else {
-							log.error("Invalid date / time" + datetime  );
+							log.error("Invalid date / time {}", datetime );
+							return new Obs();
 						}
 					}
 				}
@@ -636,7 +638,7 @@ public class HL7SocketHandler implements Application {
 			
 			List<Encounter> encounters = es.getEncounters(p,newEncounter.getLocation(), cal.getTime(), encDate,null,null,null,null,null,false); // CHICA-1151 Add null parameters for Collection<VisitType> and Collection<Visit> CHICA-1157 Add parameter for location
 			
-			if(encounters.size() > 0){ 
+			if(!encounters.isEmpty()){ 
 				// The patient already has an encounter for the day at this location, treat this message as an update
 				enc = encounters.get(0);
 				
@@ -744,16 +746,16 @@ public class HL7SocketHandler implements Application {
 		
 		public PersonName parseProviderName(PersonAttribute provNameAttr) {
 		
-			String ProvNameValue = provNameAttr.getValue();
+			String provNameValue = provNameAttr.getValue();
 			String firstname = "";
 			String lastname = "";
 			
-			int index1 =ProvNameValue.indexOf(".");
+			int index1 =provNameValue.indexOf(".");
 			if (index1 != -1){
-				firstname = ProvNameValue.substring(0,index1);
-				lastname = ProvNameValue.substring(index1 + 1);
+				firstname = provNameValue.substring(0,index1);
+				lastname = provNameValue.substring(index1 + 1);
 			}else {
-				firstname = ProvNameValue;
+				firstname = provNameValue;
 			}
 			PersonName provName = new PersonName();
 			provName.setFamilyName(lastname);
@@ -803,7 +805,8 @@ public class HL7SocketHandler implements Application {
 	{
 		try
 		{
-			double dVal = this.hl7ObsHandler.getNumericResult(message, orderRep, obxRep);
+			HL7SocketHandler hl7SocketHandler = this;
+			double dVal = hl7SocketHandler.hl7ObsHandler.getNumericResult(message, orderRep, obxRep);
 			obs.setValueNumeric(dVal);
 			
 			// DWE CHICA-635 Get the units from OBX-6 
@@ -996,7 +999,7 @@ public class HL7SocketHandler implements Application {
 		}
 		this.socket.setSoTimeout(timeoutSec * 1000);
 		String result = readAck();
-		log.error(String.format("Read ACK: %s ", result));
+		log.error("Read ACK: {}" , result);
 		Date ackDate = null;
 		if (result != null){ 
 			ackDate = new Date();
@@ -1017,24 +1020,24 @@ public class HL7SocketHandler implements Application {
 			String message, Integer timeoutSec, boolean readAck) throws IOException{
 		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
 		
-		String Hl7StartMessage = "\u000b";
-		String Hl7EndMessage = "\u001c";
+		String hl7StartMessage = "\u000b";
+		String hl7EndMessage = "\u001c";
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
 		if (this.os != null){
-			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write( hl7StartMessage.getBytes() );
 			this.os.write(message.getBytes());
-	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write( hl7EndMessage.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
-		socket.setSoTimeout(timeoutSec * 1000);
+		this.socket.setSoTimeout(timeoutSec * 1000);
 		String result = null;
 		if (readAck) {
 			
 			result = readAck();
-			log.error(String.format("Read ACK: %s ", result));
+			log.error("Read ACK: {} ", result);
 		}
 		Date ackDate = null;
 		if (result != null){ 
@@ -1047,15 +1050,15 @@ public class HL7SocketHandler implements Application {
 	
 	public HL7Outbound sendMessage(HL7Outbound hl7Out, Integer timeoutSec) throws IOException{
 		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
-		String Hl7StartMessage = "\u000b";
-		String Hl7EndMessage = "\u001c";
+		String hl7StartMessage = "\u000b";
+		String hl7EndMessage = "\u001c";
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7Out = hl7ListService.saveMessageToDatabase(hl7Out);
 		 if (this.os != null){
-			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write( hl7StartMessage.getBytes() );
 			this.os.write( hl7Out.getHl7Message().getBytes());
-	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write( hl7EndMessage.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
@@ -1063,7 +1066,7 @@ public class HL7SocketHandler implements Application {
 		this.socket.setSoTimeout(timeoutSec * 1000);
 		try {
 			String result = readAck();
-			log.error(String.format("Read ACK: %s", result));
+			log.error("Read ACK: {}", result);
 			Date ackDate = null;
 			if (result != null){ 
 				ackDate = new Date();
