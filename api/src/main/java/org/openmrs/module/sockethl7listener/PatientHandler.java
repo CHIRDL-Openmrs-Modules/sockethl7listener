@@ -172,6 +172,7 @@ public class PatientHandler
 			raceID = Integer.parseInt(hl7PatientHandler.getRace(message));
 		} catch (Exception e){
 			log.warn("Unable to parse race from PID.", e);
+			return;
 		}
 
 		// Set values based on NBS specific codes
@@ -196,8 +197,6 @@ public class PatientHandler
 			race = "";
 			break;
 		}
-
-		// personAttrList += ";race:" + race ;
 
 		addAttribute(hl7Patient, ATTRIBUTE_RACE, race, encounterDate);
 

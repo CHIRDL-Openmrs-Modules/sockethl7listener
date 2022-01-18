@@ -648,6 +648,7 @@ public class MatchHandler {
 
 		Date matchDOB = resolvedPatient.getBirthdate();
 		Date hl7DOB = hl7Patient.getBirthdate();
+
 		if (hl7DOB != null )
 		{
 			return hl7DOB;
@@ -705,7 +706,7 @@ public class MatchHandler {
 			Context.closeSession();
 		} catch (RuntimeException e)
 		{
-			log.error(String.format("Exception creating new attribute type:n%s", patString), e);
+			log.error(String.format("Exception creating new attribute type: %s", patString), e);
 		}
 		return personAttr;
 

@@ -81,11 +81,11 @@ public class HL7SocketHandler implements Application {
 	
 	public HL7SocketHandler(){
 		
-		if (port == null){
-			port = 0;
+		if (this.port == null){
+			this.port = 0;
 		}
-		if (host == null){
-			host = "localhost";
+		if (this.host == null){
+			this.host = "localhost";
 		}
 		
 	}
@@ -161,7 +161,7 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
 		if (provider.createProvider(provider) == null){
-			log.error(String.format("Could not create Provider object from provider  %s",  provider.getEhrProviderId()));
+			log.error(String.format("Could not create Provider object from provider %s",  provider.getEhrProviderId()));
 			return null;
 		}
 		 
@@ -190,7 +190,7 @@ public class HL7SocketHandler implements Application {
 		
 		if (encounter == null || !newEncounterCreated) return null;
 		
-		int reps = hl7ObsHandler.getReps(message);// number of obs 
+		int reps = this.hl7ObsHandler.getReps(message);// number of obs 
 
 		if (message instanceof ORU_R01)
 		{
@@ -244,13 +244,13 @@ public class HL7SocketHandler implements Application {
 			//If duplicate message string, do not process 
 			if (! isDuplicateHL7){
 				
-				String locationString = hl7EncounterHandler.getLocation(message); // CHICA-982 Get location from PV1 instead of ZLR segment
+				String locationString = this.hl7EncounterHandler.getLocation(message); // CHICA-982 Get location from PV1 instead of ZLR segment
 				Location encounterLocation = setLocation(locationString);
-				Date encounterDate = hl7EncounterHandler.getEncounterDate(message);
-				Patient hl7Patient = patientHandler.setPatientFromHL7(message,encounterDate,encounterLocation,hl7PatientHandler, parameters); // CHICA-1185 Add parameters
+				Date encounterDate = this.hl7EncounterHandler.getEncounterDate(message);
+				Patient hl7Patient = this.patientHandler.setPatientFromHL7(message,encounterDate,encounterLocation,this.hl7PatientHandler, parameters); // CHICA-1185 Add parameters
 				
 				// Extract provider information for provider observations.
-				Provider provider = hl7EncounterHandler.getProvider(message);
+				Provider provider = this.hl7EncounterHandler.getProvider(message);
 
 				if (provider != null){
 					Encounter newEncounter = new Encounter();
@@ -270,7 +270,7 @@ public class HL7SocketHandler implements Application {
 			}
 				
 			double duration =  (new Date().getTime() - starttime.getTime())/1000.0;
-			log.debug(String.format("Message process time is %f seconds. ", duration));
+			log.debug(String.format("Message process time: %f seconds. ", duration));
 			
 		} catch (RuntimeException e) {
 			//Do not stop application. Start processing next hl7 message.
@@ -373,14 +373,16 @@ public class HL7SocketHandler implements Application {
 			int orderRep,int obxRep,Location existingLoc,Patient resultPatient) {
 		ObsService os = Context.getObsService();
 
-		boolean okToCreateObs = true;
 		String pIdentifierString = resultPatient.getPatientIdentifier().getIdentifier();
-		Obs obs = new Obs();
 		
+		if (!saveToDatabase){
+			return new Obs();
+		}
+	
 		// Get obsv type
-		String obsValueType = hl7ObsHandler.getObsValueType(message, orderRep,obxRep);
+		String obsValueType = this.hl7ObsHandler.getObsValueType(message, orderRep,obxRep);
 		if (obsValueType == null) {
-			okToCreateObs = false;
+			return new Obs();
 		}
 		
 		// set Observation date/time
@@ -391,7 +393,7 @@ public class HL7SocketHandler implements Application {
 		//messages as ORU, so check first. 
 		
 		//MES CHICA-358 Use OBR datetime if OBX is null
-		Date obsDateTime = hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
+		Date obsDateTime = this.hl7ObsHandler.getObsDateTime(message, orderRep, obxRep);
 		
 		try {
 			if (obsDateTime == null && (message instanceof ca.uhn.hl7v2.model.v25.message.ORU_R01 || message instanceof ca.uhn.hl7v2.model.v23.message.ORU_R01)){ // DWE CHICA-556 Make sure this is an ORU_R01 message before trying to use the OBR date/time
@@ -418,13 +420,15 @@ public class HL7SocketHandler implements Application {
 			}
 		} catch (Exception e){
 			log.error("Exception getting obs datetime from OBX/OBR.", e);
+			return new Obs();
 		}
 		
+		Obs obs = new Obs();
 		obs.setObsDatetime(obsDateTime);
 
 		// set Location
 		Location loc = new Location();
-		String sendingFacility = hl7ObsHandler.getSendingFacility(message);
+		String sendingFacility = this.hl7ObsHandler.getSendingFacility(message);
 		loc.setName(sendingFacility);
 		try {
 			if (existingLoc != null) {
@@ -447,80 +451,69 @@ public class HL7SocketHandler implements Application {
 		// Assumption that first field is always a string representing an
 		// integer
 
-		String stConceptId = hl7ObsHandler.getConceptId(message, orderRep, obxRep);
+		String stConceptId = this.hl7ObsHandler.getConceptId(message, orderRep, obxRep);
 		int conceptId = 0;
 
 		// if the conceptId isn't there, lookup the code by name
-		conceptName = hl7ObsHandler.getConceptName(message, orderRep, obxRep);
+		conceptName = this.hl7ObsHandler.getConceptName(message, orderRep, obxRep);
 		try{
 			conceptId = Integer.parseInt(stConceptId);
 		} catch (NumberFormatException e){
 			log.error( "Unable to parse integer from OBX", e);
+			return obs;
 		}
 		
-		Concept concept = null;
 		
-		if(saveToDatabase){
-			concept = Util.lookupConcept(conceptId, conceptName);
-			
-			if(concept == null){
-				okToCreateObs = false;
-			}
-		}else{
-			// DWE CHICA-635
-			if(HL7Constants.HL7_NUMERIC.equals(obsValueType)){
-				concept = new ConceptNumeric();
-			}else{
-				concept = new Concept();
-			}
-			concept.setConceptId(conceptId);
-			ConceptName name = new ConceptName();
-			name.setName(conceptName);
-			name.setLocale(new Locale("en_US"));
-			concept.addName(name);
+		Concept concept = Util.lookupConcept(conceptId, conceptName);
+		
+		if(concept == null){
+			return obs;
 		}
 		
+		// DWE CHICA-635
+		if(HL7Constants.HL7_NUMERIC.equals(obsValueType)){
+			concept = new ConceptNumeric();
+		}
+		concept.setConceptId(conceptId);
+		ConceptName name = new ConceptName();
+		name.setName(conceptName);
+		name.setLocale(new Locale("en_US"));
+		concept.addName(name);		
 		obs.setConcept(concept);
 
 		// Meeting on 3/20/07 - only one set of data in field 5. There will be
 		// no "~"
 		// Varies value = values[0];
-
-		//set the result by type
-		if (okToCreateObs){
-			if (obsValueType != null){
-				if (obsValueType.equals("CWE")){
-					okToCreateObs = processCWEType(obs, message, orderRep,
-							obxRep, pIdentifierString, stConceptId,
-							obsValueType);
-				} else if (obsValueType.equals("CE")){
-					okToCreateObs = processCEType(obs, message, orderRep,
-							obxRep, pIdentifierString, stConceptId,
-							obsValueType);
-				} else if (obsValueType.equals("NM")){
-					okToCreateObs = processNMType(obs, message, orderRep,
-							obxRep);
-				} else if (obsValueType.equals("TS")){
-					okToCreateObs = processTSType(obs, message, orderRep,
-							obxRep);
-				} else if (obsValueType.equals("ST")){
-					okToCreateObs = processSTType(obs, message, orderRep,
-							obxRep);
-				} else if (obsValueType.equals("TX")){
-					okToCreateObs = processTXType(obs, message, orderRep,
-							obxRep);
-				}
-			}
-			
-			//create the obs
-			if(okToCreateObs&&saveToDatabase){
-				os.saveObs(obs,null);
-				if(enc != null){
-				    enc.addObs(obs);
-				}
-			}
+	
+		if (obsValueType.equals("CWE")  && !processCWEType(obs, message, orderRep,
+					obxRep, pIdentifierString, stConceptId,obsValueType)){
+				return obs;
+		}
+		if (obsValueType.equals("CE")  && !processCEType(obs, message, orderRep,
+				obxRep, pIdentifierString, stConceptId,obsValueType)){
+			return obs;
 		}
 		
+		if (obsValueType.equals("NM")  && !processNMType(obs, message, orderRep,obxRep)){
+			return obs;
+		}
+		if (obsValueType.equals("TS")  && !processTSType(obs, message, orderRep,obxRep)){
+			return obs;
+		}
+		if (obsValueType.equals("ST")  && !processSTType(obs, message, orderRep,obxRep)){
+			return obs;
+		}
+		if (obsValueType.equals("TX")  && !processTXType(obs, message, orderRep,obxRep)){
+			return obs;
+		}
+		
+		//create the obs
+		os.saveObs(obs,null);
+		if(enc != null){
+		    enc.addObs(obs);
+			
+		}
+			
 		return obs;
 
 	}
@@ -538,7 +531,7 @@ public class HL7SocketHandler implements Application {
 		Location newLocation = new Location();
 
 		try {
-			sendingLocString = hl7ObsHandler.getSendingFacility(message);
+			sendingLocString = this.hl7ObsHandler.getSendingFacility(message);
 			existingLocation = locationService.getLocation(sendingLocString);
 			if (existingLocation != null) {
 				return existingLocation;
@@ -556,9 +549,7 @@ public class HL7SocketHandler implements Application {
 	protected Patient createPatient(Patient p){
 		
 		PatientService patientService = Context.getPatientService();
-		Patient resultPatient = patientService.savePatient(p);
-			
-		return resultPatient;
+		return patientService.savePatient(p);
 	}
 	
 	protected Patient updatePatient(Patient mp,
@@ -781,7 +772,7 @@ public class HL7SocketHandler implements Application {
 			String obsValueType)
 	{
 
-		Concept answer = hl7ObsHandler.getCodedResult(message, orderRep, obxRep, pIdentifierString, obsvID, obsValueType);
+		Concept answer = this.hl7ObsHandler.getCodedResult(message, orderRep, obxRep, pIdentifierString, obsvID, obsValueType);
 
 		if (answer != null)
 		{
@@ -796,7 +787,7 @@ public class HL7SocketHandler implements Application {
 			int obxRep, String pIdentifierString, String obsvID,
 			String obsValueType)
 	{
-		Concept answer = hl7ObsHandler.getCodedResult(message, orderRep, obxRep, pIdentifierString, obsvID, obsValueType);
+		Concept answer = this.hl7ObsHandler.getCodedResult(message, orderRep, obxRep, pIdentifierString, obsvID, obsValueType);
 
 		if (answer != null)
 		{
@@ -812,14 +803,14 @@ public class HL7SocketHandler implements Application {
 	{
 		try
 		{
-			double dVal = hl7ObsHandler.getNumericResult(message, orderRep, obxRep);
+			double dVal = this.hl7ObsHandler.getNumericResult(message, orderRep, obxRep);
 			obs.setValueNumeric(dVal);
 			
 			// DWE CHICA-635 Get the units from OBX-6 
 			// and set it in the concept for this obs
 			Concept concept = obs.getConcept();
 			if(concept instanceof ConceptNumeric){
-				String units = hl7ObsHandler.getUnits(message, orderRep, obxRep);
+				String units = this.hl7ObsHandler.getUnits(message, orderRep, obxRep);
 				((ConceptNumeric) concept).setUnits(units);
 				obs.setConcept(concept);
 			}
@@ -838,7 +829,7 @@ public class HL7SocketHandler implements Application {
 	{
 		try
 		{
-			Date date = hl7ObsHandler.getDateResult(message, orderRep, obxRep);
+			Date date = this.hl7ObsHandler.getDateResult(message, orderRep, obxRep);
 			if (date != null)
 			{
 				obs.setValueDatetime(date);
@@ -846,7 +837,7 @@ public class HL7SocketHandler implements Application {
 			}
 		} catch (RuntimeException e)
 		{
-			log.error("Exception creating observation for type TS. " +  e.getMessage());
+			log.error("Exception creating observation for type TS.", e);
 		}
 		return false;
 	}
@@ -857,7 +848,7 @@ public class HL7SocketHandler implements Application {
 	{
 		try
 		{
-			String dataString = hl7ObsHandler.getTextResult(message, orderRep,
+			String dataString = this.hl7ObsHandler.getTextResult(message, orderRep,
 					obxRep);
 
 			try
@@ -956,7 +947,7 @@ public class HL7SocketHandler implements Application {
 				
 				
 			} catch (IOException e) {
-				log.error("IO Exception archiving an hl7 message to directory " + hl7ArchiveDirectory ,e);
+				log.error(String.format("IO Exception archiving an hl7 message to directory: %s ", hl7ArchiveDirectory) ,e);
 			}
 
 
@@ -967,7 +958,7 @@ public class HL7SocketHandler implements Application {
 	 * @return the port
 	 */
 	public Integer getPort() {
-		return port;
+		return this.port;
 	}
 
 
@@ -996,16 +987,16 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
-		if (os != null){
-			os.write( Hl7StartMessage.getBytes() );
-			os.write(message.getBytes());
-	        os.write( Hl7EndMessage.getBytes() );
-	        os.write(13);
-	        os.flush();
+		if (this.os != null){
+			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write(message.getBytes());
+	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write(13);
+	        this.os.flush();
 		}
-		socket.setSoTimeout(timeoutSec * 1000);
+		this.socket.setSoTimeout(timeoutSec * 1000);
 		String result = readAck();
-		log.error("Read ACK: " + result);
+		log.error(String.format("Read ACK: %s ", result));
 		Date ackDate = null;
 		if (result != null){ 
 			ackDate = new Date();
@@ -1031,19 +1022,19 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
-		if (os != null){
-			os.write( Hl7StartMessage.getBytes() );
-			os.write(message.getBytes());
-	        os.write( Hl7EndMessage.getBytes() );
-	        os.write(13);
-	        os.flush();
+		if (this.os != null){
+			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write(message.getBytes());
+	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write(13);
+	        this.os.flush();
 		}
 		socket.setSoTimeout(timeoutSec * 1000);
 		String result = null;
 		if (readAck) {
 			
 			result = readAck();
-			log.error("Read ACK: " + result);
+			log.error(String.format("Read ACK: %s ", result));
 		}
 		Date ackDate = null;
 		if (result != null){ 
@@ -1061,18 +1052,18 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7Out = hl7ListService.saveMessageToDatabase(hl7Out);
-		 if (os != null){
-			os.write( Hl7StartMessage.getBytes() );
-			os.write( hl7Out.getHl7Message().getBytes());
-	        os.write( Hl7EndMessage.getBytes() );
-	        os.write(13);
-	        os.flush();
+		 if (this.os != null){
+			this.os.write( Hl7StartMessage.getBytes() );
+			this.os.write( hl7Out.getHl7Message().getBytes());
+	        this.os.write( Hl7EndMessage.getBytes() );
+	        this.os.write(13);
+	        this.os.flush();
 		}
 		
-		socket.setSoTimeout(timeoutSec * 1000);
+		this.socket.setSoTimeout(timeoutSec * 1000);
 		try {
 			String result = readAck();
-			log.error("Read ACK: " + result);
+			log.error(String.format("Read ACK: %s", result));
 			Date ackDate = null;
 			if (result != null){ 
 				ackDate = new Date();
@@ -1089,11 +1080,11 @@ public class HL7SocketHandler implements Application {
 	
 	public void openSocket(String host, Integer port) throws IOException{
         try {
-        	socket = new Socket(host, port);
-			socket.setSoLinger(true, 10000);
+        	this.socket = new Socket(host, port);
+			this.socket.setSoLinger(true, 10000);
 			
-			os = socket.getOutputStream();
-			is = socket.getInputStream();
+			this.os = this.socket.getOutputStream();
+			this.is = this.socket.getInputStream();
 			
 		} catch (Exception e) {
 			log.error("Open socket failed for host= " + host + " port= " + port, e);
@@ -1102,10 +1093,10 @@ public class HL7SocketHandler implements Application {
 	
 	 public void closeSocket() {
 	        try {
-	            Socket sckt = socket;
-	            socket = null;
-	            os.close();
-	            is.close();
+	            Socket sckt = this.socket;
+	            this.socket = null;
+	            this.os.close();
+	            this.is.close();
 	           
 	            if (sckt != null)
 	                sckt.close();
@@ -1121,7 +1112,7 @@ public class HL7SocketHandler implements Application {
 			StringBuffer stringbuffer = new StringBuffer();
 			int i = 0;
 			do {
-				i = is.read();
+				i = this.is.read();
 				if (i == -1)
 					return null;
 	            
@@ -1135,7 +1126,7 @@ public class HL7SocketHandler implements Application {
 	 * @return the socket
 	 */
 	public Socket getSocket() {
-		return socket;
+		return this.socket;
 	}
 
 	/**
