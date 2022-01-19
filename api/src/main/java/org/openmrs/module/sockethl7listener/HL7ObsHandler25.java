@@ -305,7 +305,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		        if (nmvalue != null){
 		            try{
 		                dVal = Double.parseDouble(nmvalue);
-		            } catch (Exception ex){
+		            } catch (Exception e){
 		            	log.error("Exception parsing OBX for numeric value." ,e);
 		            }
 		        }
