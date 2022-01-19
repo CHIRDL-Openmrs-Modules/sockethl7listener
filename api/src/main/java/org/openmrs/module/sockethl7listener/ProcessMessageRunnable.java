@@ -69,93 +69,103 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 	@Override
 	public void run() {
 		boolean error = false;
-	
-		HL7Service hl7Service = Context.getHL7Service();
-		String incomingMessageString = "";
-		try {
-			incomingMessageString = this.parser.encode(this.message);
-		}
-		catch (HL7Exception e) {
-			log.error("Exception encoding hl7 message.", e);
-		}
 		
-	
-		if (!(this.message instanceof ORU_R01) && !(this.message instanceof ADT_A01)) {
-			//Invalid message type
-			String messageType = "";		
-			if (this.message.getParent() != null) {
-				messageType = this.message.getParent().getName();
+			HL7Service hl7Service = Context.getHL7Service();
+			String incomingMessageString = "";
+			try {
+				incomingMessageString = this.parser.encode(this.message);
 			}
-			log.error(String.format("Invalid message type (%s). Only ORU_R01 and ADT_A01 valid.", messageType));
-			log.error("Invalid message type {}. Only ORU_R01 and ADT_A01 valid.", messageType);
-			return;
-		}
-			
-		
-	    HL7Source hl7Source = new HL7Source();
-	    MSH msh = HL7ObsHandler25.getMSH(this.message);
-	    
-	    try {
-	    	  
-			if (hl7Service.getHL7SourceByName(this.socketHandler.getPort().toString()) == null) {
-				hl7Source.setName(String.valueOf(this.socketHandler.getPort()));
-				hl7Source.setDescription("Port for hl7 message.");
-				hl7Service.saveHL7Source(hl7Source);
-			} else {
-				hl7Source = hl7Service.getHL7SourceByName(this.socketHandler.getPort().toString());
+			catch (HL7Exception e) {
+				log.error("Exception encoding hl7 message.", e);
+				this.exception = e;
 			}
 			
-			HL7InQueue hl7inQ = new HL7InQueue();
-			hl7inQ.setHL7Source(hl7Source);
-			hl7inQ.setHL7Data(incomingMessageString);
-			//MessageState 0=pending, 1=processing, 2=processed, 3=error
-			hl7inQ.setMessageState(PROCESSING);
-			HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
-			
-			this.socketHandler.archiveHL7Message(incomingMessageString);
-			
-			boolean ignoreMessage = false;
-		
-			if (this.filters != null) {
-				for (HL7Filter filter : this.filters) {
-					if (filter.ignoreMessage(this.hl7EncounterHandler, this.message, incomingMessageString)) {
-						ignoreMessage = true;
-						break;
-					}
+			if (!(this.message instanceof ORU_R01) && !(this.message instanceof ADT_A01)) {
+				String messageType = "";
+				
+				if (this.message.getParent() != null) {
+					messageType = this.message.getParent().getName();
 				}
-			}
-			
-			if (!ignoreMessage) {
-				error = this.socketHandler.processMessageSegments(this.message, incomingMessageString, this.parameters);
+				
+				this.exception = new ApplicationException("Invalid message type (" + messageType
+				        + ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
+				return;
 			}
 			
 			try {
-				this.response = Util.makeACK(msh, error, null, null);
-			}
-			catch (Exception e) {
-				log.error("Exception during first attempt to send ACK message.", e);
-			}
-
-			savedHl7.setMessageState(PROCESSED);
-			Context.getHL7Service().saveHL7InQueue(savedHl7);
+				HL7Source hl7Source = new HL7Source();
 				
-		}
-		catch (Exception e) {
-			log.error("Error while processing hl7 message", e);
-		}
-		finally {
-			if (this.response == null) {
-				try {
-					this.response = Util.makeACK(msh, error, null, null);
-					if (this.response == null) {
-						log.error("Second attempt to send ACK message failed.");
+				if (hl7Service.getHL7SourceByName(this.socketHandler.getPort().toString()) == null) {
+					hl7Source.setName(String.valueOf(this.socketHandler.getPort()));
+					hl7Source.setDescription("Port for hl7 message.");
+					hl7Service.saveHL7Source(hl7Source);
+				} else {
+					hl7Source = hl7Service.getHL7SourceByName(this.socketHandler.getPort().toString());
+				}
+				
+				HL7InQueue hl7inQ = new HL7InQueue();
+				hl7inQ.setHL7Source(hl7Source);
+				hl7inQ.setHL7Data(incomingMessageString);
+				//MessageState 0=pending, 1=processing, 2=processed, 3=error
+				hl7inQ.setMessageState(PROCESSING);
+				HL7InQueue savedHl7 = hl7Service.saveHL7InQueue(hl7inQ);
+				
+				this.socketHandler.archiveHL7Message(incomingMessageString);
+				
+				boolean ignoreMessage = false;
+				
+				if (this.filters != null) {
+					for (HL7Filter filter : this.filters) {
+						if (filter.ignoreMessage(this.hl7EncounterHandler, this.message, incomingMessageString)) {
+							ignoreMessage = true;
+							break;
+						}
 					}
 				}
+				
+				if (!ignoreMessage) {
+					error = this.socketHandler.processMessageSegments(this.message, incomingMessageString, this.parameters);
+				}
+				try {
+					MSH msh = HL7ObsHandler25.getMSH(this.message);
+					this.response = Util.makeACK(msh, error, null, null);
+				}
 				catch (Exception e) {
-					log.error("Exception during second attempt to send ACK message.", e);
+					log.error("Exception sending ACK message.", e);
+					this.exception = e;
+				}
+				
+				Context.clearSession();
+				
+				savedHl7.setMessageState(PROCESSED);
+				Context.getHL7Service().saveHL7InQueue(savedHl7);
+				
+			}
+			catch (ContextAuthenticationException e) {
+				log.error("Context Authentication exception: ", e);
+				this.exception = e;
+			}
+			catch (ClassCastException e) {
+				log.error(String.format("Error casting to %s ", this.message.getClass().getName()), e);
+				this.exception = new ApplicationException("Invalid message type for handler");
+			}
+			catch (Exception e) {
+				log.error("Exception processing hl7 message.", e);
+				this.exception = e;
+			}
+			finally {
+				if (this.response == null) {
+					try {
+						error = true;
+						MSH msh = HL7ObsHandler25.getMSH(this.message);
+						this.response = Util.makeACK(msh, error, null, null);
+					}
+					catch (Exception e) {
+					    log.error("Second attempt to send ACK message failed.");
+						this.exception = e;
+					}
 				}
 			}
-		}
 	}
 	
 	/**
