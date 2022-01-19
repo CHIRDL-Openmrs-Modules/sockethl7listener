@@ -59,7 +59,7 @@ public class SocketHL7ListenerActivator extends BaseModuleActivator implements D
 					currValue = currProperty.getPropertyValue();
 					if (currValue == null || currValue.length() == 0)
 					{
-						log.error(String.format("Global property %s has no value.", currName));
+						log.error("Global property {} has no value", currName);
 					}
 				}
 			}

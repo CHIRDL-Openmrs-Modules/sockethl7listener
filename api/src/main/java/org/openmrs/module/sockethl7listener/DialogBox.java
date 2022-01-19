@@ -22,7 +22,6 @@ import javax.swing.JTextField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 import ca.uhn.hl7v2.app.HL7ServerTestHelper;
 
 
@@ -134,7 +133,7 @@ public class DialogBox
 				   	
 					
 					} catch (Exception e){
-						log.error(String.format("Unable to process file name: %s ", t1.getText() ) ,e);
+						log.error("Unable to process file name: {} ", t1.getText(), e);
 					}
 
 				}
@@ -166,8 +165,11 @@ public class DialogBox
 			    	}
 					
 					
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					log.error("Failed to send message to host: {} port: {}", host, port );
 				} catch (Exception e) {
-					log.error(String.format("Error sending message from file: %s ", file) ,e);
+					log.error("Error sending message from file: {}", file, e);
 				} finally {
 					closeSocket();
 				}
@@ -180,11 +182,11 @@ public class DialogBox
 			 private void sendMessage(String theMessage) throws IOException
 			    {
 				 
-				 	String Hl7StartMessage = "\u000b";
-					String Hl7EndMessage = "\u001c";
-			        os.write( Hl7StartMessage.getBytes() );
+				 	String hl7StartMessage = "\u000b";
+					String hl7EndMessage = "\u001c";
+			        os.write( hl7StartMessage.getBytes() );
 			        os.write( theMessage.getBytes() );
-			        os.write( Hl7EndMessage.getBytes() );
+			        os.write( hl7EndMessage.getBytes() );
 			        os.write(13);
 			        os.flush();
 			        

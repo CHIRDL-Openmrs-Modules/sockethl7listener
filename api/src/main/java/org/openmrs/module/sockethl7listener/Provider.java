@@ -214,8 +214,8 @@ public class Provider {
 					openmrsProvider = providerService.getProvider(unknownProviderId);
 				}
 				catch(NumberFormatException e){
-					log.error(String.format("Invalid number format for global property %s. ", 
-							ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID),e);
+					log.error("Invalid number format for global property {}. ", 
+							ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID,e);
 					return null;
 				}	
 			}

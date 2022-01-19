@@ -75,6 +75,8 @@ public class HL7SocketHandler implements Application {
 	private Socket socket = null;
 	private OutputStream os = null;
 	private InputStream is = null;
+	private String HL7_START_MESSAGE = "\u000b";
+	private String HL7_END_MESSAGE = "\u001c";
 	
 	protected ca.uhn.hl7v2.parser.Parser parser = null;
 	private ArrayList<HL7Filter> filters = null;
@@ -94,7 +96,7 @@ public class HL7SocketHandler implements Application {
 			PatientHandler patientHandler, HL7ObsHandler hl7ObsHandler,
 			HL7EncounterHandler hl7EncounterHandler,
 			HL7PatientHandler hl7PatientHandler,
-			List<HL7Filter> filters)
+			ArrayList<HL7Filter> filters)
 	{
 		
 		this.patientHandler = patientHandler;
@@ -102,7 +104,7 @@ public class HL7SocketHandler implements Application {
 		this.hl7ObsHandler = hl7ObsHandler;
 		this.hl7EncounterHandler = hl7EncounterHandler;
 		this.hl7PatientHandler = hl7PatientHandler;
-		this.filters = (ArrayList<HL7Filter>) filters;
+		this.filters = filters;
 	}
 	
 	/**
@@ -149,7 +151,7 @@ public class HL7SocketHandler implements Application {
 	 */
 	public Message processMessage(Message message) throws ApplicationException {
 		
-		HashMap<String,Object> parameters = new HashMap<String,Object>();
+		HashMap<String,Object> parameters = new HashMap<>();
 		return this.processMessage(message, parameters);
 	}
 
@@ -161,14 +163,14 @@ public class HL7SocketHandler implements Application {
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
 		if (provider == null || provider.createProvider(provider) == null){
-			log.error("Unable to create a provider for tis encounter.");
+			log.error("Unable to create a provider for encounter.");
 			return null;
 		}
 		 
 		Patient resultPatient = findPatient(patient,encounterDate,parameters);	
 		if (resultPatient == null || resultPatient.getPatientId() == null){
 			hl7ListService.setHl7Message(0, 0, incomingMessageString, false, false, this.port);
-			log.error("Unable to create or update patient based on hl7 patient message.");
+			log.error("Unable to create or update patient from hl7 patient message.");
 			return null;
 		}
 		
@@ -271,7 +273,7 @@ public class HL7SocketHandler implements Application {
 			}
 				
 			double duration =  (new Date().getTime() - starttime.getTime())/1000.0;
-			log.debug(String.format("Message process time: %f seconds. ", duration));
+			log.debug("Message process time: {} seconds.", duration);
 			
 		} catch (RuntimeException e) {
 			//Do not stop application. Start processing next hl7 message.
@@ -349,7 +351,7 @@ public class HL7SocketHandler implements Application {
 			}
 		} catch (Exception e)
 		{
-			log.error("Unable to create encounter.", e);
+			log.error("Unable to create encounter for patient", resultPatient.getPatientId(),  e);
 			return null;
 
 		}
@@ -371,7 +373,7 @@ public class HL7SocketHandler implements Application {
 	 */
 	public Obs CreateObservation(Encounter enc, boolean saveToDatabase,Message message,
 			int orderRep,int obxRep,Location existingLoc,Patient resultPatient) {
-		ObsService os = Context.getObsService();
+		ObsService obsService = Context.getObsService();
 
 		String pIdentifierString = resultPatient.getPatientIdentifier().getIdentifier();
 		
@@ -506,7 +508,7 @@ public class HL7SocketHandler implements Application {
 		}
 		
 		//create the obs
-		os.saveObs(obs,null);
+		obsService.saveObs(obs,null);
 		
 		if(enc != null){
 		    enc.addObs(obs);	
@@ -693,7 +695,7 @@ public class HL7SocketHandler implements Application {
 			
 			
 		} catch (IOException e) {
-			log.error(String.format("Exception writing to directory %s", hl7ArchiveDirectory),e);
+			log.error("Exception writing to directory {}", hl7ArchiveDirectory,e);
 		}
 
 
@@ -911,7 +913,7 @@ public class HL7SocketHandler implements Application {
 			}
 			
 		} catch (Exception e) {
-			log.error("Exception while extracting NTE segment from hl7",e);
+			log.error("Exception while extracting NTE segment from hl7.",e);
 		}
 		return nte;
 		
@@ -946,7 +948,7 @@ public class HL7SocketHandler implements Application {
 				
 				
 			} catch (IOException e) {
-				log.error(String.format("IO Exception archiving an hl7 message to directory: %s ", hl7ArchiveDirectory) ,e);
+				log.error("IO Exception archiving an hl7 message to directory: {} ", hl7ArchiveDirectory ,e);
 			}
 
 
@@ -980,16 +982,14 @@ public class HL7SocketHandler implements Application {
 	public Date sendMessage(Encounter encounter , String host, Integer port, 
 			String message, Integer timeoutSec) throws IOException{
 		if (timeoutSec == null || timeoutSec == 0) timeoutSec = 5;
-		
-		String hl7StartMessage = "\u000b";
-		String hl7EndMessage = "\u001c";
+	
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
 		if (this.os != null){
-			this.os.write( hl7StartMessage.getBytes() );
+			this.os.write( this.HL7_START_MESSAGE.getBytes() );
 			this.os.write(message.getBytes());
-	        this.os.write( hl7EndMessage.getBytes() );
+	        this.os.write( this.HL7_END_MESSAGE.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
@@ -1016,15 +1016,13 @@ public class HL7SocketHandler implements Application {
 			String message, Integer timeoutSec, boolean readAck) throws IOException{
 		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
 		
-		String hl7StartMessage = "\u000b";
-		String hl7EndMessage = "\u001c";
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7ListService.saveMessageToDatabase(encounter, message, null, port, host);
 		if (this.os != null){
-			this.os.write( hl7StartMessage.getBytes() );
+			this.os.write( this.HL7_START_MESSAGE.getBytes() );
 			this.os.write(message.getBytes());
-	        this.os.write( hl7EndMessage.getBytes() );
+	        this.os.write( this.HL7_END_MESSAGE.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
@@ -1046,15 +1044,14 @@ public class HL7SocketHandler implements Application {
 	
 	public HL7Outbound sendMessage(HL7Outbound hl7Out, Integer timeoutSec) throws IOException{
 		if (timeoutSec == null || timeoutSec == 0)timeoutSec = 5;
-		String hl7StartMessage = "\u000b";
-		String hl7EndMessage = "\u001c";
+
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		
 		 hl7Out = hl7ListService.saveMessageToDatabase(hl7Out);
 		 if (this.os != null){
-			this.os.write( hl7StartMessage.getBytes() );
+			this.os.write( this.HL7_START_MESSAGE.getBytes() );
 			this.os.write( hl7Out.getHl7Message().getBytes());
-	        this.os.write( hl7EndMessage.getBytes() );
+	        this.os.write( this.HL7_END_MESSAGE.getBytes() );
 	        this.os.write(13);
 	        this.os.flush();
 		}
@@ -1086,7 +1083,7 @@ public class HL7SocketHandler implements Application {
 			this.is = this.socket.getInputStream();
 			
 		} catch (Exception e) {
-			log.error(String.format("Open socket failed for host=%1$s port=%2$s", host, port), e);
+			log.error("Open socket failed for host={} port={}", host, port, e);
 		}
     } 
 	

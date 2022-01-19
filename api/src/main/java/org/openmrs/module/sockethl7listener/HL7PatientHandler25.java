@@ -460,6 +460,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getMothersName(ca.uhn.hl7v2.model.Message)
 	 */
 	public String getMothersName(Message message) {
+		
 		NK1 nk1 = getNK1(message);
 		String motherNameString = "";
 

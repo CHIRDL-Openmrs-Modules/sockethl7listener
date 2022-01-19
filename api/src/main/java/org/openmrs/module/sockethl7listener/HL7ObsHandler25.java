@@ -38,17 +38,17 @@ public class HL7ObsHandler25 implements HL7ObsHandler
     
     private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
     public static MSH getMSH(Message message)
-    {
-        if (message instanceof ORU_R01)
-        {
-            return getMSH((ORU_R01) message);
-        }
-        if (message instanceof ADT_A01)
-        {
-            return getMSH((ADT_A01) message);
-        }
-        return null;
-    }
+	{
+		if (message instanceof ORU_R01)
+		{
+			return getMSH((ORU_R01) message);
+		}
+		if (message instanceof ADT_A01)
+		{
+			return getMSH((ADT_A01) message);
+		}
+		return null;
+	}
 
 	private static MSH getMSH(ORU_R01 oru)
 	{
@@ -87,31 +87,31 @@ public class HL7ObsHandler25 implements HL7ObsHandler
             log.error("Exception getting OBX segment from ORU_R01 message." ,e);
         }
 
-        return obx;
-    }
-    
-    /**
-     * DWE CHICA-635 
-     * Get OBX from ADT_A01 message
-     * @param adt
-     * @param orderRep
-     * @param obRep
-     * @return
-     */
-    private static OBX getOBX(ADT_A01 adt, int orderRep, int obRep)
-    {
-        OBX obx = null;
-        try
-        {
-            obx = adt.getOBX(obRep);
-        }
-        catch(Exception e)
-        {
-            log.error("Exception getting OBX from ADT_A01 message.", e);
-        }
-        
-        return obx;
-    }
+		return obx;
+	}
+	
+	/**
+	 * DWE CHICA-635 
+	 * Get OBX from ADT_A01 message
+	 * @param adt
+	 * @param orderRep
+	 * @param obRep
+	 * @return
+	 */
+	private static OBX getOBX(ADT_A01 adt, int orderRep, int obRep)
+	{
+		OBX obx = null;
+		try
+		{
+			obx = adt.getOBX(obRep);
+		}
+		catch(Exception e)
+		{
+			log.error("Exception getting OBX from ADT_A01 message.", e);
+		}
+		
+		return obx;
+	}
 
 	public static OBR getOBR(Message message, int orderRep)
 	{
@@ -126,43 +126,42 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 	private static OBR getOBR(ORU_R01 oru, int orderRep)
 	{
 
-        OBR obr = null;
-        try
-        {
-            obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
-                    .getOBR();
-        } catch (Exception e)
-        {
-            log.error("Exception getting OBR segment from ORU_R01 message.", e);
-        }
+		OBR obr = null;
+		try
+		{
+			obr = oru.getPATIENT_RESULT().getORDER_OBSERVATION(orderRep)
+					.getOBR();
+		} catch (Exception e)
+		{
+			log.error("Exception getting OBR segment from ORU_R01 message.", e);
+		}
 
 		return obr;
 	}
-
-    
-    /**
-     * @param ts
-     * @return Date that was extraced from the TS data type
-     */
-    public static Date TranslateDate(TS ts)
-    {
-        Date datetime = null;
-        String timeString = null;
-        try {
-            if (ts != null && ts.getTime() != null ){
-                timeString = ts.getTime().getValue();
-                if (timeString != null) {
-                    datetime = HL7Util.parseHL7Timestamp(timeString);
-                }
-            }    
-        }  catch (HL7Exception e) {
-            log.error(String.format("Error parsimg TS timestamp. Time string: %s.",timeString), e);
-        }
-        
-        return datetime;
-        
-        
-    }
+	
+	/**
+	 * @param ts
+	 * @return Date that was extraced from the TS data type
+	 */
+	public static Date TranslateDate(TS ts)
+	{
+		Date datetime = null;
+		String timeString = null;
+		try {
+			if (ts != null && ts.getTime() != null ){
+				timeString = ts.getTime().getValue();
+				if (timeString != null) {
+					datetime = HL7Util.parseHL7Timestamp(timeString);
+				}
+			}	
+		}  catch (HL7Exception e) {
+            log.error("Error converting TS timestamp to Date due to parsing error. Time string: {}.", timeString, e);
+		}
+		
+		return datetime;
+		
+		
+	}
 
 	public String getSendingFacility(Message message)
 	{
@@ -303,17 +302,17 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		        value = values[0];
 		        String nmvalue = ((NM) value.getData()).getValue();
 
-                if (nmvalue != null){
-                    try{
-                        dVal = Double.parseDouble(nmvalue);
-                    } catch (Exception e){
-                        log.error("Exception parsing OBX for numeric value." ,e);
-                    }
-                }
-            }
-        }
-        return dVal;
-    }
+		        if (nmvalue != null){
+		            try{
+		                dVal = Double.parseDouble(nmvalue);
+		            } catch (Exception ex){
+		            	log.error("Exception parsing OBX for numeric value." ,e);
+		            }
+		        }
+		    }
+		}
+		return dVal;
+	}
 
     protected Concept processCWEType(Varies value,
             String pIdentifierString, String conceptQuestionId)
@@ -349,7 +348,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
                 return answer;
             }
         } catch (RuntimeException e){
-            log.error(String.format("Exception parsing CET concept for concept name %1$s", conceptName), e);
+            log.error("Exception parsing CET concept for concept name {}", conceptName, e);
         }
         
         return null;

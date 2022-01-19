@@ -268,7 +268,7 @@ public class PatientHandler
 			personService.savePersonAttributeType(personAttr);
 		} catch (RuntimeException e)
 		{
-			log.error(String.format("Unable to create new attribute type for attribute type %s", patString), e);
+			log.error("Unable to create new attribute type for attribute type {}", patString, e);
 		}
 		return personAttr;
 

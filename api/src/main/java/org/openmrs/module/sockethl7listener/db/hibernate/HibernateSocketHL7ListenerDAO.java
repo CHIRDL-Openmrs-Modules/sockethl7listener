@@ -88,7 +88,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 			query.addEntity(PatientMessage.class);
 			return (PatientMessage) query.uniqueResult();
 		} catch (Exception e){
-			log.error(String.format("Error getting patient hl7 message by encounter. EncounterId:  %d", encounterId), e);
+			log.error("Error getting patient hl7 message by encounter. EncounterId:  {}", encounterId, e);
 		}
 		return null;
 	}

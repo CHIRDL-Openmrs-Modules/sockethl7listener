@@ -219,7 +219,7 @@ public class HL7MessageConstructor {
 			return pid;
 
 		} catch (Exception e) {
-			log.error(String.format("Exception adding PID segment to hl7 message for %s", pat.getPatientId()), e);
+			log.error("Exception adding PID segment to hl7 message for {}", pat.getPatientId(), e);
 			return null;
 		} 
 	}
@@ -236,9 +236,11 @@ public class HL7MessageConstructor {
 		try {
 			String ln = "";
 			String fn = "";
-			String nkName = pat.getAttribute(this.attributeNextOfKin).getValue();
-			if ((pat != null)
-					&& (pat.getAttribute(this.attributeTelephoneNum) != null)) {
+			String nkName = "";
+			if ((pat != null) && (pat.getAttribute(this.attributeNextOfKin) != null)) {
+				nkName = pat.getAttribute(this.attributeNextOfKin).getValue();
+			}
+			if ((pat != null) && (pat.getAttribute(this.attributeTelephoneNum) != null)) {	
 				String tel = pat.getAttribute(this.attributeTelephoneNum).getValue();
 				nk1.getPhoneNumber(0).getTelephoneNumber().setValue(tel);
 			}
@@ -272,7 +274,7 @@ public class HL7MessageConstructor {
 			}
 		
 		} catch (Exception e) {
-			log.error("Exception setting next-of-kin from hl7 NK1.", e);
+			log.error("Exception setting next-of-kin from hl7 NK1 for {}.", pat.getPatientId() , e);
 		}
 		return nk1;
 
@@ -299,7 +301,7 @@ public class HL7MessageConstructor {
 			
 			if(openmrsProvider == null)
 			{
-				log.error("Error getting the attending provider for the encounter.");
+				log.error("Error while creating PV1 segment. Unable to locate provider for encounter: {}", enc.getEncounterId());
 				return pv1;
 			}
 			
@@ -325,7 +327,7 @@ public class HL7MessageConstructor {
 			}
 			
 		} catch (Exception e) {
-			log.error(String.format("Exception adding PV1 segment to hl7 for encounter: %d", enc.getEncounterId()), e);
+			log.error("Exception adding PV1 segment to hl7 for encounter: {}", enc.getEncounterId(), e);
 		}
 		return pv1;
 	}
@@ -364,7 +366,7 @@ public class HL7MessageConstructor {
 			msh.getMessageControlID().setValue(
 					this.ourApplication + "-" + formattedDate);
 		} catch (Exception e) {
-			log.error(String.format("Exception constructing MSH segment for export message. EncounterId: %d ", enc.getEncounterId()), e);
+			log.error("Exception constructing MSH segment for export message. EncounterId: {} ", enc.getEncounterId(), e);
 		}
 
 		return msh;
@@ -373,15 +375,15 @@ public class HL7MessageConstructor {
 	private int getRaceID(String race) {
 		int raceID = 0; // default
 		if ((race != null) && !race.equals("")) {
-			if (race.toLowerCase().equals("white"))
+			if (race.equalsIgnoreCase("white"))
 				raceID = 1;
-			else if (race.toLowerCase().equals("black"))
+			else if (race.equalsIgnoreCase("black"))
 				raceID = 2;
-			else if (race.toLowerCase().equals("american indian"))
+			else if (race.equalsIgnoreCase("american indian"))
 				raceID = 3;
-			else if (race.toLowerCase().equals("asian"))
+			else if (race.equalsIgnoreCase("asian"))
 				raceID = 4;
-			else if (race.toLowerCase().equals("other"))
+			else if (race.equalsIgnoreCase("other"))
 				raceID = 5;
 		}
 		return raceID;
@@ -420,7 +422,7 @@ public class HL7MessageConstructor {
 			
 			if(openmrsProvider == null)
 			{
-				log.error("Error setting attending provider in OBR segment");
+				log.error("Error setting attending provider in OBR segment.");
 				return obr;
 			}
 			
@@ -460,7 +462,7 @@ public class HL7MessageConstructor {
 					accessionNumber);
 
 		} catch (Exception e) {
-			log.error("Exception adding OBR segment to hl7", e);
+			log.error("Exception adding OBR segment to hl7. EncounterId: {} " + enc.getEncounterId(), e);
 		}
 
 		return obr;
@@ -572,7 +574,7 @@ public class HL7MessageConstructor {
 			}
 
 		} catch (Exception e) {
-			log.error(String.format("Exception constructing OBX segment for concept %s", name) ,e);
+			log.error("Exception constructing OBX segment for concept {}", name ,e);
 		}
 		return obx;
 

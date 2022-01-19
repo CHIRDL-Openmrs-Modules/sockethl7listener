@@ -146,7 +146,7 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 				this.exception = e;
 			}
 			catch (ClassCastException e) {
-				log.error(String.format("Error casting to %s ", this.message.getClass().getName()), e);
+				log.error("Error casting to {} ", this.message.getClass().getName(), e);
 				this.exception = new ApplicationException("Invalid message type for handler");
 			}
 			catch (Exception e) {

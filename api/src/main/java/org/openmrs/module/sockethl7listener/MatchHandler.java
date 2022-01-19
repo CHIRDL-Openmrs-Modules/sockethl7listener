@@ -62,11 +62,7 @@ public class MatchHandler {
 		{
 			resolvedPatient.getPatientIdentifier().setPreferred(false);
 			resolvedPatient.addIdentifier(bestIdentifier);
-		} else
-		{
-			bestIdentifier = resolvedPatient.getPatientIdentifier();
-		}
-		
+		}	
 
 		PersonName bestName = getBestName(hl7Patient.getPersonName(), resolvedPatient.getPersonName(),
 				encounterDate);
@@ -74,11 +70,7 @@ public class MatchHandler {
 		{
 			resolvedPatient.getPersonName().setPreferred(false);
 			resolvedPatient.addName(bestName);
-		} else
-		{
-			bestName = resolvedPatient.getPersonName();
-		}
-
+		} 	
 		
 		String correctGender = getBestGenderByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setGender(correctGender);
@@ -87,8 +79,6 @@ public class MatchHandler {
 		Date DOB = getBestDOBByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setBirthdate(DOB);
 
-
-		
 		PersonAddress bestAddress = getBestAddress(hl7Patient, resolvedPatient,
 				encounterDate);
 		
@@ -706,7 +696,7 @@ public class MatchHandler {
 			Context.closeSession();
 		} catch (RuntimeException e)
 		{
-			log.error(String.format("Exception creating new attribute type: %s", patString), e);
+			log.error("Exception creating new attribute type: {}", patString, e);
 		}
 		return personAttr;
 

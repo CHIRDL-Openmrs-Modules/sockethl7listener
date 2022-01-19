@@ -98,7 +98,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			
 		} catch (Exception e)
 		{
-			log.error(String.format("Error saving hl7 message for encounter id %d", encounter_id), e);
+			log.error("Error saving hl7 message for encounter id {}.", encounter_id, e);
 		}
 		
 		return;
@@ -115,7 +115,7 @@ public class SocketHL7ListenerServiceImpl implements SocketHL7ListenerService{
 			if (it.hasNext()){
 				PatientMessage pm = it.next();
 				duplicate = true;
-				log.error(String.format("Duplicate message for patient: %d encounter: %d", pm.getPatient_id(), pm.getEncounter_id()));
+				log.error("Duplicate message for patient: {} encounter: {}", pm.getPatient_id(), pm.getEncounter_id());
 				
 				setHl7Message(pm.getPatient_id(), pm.getEncounter_id(), 
 							incoming, duplicate, duplicate, port);

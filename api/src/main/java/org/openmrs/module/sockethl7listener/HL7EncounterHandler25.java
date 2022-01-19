@@ -150,14 +150,13 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			 }
 			
 			if (timeStamp != null && timeStamp.getTime()!= null) { 
-				datetime = translateDate(timeStamp);
+				datetime = TranslateDate(timeStamp);
 			}else {
-				log.error("A valid encounter date time stamp  not found in PV1 (ADT messages), OBR (ORU messages)," +
-						" or MSH segments.");
+				log.error("A valid encounter date time stamp  not found in PV1 (ADT messages), OBR (ORU messages), or MSH segments.");
 			}
 			
 		} catch (Exception e) {
-			log.error("Exception getting encounter date from hl7 message",e);
+			log.error("Exception getting encounter date from hl7 message.", e);
 		}
 
 		return datetime;
@@ -197,7 +196,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		return HL7ObsHandler25.getMSH(message);
 	}
 
-	protected Date translateDate(TS ts)
+	protected Date TranslateDate(TS ts)
 	{
 		return HL7ObsHandler25.TranslateDate(ts);
 	}
