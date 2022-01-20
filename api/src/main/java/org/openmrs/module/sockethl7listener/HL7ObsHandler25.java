@@ -329,7 +329,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
                 return answer;
             }
         } catch (RuntimeException e){
-            log.error(String.format("Exception getting CWE concept for concept name %s", conceptName), e);
+            log.error("Exception getting CWE concept for concept name {}", conceptName, e);
         }
         
         return null;

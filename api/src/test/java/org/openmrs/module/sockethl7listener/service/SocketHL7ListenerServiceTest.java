@@ -2,8 +2,9 @@ package org.openmrs.module.sockethl7listener.service;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import org.junit.Test;
+
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.openmrs.annotation.Authorized;
 import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 import org.openmrs.test.SkipBaseSetup;
@@ -17,7 +18,7 @@ public class SocketHL7ListenerServiceTest extends BaseModuleContextSensitiveTest
 	
 	@Test
 	@SkipBaseSetup
-	public void checkAuthorizationAnnotations() throws Exception {
+	void checkAuthorizationAnnotations() throws Exception {
 		Method[] allMethods = SocketHL7ListenerService.class.getDeclaredMethods();
 		for (Method method : allMethods) {
 		    if (Modifier.isPublic(method.getModifiers())) {

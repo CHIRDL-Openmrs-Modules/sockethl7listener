@@ -205,7 +205,7 @@ public class Provider {
 				AdministrationService adminService = Context.getAdministrationService();
 				String unknownProviderIdString = adminService.getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0){
-					log.error("No value exists for global property {}.", ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
+					log.error("Provider id is null, and no value exists for global property {}. Unable to create provider. ", ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 					return null;
 				}
 				
@@ -214,7 +214,7 @@ public class Provider {
 					openmrsProvider = providerService.getProvider(unknownProviderId);
 				}
 				catch(NumberFormatException e){
-					log.error("Invalid number format for global property {}. ", 
+					log.error("Provider id is null and global property {} is an invalid number format. Unable to create provider. ", 
 							ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID,e);
 					return null;
 				}	

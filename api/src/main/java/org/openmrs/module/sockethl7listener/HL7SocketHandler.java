@@ -162,8 +162,12 @@ public class HL7SocketHandler implements Application {
 		
 		SocketHL7ListenerService hl7ListService = Context.getService(SocketHL7ListenerService.class);
 		PatientService patientService = Context.getPatientService();
-		if (provider == null || provider.createProvider(provider) == null){
-			log.error("Unable to create a provider for encounter.");
+		if (provider == null) {
+			log.error("No provider exists in hl7 message for encounter {} ", newEncounter.getEncounterId());
+			return null;
+		}
+		if (provider.createProvider(provider) == null){
+			log.error("Could not create a provider or find an existing provider for encounter id {} ", newEncounter.getEncounterId());
 			return null;
 		}
 		 
@@ -310,7 +314,7 @@ public class HL7SocketHandler implements Application {
 			}
 					
 		} catch (RuntimeException e) {
-			log.error("Exception creating or updating patient.",e);
+			log.error("Exception creating or updating patient for patient id = {}", hl7Patient.getPatientId(), e);
 		}
 		return resultPatient;
 
@@ -351,7 +355,7 @@ public class HL7SocketHandler implements Application {
 			}
 		} catch (Exception e)
 		{
-			log.error("Unable to create encounter for patient", resultPatient.getPatientId(),  e);
+			log.error("Exception creating encounter for patient id {} ", resultPatient.getPatientId(), e);
 			return null;
 
 		}

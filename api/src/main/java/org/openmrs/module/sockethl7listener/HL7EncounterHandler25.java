@@ -152,7 +152,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			if (timeStamp != null && timeStamp.getTime()!= null) { 
 				datetime = TranslateDate(timeStamp);
 			}else {
-				log.error("A valid encounter date time stamp  not found in PV1 (ADT messages), OBR (ORU messages), or MSH segments.");
+				log.error("A valid encounter date time stamp not found in PV1 (ADT messages), OBR (ORU messages), or MSH segments.");
 			}
 			
 		} catch (Exception e) {

@@ -313,7 +313,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 		} catch (RuntimeException e)
 		{
-			log.error("Unable parse address from PID", e);
+			log.error("Unable to parse address from PID", e);
 		}
 		return addresses;
 	}
@@ -576,7 +576,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 				preferred = false;
 
 			} else {
-				log.error("Patient identifier name in CX field is empty.");
+				log.error("Patient identifier name in CX field is empty for identifier type: () patient:{} ", pit.getName(), pid.getPatientID());
 			}
 
 		}

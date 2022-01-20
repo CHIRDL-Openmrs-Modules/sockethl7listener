@@ -219,7 +219,7 @@ public class HL7MessageConstructor {
 			return pid;
 
 		} catch (Exception e) {
-			log.error("Exception adding PID segment to hl7 message for {}", pat.getPatientId(), e);
+			log.error("Exception adding PID segment to hl7 message for patient id {}", pid.getPatientID(), e);
 			return null;
 		} 
 	}
@@ -274,7 +274,11 @@ public class HL7MessageConstructor {
 			}
 		
 		} catch (Exception e) {
-			log.error("Exception setting next-of-kin from hl7 NK1 for {}.", pat.getPatientId() , e);
+			if (pat != null) {
+				log.error("Exception setting next-of-kin from hl7 NK1. Patient id = {}", pat.getPatientId(), e);
+			} else {
+				log.error("Exception setting next-of-kin from hl7 NK1.", e);
+			}
 		}
 		return nk1;
 
@@ -422,7 +426,7 @@ public class HL7MessageConstructor {
 			
 			if(openmrsProvider == null)
 			{
-				log.error("Error setting attending provider in OBR segment.");
+				log.error("Error setting attending provider in OBR segment for encounter {} ", enc.getEncounterId());
 				return obr;
 			}
 			
