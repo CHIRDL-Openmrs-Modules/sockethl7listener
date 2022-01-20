@@ -161,7 +161,7 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 						this.response = Util.makeACK(msh, error, null, null);
 					}
 					catch (Exception e) {
-					    log.error("Second attempt to send ACK message failed.");
+					    log.error("Second attempt to send ACK message failed.", e);
 						this.exception = e;
 					}
 				}

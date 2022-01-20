@@ -576,7 +576,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 				preferred = false;
 
 			} else {
-				log.error("Patient identifier name in CX field is empty for identifier type: () patient:{} ", pit.getName(), pid.getPatientID());
+				log.error("Patient identifier name in CX field is empty for identifier type: {} patient:{} ", pit.getName(), pid.getPatientID());
 			}
 
 		}
