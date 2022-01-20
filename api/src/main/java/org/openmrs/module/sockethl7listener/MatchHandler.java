@@ -2,7 +2,9 @@ package org.openmrs.module.sockethl7listener;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PersonAddress;
@@ -25,7 +27,7 @@ public class MatchHandler {
 	public static final String ATTRIBUTE_TELEPHONE = "Telephone Number";
 	public static final String ATTRIBUTE_RACE = "Race";
 	public static final String ATTRIBUTE_BIRTHPLACE = "Birthplace";
-	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 
 	public MatchHandler() {
 		
@@ -60,11 +62,7 @@ public class MatchHandler {
 		{
 			resolvedPatient.getPatientIdentifier().setPreferred(false);
 			resolvedPatient.addIdentifier(bestIdentifier);
-		} else
-		{
-			bestIdentifier = resolvedPatient.getPatientIdentifier();
-		}
-		
+		}	
 
 		PersonName bestName = getBestName(hl7Patient.getPersonName(), resolvedPatient.getPersonName(),
 				encounterDate);
@@ -72,11 +70,7 @@ public class MatchHandler {
 		{
 			resolvedPatient.getPersonName().setPreferred(false);
 			resolvedPatient.addName(bestName);
-		} else
-		{
-			bestName = resolvedPatient.getPersonName();
-		}
-
+		} 	
 		
 		String correctGender = getBestGenderByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setGender(correctGender);
@@ -85,12 +79,10 @@ public class MatchHandler {
 		Date DOB = getBestDOBByEncounterDate(hl7Patient, resolvedPatient, encounterDate);
 		resolvedPatient.setBirthdate(DOB);
 
-
-		
 		PersonAddress bestAddress = getBestAddress(hl7Patient, resolvedPatient,
 				encounterDate);
 		
-		if (hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
+		if (hl7Patient.getPersonAddress() != null && hl7Patient.getPersonAddress().equalsContent(resolvedPatient.getPersonAddress())){
 		    resolvedPatient.getPersonAddress().setDateCreated(encounterDate);
 		}
 		else if (bestAddress != null)
@@ -165,13 +157,13 @@ public class MatchHandler {
 			return hl7Address;
 		}
 
-		String existingPrefAddr1, PIDAddr1;
-		String existingPrefAddr2, PIDAddr2;
-		String existingPrefCity, PIDCity;
-		String existingPrefCountry, PIDCountry;
-		String existingPrefPostalCode, PIDPostalCode;
-		String existingPrefCounty, PIDCounty;
-		String existingState, PIDState;
+		String existingPrefAddr1;
+		String existingPrefAddr2;
+		String existingPrefCity;
+		String existingPrefCountry;
+		String existingPrefPostalCode;
+		String existingPrefCounty;
+		String existingState;
 
 		existingPrefAddr1 = existingPreferredAddr.getAddress1();
 		existingPrefAddr2 = existingPreferredAddr.getAddress2();
@@ -181,17 +173,8 @@ public class MatchHandler {
 		existingPrefPostalCode = existingPreferredAddr.getPostalCode();
 		existingPrefCounty = existingPreferredAddr.getCountyDistrict();
 
-		PIDAddr1 = hl7Address.getAddress1();
-		PIDAddr2 = hl7Address.getAddress2();
-		PIDCity = hl7Address.getCityVillage();
-		PIDState = hl7Address.getStateProvince();
-		PIDCountry = hl7Address.getCountry();
-		PIDPostalCode = hl7Address.getPostalCode();
-		PIDCounty = hl7Address.getCountyDistrict();
-
 		// Check if identical
-		boolean isEqual = hl7Address.equalsContent(existingPreferredAddr);
-		if (isEqual){
+		if (hl7Address.equalsContent(existingPreferredAddr)){
 			return existingPreferredAddr;
 		}
 
@@ -655,7 +638,6 @@ public class MatchHandler {
 
 		Date matchDOB = resolvedPatient.getBirthdate();
 		Date hl7DOB = hl7Patient.getBirthdate();
-		Date resolvedDOB = hl7DOB;
 
 		if (hl7DOB != null )
 		{
@@ -714,8 +696,7 @@ public class MatchHandler {
 			Context.closeSession();
 		} catch (RuntimeException e)
 		{
-			logger.error("Unable to create new attribute type:" + patString);
-			logger.error(e.getStackTrace());
+			log.error("Exception creating new attribute type: {}", patString, e);
 		}
 		return personAttr;
 

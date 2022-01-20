@@ -2,8 +2,6 @@ package org.openmrs.module.sockethl7listener.db.hibernate;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.SQLQuery;
@@ -13,6 +11,8 @@ import org.openmrs.module.chirdlutil.util.Util;
 import org.openmrs.module.sockethl7listener.db.SocketHL7ListenerDAO;
 import org.openmrs.module.sockethl7listener.hibernateBeans.HL7Outbound;
 import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -22,7 +22,7 @@ import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
  */
 public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 
-	private static final Log LOG =  LogFactory.getLog(HibernateSocketHL7ListenerDAO.class);
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 	
 	/**
 	 * Hibernate session factory
@@ -57,7 +57,7 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 	
 	public List<PatientMessage> checkMD5(String incoming){
 		String sqlSelect = "SELECT * from sockethl7listener_patient_message "
-		+ " where md5  = ?"; 
+		+ " where md5 = :incomingMD5"; 
 		
 		try{
 			String incomingMD5 = null;
@@ -68,27 +68,27 @@ public class HibernateSocketHL7ListenerDAO implements SocketHL7ListenerDAO{
 			
 			SQLQuery query = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sqlSelect);
-			query.setString(0, incomingMD5);
+			query.setString("incomingMD5", incomingMD5);
 			query.addEntity(PatientMessage.class);
 			return query.list();
 		} catch (Exception e){
-			LOG.error(e.getMessage(),e);
+			log.error("Error getting PatientMessage by MD5 string.",e);
 		}
 		return null;
 	}
 	
 	public PatientMessage getPatientMessageByEncounter(Integer encounterId){
 		String sqlSelect = "SELECT * from sockethl7listener_patient_message "
-		+ " where encounter_id  = ? and duplicate_string=0 and duplicate_datetime=0"; 
+		+ " where encounter_id = :encounterId and duplicate_string=0 and duplicate_datetime=0"; 
 		
 		try{
 			SQLQuery query = this.sessionFactory.getCurrentSession()
 					.createSQLQuery(sqlSelect);
-			query.setInteger(0, encounterId);
+			query.setInteger("encounterId", encounterId);
 			query.addEntity(PatientMessage.class);
 			return (PatientMessage) query.uniqueResult();
 		} catch (Exception e){
-			LOG.error(e.getMessage(),e);
+			log.error("Error getting patient hl7 message by encounter. EncounterId:  {}", encounterId, e);
 		}
 		return null;
 	}

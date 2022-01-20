@@ -5,12 +5,10 @@ package org.openmrs.module.sockethl7listener;
 
 import java.util.Date;
 
-import org.apache.log4j.Logger;
 import org.openmrs.PersonName;
-import org.openmrs.api.context.Context;
-import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CX;
 import ca.uhn.hl7v2.model.v25.datatype.HD;
@@ -31,9 +29,7 @@ import ca.uhn.hl7v2.model.v25.segment.PV2;
  */
 public class HL7EncounterHandler25 implements HL7EncounterHandler
 {
-	protected static final Logger logger = Logger
-			.getLogger("SocketHandlerLogger");
-	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 
 	public Provider getProvider(Message message)
 	{
@@ -89,7 +85,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			return provider;
 
 		} catch (RuntimeException e){
-			logger.error("Error setting provider object",e) ;
+			log.error("Error creating provider from hl7 message",e) ;
 		}
 		return null;
 	}
@@ -104,8 +100,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			doctor = pv1.getAttendingDoctor(0);
 		} catch (Exception e)
 		{
-			logger.warn("Unable to parse doctor name from PV1. Message: "
-					+ e.getMessage());
+			log.error("Unable to parse doctor name from PV1 segment.", e);
 		}
 
 		if (doctor != null)
@@ -157,13 +152,11 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			if (timeStamp != null && timeStamp.getTime()!= null) { 
 				datetime = TranslateDate(timeStamp);
 			}else {
-				logger.error("A valid encounter date time stamp could not be " +
-						"determined from PV1 (for ADT messages), OBR (for ORU messages)," +
-						" or MSH segments");
+				log.error("A valid encounter date time stamp not found in PV1 (ADT messages), OBR (ORU messages), or MSH segments.");
 			}
 			
 		} catch (Exception e) {
-			logger.error(e.getMessage());
+			log.error("Exception getting encounter date from hl7 message.", e);
 		}
 
 		return datetime;
@@ -223,7 +216,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		} 
 		catch (RuntimeException e)
 		{
-			logger.error("Unable to parse visit number from PV1-19.", e);
+			log.error("Unable to parse visit number from PV1-19.", e);
 		}
 
 		if (visitNumber != null)
@@ -232,9 +225,9 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 			{
 				return visitNumber.getIDNumber().toString();
 			} 
-			catch (RuntimeException e1)
+			catch (RuntimeException e)
 			{
-				logger.error("Visit number not available in PV1-19 segment.", e1);
+				log.error("Unable to parse visit number id from PV1-19 visit number field. ", e);
 			}
 		}
 		return null;	
@@ -255,7 +248,7 @@ public class HL7EncounterHandler25 implements HL7EncounterHandler
 		} 
 		catch (RuntimeException e)
 		{
-			logger.error("Unable to parse original location from PV1-3.9", e);
+			log.error("Unable to parse original location from PV1-3.9. ", e);
 		}
 		return null;	
 	}

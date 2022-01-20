@@ -1,15 +1,12 @@
 package org.openmrs.module.sockethl7listener;
 
-
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Calendar;
-import java.util.Date;
 
-import org.apache.log4j.Logger;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.openmrs.Location;
 import org.openmrs.Patient;
 import org.openmrs.PatientIdentifier;
@@ -17,93 +14,74 @@ import org.openmrs.PatientIdentifierType;
 import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
-import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.openmrs.module.sockethl7listener.hibernateBeans.PatientMessage;
+import org.openmrs.module.sockethl7listener.service.SocketHL7ListenerService;
+import org.openmrs.test.jupiter.BaseModuleContextSensitiveTest;
 
-public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest{
-	
+public class HL7SocketHandlerTest extends BaseModuleContextSensitiveTest {
+
 	protected static final String DATASET_XML = "dbunit/BasicTest.xml";
-	private static final Logger logger = Logger.getLogger("SocketHandlerLogger");
-	
-	@Before
-	public void runBeforeEachTest() throws Exception
-	{
-	// create the basic user and give it full rights
+
+	@BeforeEach
+	public void runBeforeEachTest() throws Exception {
+		// create the basic user and give it full rights
 		initializeInMemoryDatabase();
 		executeDataSet(DATASET_XML);
-		 //authenticate to the temp database
+		// authenticate to the temp database
 		authenticate();
-		
-		//}
 	}
+
 	/**
-	 * @see {@link HL7SocketHandler#updatePatient(Patient,Patient,Date)} 
+	 * @see HL7SocketHandler#updatePatient(Patient mp, Patient hl7Patient,Date
+	 *      encounterDate, HashMap<String,Object> parameters)
 	 */
 	@Test
-	//@Verifies(value = "should update an existing patient", method = "updatePatient(Patient,Patient,Date)")
-	public void updatePatient_shouldUpdateAnExistingPatient() throws Exception {
-		
-		//create the new patient
-		//create the existing patient
-		
-			
-		try{	
-			Patient oldPatient = new Patient();
-			
-			PatientService ps = Context.getPatientService();
-			oldPatient = createAPatient("Jenny", "", "Patient", "9999999-7", 35, "F");
-	
-			Patient result = ps.savePatient(oldPatient);
-			
-			Assert.assertNotNull(result);
-			
-		}catch(Exception e){
-			assertFalse(e.getMessage(), true);
-		}
-		
-		/*Patient patient = new Patient(); 
-	          patient.setGender("F"); 
-	 	      patient.setPatientId(35); 
-	 	      patient.addName(new PersonName("Jenny", "", "Patient")); 
-	          patient.addIdentifier(new PatientIdentifier("9999999-7", new PatientIdentifierType(1), new Location(1))); 
-	          patientService.savePatient(patient); */
-	}
-	
-	
-	public Patient createAPatient(String fn, String mn, String ln, 
-			String mrn, Integer id,String gender){
-		
-		Patient patient = new Patient();
-		
-		try{
+	public void testUpdateAnExistingPatient() throws Exception {
 
-			Calendar dobCal = Calendar.getInstance();
-			dobCal.set(2006,1,2,0,0,0);
-			
-			PatientIdentifierType pit = new PatientIdentifierType(3);
-			PatientIdentifier pi = new PatientIdentifier();
-			pi.setIdentifierType(pit);
-			pi.setPatient(patient);
-			pi.setIdentifier(mrn);
-			pi.setLocation(new Location(2));
-			patient.addIdentifier(pi);
-			
-			patient.setPatientId(id);
-			patient.setGender(gender);
-			patient.setBirthdate(dobCal.getTime());	
-			PersonName name = new PersonName(fn, mn,ln);
-			name.setPreferred(true);
-			name.setCreator(Context.getAuthenticatedUser());
-			name.setPerson(patient);
-			name.setDateCreated(new Date());
-			patient.addName(name);
-		} catch (Exception e) {
-			logger.error("Error setting new patient object. ", e);
-		} 
+		Patient patient = new Patient();
+		PatientService patientSerivce = Context.getPatientService();
 		
-		return patient;
-		
-		
-		
-		
+		patient.setGender("F");
+		patient.setPatientId(35);
+		patient.addName(new PersonName("Jenny", "A", "Patient"));
+		patient.addIdentifier(new PatientIdentifier("1313-4", new PatientIdentifierType(1), new Location(1)));
+		Patient savedPatient = patientSerivce.savePatient(patient);
+		assertNotNull(savedPatient);
+
+		Patient newPatient = new Patient();
+		newPatient.setGender("F");
+		newPatient.setPatientId(999);
+		newPatient.addName(new PersonName("Ima", "", "Patient"));
+		newPatient.addIdentifier(new PatientIdentifier("1212-0", new PatientIdentifierType(1), new Location(1)));
+		newPatient = patientSerivce.savePatient(newPatient);
+		assertNotNull(newPatient);
+		newPatient.addName(new PersonName("Jane", "", "Patient"));
+		HL7SocketHandler hl7SocketHander = new HL7SocketHandler();
+		Calendar cal = Calendar.getInstance();
+
+		Patient updatedPatient = hl7SocketHander.updatePatient(patient, newPatient, cal.getTime(), null);
+		assertNotNull(updatedPatient);
+
 	}
+
+	@Test
+	public void testGetPatientMessageByIdentifier() throws Exception {
+
+		SocketHL7ListenerService service = Context.getService(SocketHL7ListenerService.class);
+		PatientMessage message = service.getPatientMessageByEncounter(1);
+		assertNotNull(message);
+
+	}
+
+	@Test
+	public void testCheckMD5() throws Exception {
+
+		SocketHL7ListenerService service = Context.getService(SocketHL7ListenerService.class);
+		int port = 5555;
+		String message = "PIDTestString";
+		boolean md5IsCorrect = service.checkMD5(message, port);
+		assertTrue(md5IsCorrect);
+
+	}
+
 }
