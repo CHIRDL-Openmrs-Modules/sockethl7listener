@@ -1,8 +1,8 @@
 package org.openmrs.module.sockethl7listener;
 
 import java.util.Date;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonName;
@@ -29,7 +29,7 @@ public class Provider {
 	private String pocRoom;
 	private String pocBed;
 	private String admitSource;
-	private static final Log LOG =  LogFactory.getLog(Provider.class);
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 	private static final String VOIDED_REASON_PERSON_NAME_CHANGE = "voided due to name update in HL7 message";
 	
 	
@@ -205,7 +205,7 @@ public class Provider {
 				AdministrationService adminService = Context.getAdministrationService();
 				String unknownProviderIdString = adminService.getGlobalProperty(ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 				if(unknownProviderIdString == null || unknownProviderIdString.trim().length() == 0){
-					LOG.error("No value set for global property: " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+					log.error("Provider id is null, and no value exists for global property {}. Unable to create provider. ", ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID);
 					return null;
 				}
 				
@@ -213,13 +213,14 @@ public class Provider {
 					Integer unknownProviderId = Integer.parseInt(unknownProviderIdString);
 					openmrsProvider = providerService.getProvider(unknownProviderId);
 				}
-				catch(NumberFormatException nfe){
-					LOG.error("Invalid number format for global property " + ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID + ". This will prevent the encounter from being created.");
+				catch(NumberFormatException e){
+					log.error("Provider id is null and global property {} is an invalid number format. Unable to create provider. ", 
+							ChirdlUtilConstants.GLOBAL_PROP_UNKNOWN_PROVIDER_ID,e);
 					return null;
 				}	
 			}
 		} catch (Exception e){
-			LOG.error("Error while creating or updating a provider.", e);
+			log.error("Error while creating or updating a provider.", e);
 		}
 		
 		return openmrsProvider;

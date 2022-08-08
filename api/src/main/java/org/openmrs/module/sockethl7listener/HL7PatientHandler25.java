@@ -11,7 +11,6 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
 import org.openmrs.PatientIdentifier;
 import org.openmrs.PatientIdentifierType;
 import org.openmrs.PersonAddress;
@@ -19,6 +18,8 @@ import org.openmrs.PersonName;
 import org.openmrs.api.PatientService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.uhn.hl7v2.model.Message;
 import ca.uhn.hl7v2.model.v25.datatype.CE;
@@ -33,7 +34,6 @@ import ca.uhn.hl7v2.model.v25.datatype.XPN;
 import ca.uhn.hl7v2.model.v25.datatype.XTN;
 import ca.uhn.hl7v2.model.v25.message.ADT_A01;
 import ca.uhn.hl7v2.model.v25.message.ORU_R01;
-import ca.uhn.hl7v2.model.v25.segment.IN1;
 import ca.uhn.hl7v2.model.v25.segment.NK1;
 import ca.uhn.hl7v2.model.v25.segment.PID;
 
@@ -46,9 +46,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 	private static final String MRN_PREFIX = "MRN_";
 	private static final String GENERIC_ASSIGNING_AUTHORITY = "OTHER";
-	protected static final Logger logger = Logger
-			.getLogger("SocketHandlerLogger");
-	protected static final Logger hl7Logger = Logger.getLogger("HL7Logger");
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 
 	protected PID getPID(Message message)
 	{
@@ -249,8 +247,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse patient name. Message: "
-					+ e.getMessage());
+			log.error("Unable to parse patient name from PID.", e);
 		}
 
 		return name;
@@ -265,8 +262,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			ceRace = pid.getRace();
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse race from PID. Message: "
-					+ e.getMessage());
+			log.error("Unable to parse race from PID.",e);
 		}
 
 		if (ceRace != null)
@@ -274,10 +270,9 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			try
 			{
 				return ceRace[0].getIdentifier().toString();
-			} catch (RuntimeException e1)
+			} catch (RuntimeException e)
 			{
-				logger
-						.debug("Warning: Race information not available in PID segment.");
+				log.error("Exception getting race identifier from PID.", e);
 			}
 		}
 		return null;
@@ -296,7 +291,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		// and not the patient address from PID
 		PID pid = getPID(message);
 		NK1 nk1 = getNK1(message);
-		List<PersonAddress> addresses = new ArrayList<PersonAddress>();
+		List<PersonAddress> addresses = new ArrayList<>();
 		try
 		{
 			XAD[] xadAddresses = pid.getPatientAddress(); // PID address
@@ -318,7 +313,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to collect  address from PID);", e);
+			log.error("Unable to parse address from PID", e);
 		}
 		return addresses;
 	}
@@ -355,7 +350,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			}
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse birthplace from PID. Message: ", e);
+			log.error("Unable to parse birthplace from PID.", e);
 		}
 		return birthPlace;
 	}
@@ -371,15 +366,15 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		{
 			g = pid.getAdministrativeSex().getValue();
 			if (g == null
-					|| ! ( (g.toLowerCase().equals("m")
+					|| ! (g.toLowerCase().equals("m")
 							|| g.toLowerCase().equals("f") || g.toLowerCase()
-							.equals("u"))))
+							.equals("u")))
 			{
 				g = "";
 			}
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse gender from PID. Message: ", e);
+			log.error("Unable to parse gender from PID.", e);
 		}
 		return g;
 	}
@@ -455,8 +450,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			}
 		} catch (RuntimeException e)
 		{
-			logger.error("Exception while extracting next-of-kin. Message: "
-					+ e.getMessage());
+			log.error("Exception parsing next-of-kin from PID", e);
 		}
 		return nextOfKin;
 	}
@@ -465,40 +459,25 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 	/* (non-Javadoc)
 	 * @see org.openmrs.module.sockethl7listener.HL7PatientHandler#getMothersName(ca.uhn.hl7v2.model.Message)
 	 */
-	public String getMothersName(Message message)
-	{
+	public String getMothersName(Message message) {
+		
 		NK1 nk1 = getNK1(message);
 		String motherNameString = "";
-		
-		try
-		{
-			String relation = null;
+
+		try {
+
 			XPN[] mnList = null;
-			try
-			{
-				relation = nk1.getRelationship().getIdentifier().getValue();
-				mnList = nk1.getNKName();
 
-			} catch (RuntimeException e)
-			{
-				logger.warn("Unable to parse next-of-kin from PID. Message: ",
-						e);
-				// New born Screenin project. If relation is not available,
-				// default
-				// to mother
-				relation = "Mother";
-			}
+			mnList = nk1.getNKName();
 
-			String nkln = "", nkfn = "";
+			String nkln = "";
+			String nkfn = "";
 
-			if (mnList != null)
-			{
-				for (XPN identifier : mnList)
-				{
-					nkln = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getFamilyName()
-							.getSurname().getValue());
-					nkfn = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getGivenName()
-							.getValue());
+			if (mnList != null) {
+				for (XPN identifier : mnList) {
+					nkln = org.openmrs.module.chirdlutil.util.Util
+							.toProperCase(identifier.getFamilyName().getSurname().getValue());
+					nkfn = org.openmrs.module.chirdlutil.util.Util.toProperCase(identifier.getGivenName().getValue());
 
 				}
 			}
@@ -508,10 +487,8 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			if (nkfn == null)
 				nkfn = "";
 			motherNameString = nkfn + "|" + nkln;
-		} catch (RuntimeException e)
-		{
-			logger.warn("Exception while extracting next-of-kin. Message: "
-					+ e.getMessage());
+		} catch (RuntimeException e) {
+			log.error("Exception parsing next-of-kin from PID.", e);
 		}
 		return motherNameString;
 	}
@@ -525,99 +502,85 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			ceCitizen = pid.getCitizenship();
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse citizenship from PID.", e);
+			log.error("Unable to parse citizenship field from PID.", e);
 		}
 		
 		if (ceCitizen != null) {
 			try
 			{
 				return ceCitizen[0].getIdentifier().toString();
-			} catch (RuntimeException e1)
+			} catch (RuntimeException e)
 			{
-				logger.debug("Warning: Citizenship information not available in PID segment.", e1);
+				log.error("Exception parsing citizenship identifier from PID citizenship field.", e);
 			}
 		}
 		
 		return null;
 	}
 
-	public Set<PatientIdentifier> getIdentifiers(Message message)
-	{
+	public Set<PatientIdentifier> getIdentifiers(Message message) {
 		PID pid = getPID(message);
 		CX[] identList = null;
 		PatientService patientService = Context.getPatientService();
-		Set<PatientIdentifier> identifiers = new TreeSet<org.openmrs.PatientIdentifier>();
+		Set<PatientIdentifier> identifiers = new TreeSet<>();
 
-		try
-		{
+		try {
 
 			identList = pid.getPatientIdentifierList();
-		} catch (RuntimeException e)
-		{
+		} catch (RuntimeException e) {
 			// Exception in Hapi method for parsing identifiers from PID segment
-			// Execute find match without the identifier. Some applications do not need MRN for lookup.
-			logger.error("Error parsing identifier (MRN) from PID segment. ", e);
-			return identifiers;   
+			// Execute find match without the identifier. Some applications do not need MRN
+			// for lookup.
+			log.error("Exception parsing patient identifiers from PID segment. ", e);
+			return identifiers;
 		}
-		if (identList == null)
-		{
-			// Some applications do not need MRN for lookup. Execute find match without the identifier
-			logger.warn(" No patient identifier available for this message.");
+		if (identList == null || identList.length == 0) {
+			// Some applications do not need MRN for lookup. Execute find match without the
+			// identifier
+			log.error("No patient identifiers in PID.");
 			return identifiers;
 		}
 
-		if (identList.length != 0)
-		{
-			//MES - CHICA-438 - When there are > 1 identifiers, set only the first to preferred.
-			boolean preferred = true;
-			for (CX ident : identList)
-			{
-				// First set up the identifier type; We currently use MRN
-				// Get the id number for the authorizing facility
+		// MES - CHICA-438 - When there are > 1 identifiers, set only the first to
+		// preferred.
+		boolean preferred = true;
+		for (CX ident : identList) {
+			// First set up the identifier type; We currently use MRN
+			// Get the id number for the authorizing facility
 
-				PatientIdentifierType pit = new PatientIdentifierType();
-				PatientIdentifier pi = new PatientIdentifier();
-				String stIdent = "";
-				String assignAuth = "";
+			PatientIdentifierType pit = new PatientIdentifierType();
+			PatientIdentifier pi = new PatientIdentifier();
+			String stIdent = "";
+			String assignAuth = "";
 
-					assignAuth = ident.getAssigningAuthority().getNamespaceID()
-							.getValue();
+			assignAuth = ident.getAssigningAuthority().getNamespaceID().getValue();
 
-					if ((pit = patientService
-							.getPatientIdentifierTypeByName(MRN_PREFIX + assignAuth)) == null)
-					{
-						pit = patientService
-								.getPatientIdentifierTypeByName(MRN_PREFIX + GENERIC_ASSIGNING_AUTHORITY);
-					}
-					
-					// DWE CHICA-771 Store MRN with leading zeros as MRN_EHR identifier
-					if(pit.getName().equals(ChirdlUtilConstants.IDENTIFIER_TYPE_MRN_EHR))
-					{
-						stIdent = getIDNumberValue(ident);
-					}
-					else
-					{
-						// Existing functionality always removes leading zeros and adds "-" before the check digit
-						stIdent = getMRN(ident);
-					}
-					
-				if(stIdent != null && stIdent.length() > 0)
-				{
-					pi.setIdentifierType(pit);
-					pi.setIdentifier(stIdent);
-					pi.setPreferred(preferred);
-					identifiers.add(pi);
-					preferred = false;
-
-
-				} else
-				{
-					logger.error("No MRN in PID segement for identifier type: " + pit.getName());
-				}
-
+			if ((pit = patientService.getPatientIdentifierTypeByName(MRN_PREFIX + assignAuth)) == null) {
+				pit = patientService.getPatientIdentifierTypeByName(MRN_PREFIX + GENERIC_ASSIGNING_AUTHORITY);
 			}
+
+			// DWE CHICA-771 Store MRN with leading zeros as MRN_EHR identifier
+			if (pit.getName().equals(ChirdlUtilConstants.IDENTIFIER_TYPE_MRN_EHR)) {
+				stIdent = getIDNumberValue(ident);
+			} else {
+				// Existing functionality always removes leading zeros and adds "-" before the
+				// check digit
+				stIdent = getMRN(ident);
+			}
+
+			if (stIdent != null && stIdent.length() > 0) {
+				pi.setIdentifierType(pit);
+				pi.setIdentifier(stIdent);
+				pi.setPreferred(preferred);
+				identifiers.add(pi);
+				preferred = false;
+
+			} else {
+				log.error("Patient identifier name in CX field is empty for identifier type: {} patient:{} ", pit.getName(), pid.getPatientID());
+			}
+
 		}
-		
+
 		return identifiers;
 	}
 
@@ -650,8 +613,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			accountNumber = pid.getPatientAccountNumber();
 		} catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse patient account number from PID. Message: "
-					+ e.getMessage());
+			log.error("Unable to parse patient account number from PID.", e);
 		}
 
 		if (accountNumber != null)
@@ -659,10 +621,9 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			try
 			{
 				return accountNumber.getIDNumber().toString();
-			} catch (RuntimeException e1)
+			} catch (RuntimeException e)
 			{
-				logger
-						.debug("Warning: Patient account number not available in PID segment.");
+				log.error("Exception getting Patient account number from PID CX field.", e);
 			}
 		}
 		return null;
@@ -686,7 +647,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 		} 
 		catch (RuntimeException e)
 		{
-			logger.warn("Unable to parse ethnic group from PID. Message: " + e.getMessage());
+			log.error("Unable to parse ethnic group from PID", e);
 		}
 
 		if (ceEthnicGroup != null)
@@ -697,7 +658,7 @@ public class HL7PatientHandler25 implements HL7PatientHandler
 			} 
 			catch (RuntimeException e1)
 			{
-				logger.debug("Warning: Ethnic group not available in PID segment.");
+				log.error("Unable to parse ethnic group identifier in PID.");
 			}
 		}
 		return null;

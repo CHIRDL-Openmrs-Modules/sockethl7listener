@@ -1125,5 +1125,6 @@
   <user_role user_id="65" role="Provider"/>
   <user_role user_id="99" role="Provider"/>
   <user_role user_id="103" role="Chicauser"/>
-</dataset>
+  <sockethl7listener_patient_message message_id="1" patient_id="35" encounter_id="1" hl7message="PIDTestString" duplicate_string="0" duplicate_datetime="0" date_created="2020-03-01 00:00:00.0" md5="17e9ca438e69c1b5ecdb758999d3" hl7source=""/>
+  </dataset>
 

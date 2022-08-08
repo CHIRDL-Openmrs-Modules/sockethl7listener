@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.context.ContextAuthenticationException;
 import org.openmrs.hl7.HL7InQueue;
@@ -29,7 +30,7 @@ import ca.uhn.hl7v2.parser.Parser;
  */
 public class ProcessMessageRunnable implements RunnableResult<Message> {
 	
-	private Log logger = LogFactory.getLog(this.getClass());
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 	private Message message;
 	private Message response;
 	private HL7SocketHandler socketHandler;
@@ -38,7 +39,7 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 	private List<HL7Filter> filters;
 	private HashMap<String, Object> parameters;
 	private Exception exception;
-	
+	//MessageState 0=pending, 1=processing, 2=processed, 3=error
 	private static final Integer PROCESSING = Integer.valueOf(1);
 	private static final Integer PROCESSED = Integer.valueOf(2);
 	
@@ -68,15 +69,15 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 	@Override
 	public void run() {
 		boolean error = false;
-		try {
+		
 			HL7Service hl7Service = Context.getHL7Service();
 			String incomingMessageString = "";
 			try {
 				incomingMessageString = this.parser.encode(this.message);
 			}
-			catch (HL7Exception e2) {
-				this.logger.error(e2);
-				this.exception = e2;
+			catch (HL7Exception e) {
+				log.error("Exception encoding hl7 message.", e);
+				this.exception = e;
 			}
 			
 			if (!(this.message instanceof ORU_R01) && !(this.message instanceof ADT_A01)) {
@@ -90,8 +91,6 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 				        + ") sent to HL7 Socket handler. Only ORU_R01 and ADT_A01 valid currently. ");
 				return;
 			}
-			if (this.logger.isDebugEnabled())
-				this.logger.debug("Depositing HL7 ORU_R01 message in HL7 queue.");
 			
 			try {
 				HL7Source hl7Source = new HL7Source();
@@ -131,12 +130,8 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 					MSH msh = HL7ObsHandler25.getMSH(this.message);
 					this.response = Util.makeACK(msh, error, null, null);
 				}
-				catch (IOException e) {
-					this.logger.error("Error generating message id for ACK message" + e.getMessage());
-					this.exception = e;
-				}
-				catch (HL7Exception e) {
-					this.logger.error("Error during ACK message construction", e);
+				catch (Exception e) {
+					log.error("Exception sending ACK message.", e);
 					this.exception = e;
 				}
 				
@@ -147,35 +142,30 @@ public class ProcessMessageRunnable implements RunnableResult<Message> {
 				
 			}
 			catch (ContextAuthenticationException e) {
-				this.logger.error("Context Authentication exception: ", e);
+				log.error("Context Authentication exception: ", e);
 				this.exception = e;
 			}
 			catch (ClassCastException e) {
-				this.logger.error("Error casting to " + this.message.getClass().getName() + " ", e);
+				log.error("Error casting to {} ", this.message.getClass().getName(), e);
 				this.exception = new ApplicationException("Invalid message type for handler");
 			}
-			catch (HL7Exception e) {
-				this.logger.error("Error while processing hl7 message", e);
-				this.exception = new ApplicationException(e);
+			catch (Exception e) {
+				log.error("Exception processing hl7 message.", e);
+				this.exception = e;
 			}
-		}
-		catch (Exception e) {
-			this.logger.error("", e);
-			this.exception = e;
-		}
-		finally {
-			if (this.response == null) {
-				try {
-					error = true;
-					MSH msh = HL7ObsHandler25.getMSH(this.message);
-					this.response = Util.makeACK(msh, error, null, null);
-				}
-				catch (Exception e) {
-					this.logger.error("Could not send acknowledgement", e);
-					this.exception = e;
+			finally {
+				if (this.response == null) {
+					try {
+						error = true;
+						MSH msh = HL7ObsHandler25.getMSH(this.message);
+						this.response = Util.makeACK(msh, error, null, null);
+					}
+					catch (Exception e) {
+					    log.error("Second attempt to send ACK message failed.", e);
+						this.exception = e;
+					}
 				}
 			}
-		}
 	}
 	
 	/**
