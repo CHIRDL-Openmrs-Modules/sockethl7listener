@@ -11,6 +11,7 @@ import java.util.GregorianCalendar;
 import org.openmrs.Concept;
 import org.openmrs.api.ConceptService;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.DaemonToken;
 import org.openmrs.module.chirdlutil.util.ChirdlUtilConstants;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -32,7 +33,8 @@ public class Util
 	private static final String DEFAULT_APPLICATION_ERROR_TEXT = "Application Error";
 	private static final String VERSION_2_5 = "2.5";
 	private static final String DATE_FORMAT_YYYY_M_MDD_H_HMM = "yyyyMMddHHmm";
-	private static final String ACK = "ACK";		
+	private static final String ACK = "ACK";
+	private static DaemonToken daemonToken;
 
 	public static Concept lookupConcept(Integer conceptId,String conceptName)
 	{
@@ -192,5 +194,19 @@ public class Util
 		String msg = null;
 		msg = pipeParser.encode(message);
 		return msg;
+	}
+	
+	/**
+	 * @return the daemonToken
+	 */
+	public static DaemonToken getDaemonToken() {
+		return daemonToken;
+	}
+	
+	/**
+	 * @param daemonToken the daemonToken to set
+	 */
+	public static void setDaemonToken(DaemonToken daemonToken) {
+		Util.daemonToken = daemonToken;
 	}
 }

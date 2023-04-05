@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE module PUBLIC "-//OpenMRS//DTD OpenMRS Config 1.0//EN" "http://resources.openmrs.org/doctype/config-1.0.dtd">
+<!DOCTYPE module PUBLIC "-//OpenMRS//DTD OpenMRS Config 1.0//EN" "http://resources.openmrs.org/doctype/config-1.2.dtd">
 
-<module configVersion="1.0">
+<module configVersion="1.2">
 	
 	<!-- SocketHL7Listener Module Properties -->
 	<id>@MODULE_ID@</id>
@@ -16,8 +16,8 @@
     <activator>@MODULE_PACKAGE@.SocketHL7ListenerActivator</activator>
 	<require_version>2.0.6</require_version>
 	<require_modules>
-        <require_module version="1.20.0">org.openmrs.module.chirdlutil</require_module>
-		<require_module version="2.12.0">org.openmrs.module.chirdlutilbackports</require_module>
+        <require_module version="1.21.0">org.openmrs.module.chirdlutil</require_module>
+		<require_module version="2.13.0">org.openmrs.module.chirdlutilbackports</require_module>
 		<require_module version="1.3.1">org.openmrs.module.legacyui</require_module>
 	</require_modules>
 	<extension>
@@ -52,6 +52,10 @@
 	<globalProperty>
         <property>sockethl7listener.unknownProviderId</property>
         <description>The provider.provider_id of the provider to use when an attending provider is not set in the HL7 message. If not set, encounters will not be created from HL7 messages that do not contain an attending provider.</description>
+    </globalProperty>
+    <globalProperty>
+        <property>sockethl7listener.archiveHL7MessageDirectory</property>
+        <description>Directory to store all incoming hl7 messages</description>
     </globalProperty>
 	
 	<!-- Internationalization -->

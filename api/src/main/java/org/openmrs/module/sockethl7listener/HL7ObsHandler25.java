@@ -6,10 +6,12 @@ package org.openmrs.module.sockethl7listener;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
+import org.openmrs.hl7.HL7Util;
 import org.openmrs.module.sockethl7listener.util.Util;
 
 import ca.uhn.hl7v2.HL7Exception;
@@ -26,7 +28,6 @@ import ca.uhn.hl7v2.model.v25.message.ORU_R01;
 import ca.uhn.hl7v2.model.v25.segment.MSH;
 import ca.uhn.hl7v2.model.v25.segment.OBR;
 import ca.uhn.hl7v2.model.v25.segment.OBX;
-import org.openmrs.hl7.HL7Util;
 
 /**
  * @author tmdugan
@@ -34,8 +35,9 @@ import org.openmrs.hl7.HL7Util;
  */
 public class HL7ObsHandler25 implements HL7ObsHandler
 {
-	private static final Logger LOGGER = Logger.getLogger("SocketHandlerLogger");
-	public static MSH getMSH(Message message)
+    
+    private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
+    public static MSH getMSH(Message message)
 	{
 		if (message instanceof ORU_R01)
 		{
@@ -82,8 +84,8 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		} catch (Exception e)
 		{
 
-			LOGGER.error("Exception" ,e);
-		}
+            log.error("Exception getting OBX segment from ORU_R01 message." ,e);
+        }
 
 		return obx;
 	}
@@ -105,7 +107,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		}
 		catch(Exception e)
 		{
-			LOGGER.error("Exception" ,e);
+			log.error("Exception getting OBX from ADT_A01 message.", e);
 		}
 		
 		return obx;
@@ -131,12 +133,11 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 					.getOBR();
 		} catch (Exception e)
 		{
-			LOGGER.error("Exception" ,e);
+			log.error("Exception getting OBR segment from ORU_R01 message.", e);
 		}
 
 		return obr;
 	}
-
 	
 	/**
 	 * @param ts
@@ -154,7 +155,7 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 				}
 			}	
 		}  catch (HL7Exception e) {
-			LOGGER.error("Error converting TS timestamp to Date due to parsing error. Time string: " + timeString);
+            log.error("Error converting TS timestamp to Date due to parsing error. Time string: {}.", timeString, e);
 		}
 		
 		return datetime;
@@ -304,8 +305,8 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		        if (nmvalue != null){
 		            try{
 		                dVal = Double.parseDouble(nmvalue);
-		            } catch (Exception ex){
-		                LOGGER.error(ex);
+		            } catch (Exception e){
+		            	log.error("Exception parsing OBX for numeric value." ,e);
 		            }
 		        }
 		    }
@@ -313,183 +314,110 @@ public class HL7ObsHandler25 implements HL7ObsHandler
 		return dVal;
 	}
 
-	protected Concept processCWEType(Varies value, Logger logger,
-			String pIdentifierString, String conceptQuestionId,
-			Logger conceptNotFoundLogger)
-	{
-		Integer conceptId = null;
-		String stConceptId = ((CWE) value.getData()).getIdentifier().toString();
-		String conceptShortName = ((CWE) value.getData()).getText().toString();
-		String nameOfCodingSystem = ((CWE) value.getData())
-				.getNameOfCodingSystem().toString();
-		String conceptName = ((CWE) value.getData()).getAlternateIdentifier()
-				.toString();
-		String conceptLongName = ((CWE) value.getData()).getAlternateText()
-				.toString();
+    protected Concept processCWEType(Varies value,
+            String pIdentifierString, String conceptQuestionId)
+    {
+    
+        Concept answer = null;
+        String stConceptId = ((CWE) value.getData()).getIdentifier().toString();
+        String conceptName = ((CWE) value.getData()).getAlternateIdentifier().toString();
+        
+        try{
+            Integer conceptId = Integer.parseInt(stConceptId); 
+            answer = Util.lookupConcept(conceptId, conceptName);
+            if (answer != null){
+                return answer;
+            }
+        } catch (RuntimeException e){
+            log.error("Exception getting CWE concept for concept name {}", conceptName, e);
+        }
+        
+        return null;
+    }
 
-		try
-		{
-			conceptId = Integer.parseInt(stConceptId);
-		} catch (NumberFormatException ne)
-		{
-			logger
-					.warn("PARSE WARNING: Unable to parse integer from CWE observation value id string - Invalid value in OBX  = "
-							+ stConceptId
-							+ " for patient MRN "
-							+ pIdentifierString
-							+ " \n concept question id : "
-							+ conceptQuestionId
-							+ " concept name: "
-							+ conceptName
-							+ "long name = "
-							+ conceptLongName
-							+ " Check coded value.");
-		}
+    protected Concept processCEType(Varies value, 
+            String pIdentifierString, String conceptQuestionId){
+        
+        String conceptName = ((CE) value.getData()).getText().toString();
+        String stConceptId = ((CE) value.getData()).getIdentifier().toString();
 
-		// Success conversion to int
-		if (conceptId != null)
-		{
-			try
-			{
-				Concept answer = Util.lookupConcept(conceptId, conceptName);
-				if (answer == null)
-				{
-					conceptNotFoundLogger
-							.error("NO CONCEPT ID: Invalid or no concept_id for answer. Value="
-									+ conceptQuestionId
-									+ ";Coded Name: "
-									+ conceptName + ";MRN:" + pIdentifierString);
-				}
-				return answer;
-			} catch (RuntimeException e)
-			{
-				logger.error("createObs() failed. MRN: " + pIdentifierString
-						+ ";Invalid OBX value: " + stConceptId
-						+ ";concept question id: " + conceptQuestionId
-						+ "; concept name: " + conceptName + ";long name = "
-						+ conceptLongName);
-			}
+        try{
+            Integer intObxValueID = Integer.parseInt(stConceptId);
+            Concept answer = Util.lookupConcept(intObxValueID, conceptName);
+            if (answer != null) {
+                return answer;
+            }
+        } catch (RuntimeException e){
+            log.error("Exception parsing CET concept for concept name {}", conceptName, e);
+        }
+        
+        return null;
+    }
 
-		}
-		return null;
-	}
+    public Concept getCodedResult(Message message, int orderRep, int obxRep, String pIdentifierString, String obsvID,
+            String obsValueType)
+    {
+        OBX obx = getOBX(message, orderRep, obxRep);
+        Concept conceptResult = null;
+        
+        if(obx != null){
+            Varies[] values = obx.getObservationValue();
+            Varies value = null;
 
-	protected Concept processCEType(Varies value, Logger logger,
-			String pIdentifierString, String conceptQuestionId,
-			Logger conceptNotFoundLogger)
-	{
-		String conceptName = ((CE) value.getData()).getText().toString();
-		String stConceptId = ((CE) value.getData()).getIdentifier().toString();
-		Integer intObxValueID = null;
+            if (values.length > 0){
+                value = values[0];
 
-		try
-		{
-			intObxValueID = Integer.parseInt(stConceptId);
-		} catch (NumberFormatException ne)
-		{
-			logger
-					.warn("PARSE WARNING: Unable to parse integer from CE observation value id string - Invalid value in OBX  = "
-							+ stConceptId
-							+ " for patient MRN "
-							+ pIdentifierString
-							+ " \n concept question id : "
-							+ conceptQuestionId
-							+ " concept name: "
-							+ conceptName + " Check coded value.");
-		}
+                if (obsValueType.equals("CWE")){
+                    conceptResult = processCWEType(value, 
+                        pIdentifierString, obsvID);
+                }
+                if (obsValueType.equals("CE")){
+                    conceptResult = processCEType(value, pIdentifierString,
+                        obsvID);
+                }
+            }
+        }
 
-		// Success conversion to int
-		if (intObxValueID != null)
-		{
-			try
-			{
-				Concept answer = Util.lookupConcept(intObxValueID, conceptName);
-				if (answer == null)
-				{
-					conceptNotFoundLogger
-							.error("NO CONCEPT ID: Invalid or no concept_id for answer. Value="
-									+ conceptQuestionId
-									+ ";Coded Name: "
-									+ conceptName + ";MRN:" + pIdentifierString);
-				}
-				return answer;
-			} catch (RuntimeException e)
-			{
-				logger.error("createObs() failed. MRN: " + pIdentifierString
-						+ ";Invalid OBX value: " + stConceptId
-						+ ";concept question id: " + conceptQuestionId
-						+ "; concept name: " + conceptName);
-			}
+        return conceptResult;
+    }
 
-		}
-		return null;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.openmrs.module.sockethl7listener.ObsHandler#getObs(ca.uhn.hl7v2.model.Message)
+     */
+    public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	public Concept getCodedResult(Message message, int orderRep, int obxRep,
-			Logger logger, String pIdentifierString, String obsvID,
-			String obsValueType, Logger conceptNotFoundLogger)
-	{
-	    OBX obx = getOBX(message, orderRep, obxRep);
-	    Concept conceptResult = null;
-	    
-	    if(obx != null){
-	        Varies[] values = obx.getObservationValue();
-	        Varies value = null;
+    public int getReps(Message message)
+    {
+        int reps = 0;
+        if (message instanceof ORU_R01)
+        {
+            reps = ((ORU_R01) message).getPATIENT_RESULT()
+                    .getORDER_OBSERVATION().getOBSERVATIONReps();
+        } else if ((message instanceof ADT_A01))
+        {
+            reps = ((ADT_A01) message).getOBXReps();
+        }
+        return reps;
+    }
+    
+    /**
+     * @see org.openmrs.module.sockethl7listener.HL7ObsHandler#getUnits(Message, int, int)
+     * DWE CHICA-635
+     */
+    public String getUnits(Message message, int orderRep, int obxRep)
+    {
+        OBX obx = getOBX(message, orderRep, obxRep);
+        if(obx != null){
+            CE units = obx.getUnits();
+            return units.getText().toString();
+        }
 
-	        if (values.length > 0){
-	            value = values[0];
-
-	            if (obsValueType.equals("CWE")){
-	                conceptResult = processCWEType(value, logger,
-	                    pIdentifierString, obsvID, conceptNotFoundLogger);
-	            }
-	            if (obsValueType.equals("CE")){
-	                conceptResult = processCEType(value, logger, pIdentifierString,
-	                    obsvID, conceptNotFoundLogger);
-	            }
-	        }
-	    }
-
-		return conceptResult;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.openmrs.module.sockethl7listener.ObsHandler#getObs(ca.uhn.hl7v2.model.Message)
-	 */
-	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public int getReps(Message message)
-	{
-		int reps = 0;
-		if (message instanceof ORU_R01)
-		{
-			reps = ((ORU_R01) message).getPATIENT_RESULT()
-					.getORDER_OBSERVATION().getOBSERVATIONReps();
-		} else if ((message instanceof ADT_A01))
-		{
-			reps = ((ADT_A01) message).getOBXReps();
-		}
-		return reps;
-	}
-	
-	/**
-	 * @see org.openmrs.module.sockethl7listener.HL7ObsHandler#getUnits(Message, int, int)
-	 * DWE CHICA-635
-	 */
-	public String getUnits(Message message, int orderRep, int obxRep)
-	{
-		OBX obx = getOBX(message, orderRep, obxRep);
-    	if(obx != null){
-    		CE units = obx.getUnits();
-    		return units.getText().toString();
-    	}
-    				
-		return "";
-	}
+        return "";
+    }
 }

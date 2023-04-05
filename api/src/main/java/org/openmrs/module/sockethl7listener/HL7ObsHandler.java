@@ -6,7 +6,6 @@ package org.openmrs.module.sockethl7listener;
 import java.util.ArrayList;
 import java.util.Date;
 
-import org.apache.log4j.Logger;
 import org.openmrs.Concept;
 import org.openmrs.Obs;
 import org.openmrs.Patient;
@@ -40,9 +39,8 @@ public interface HL7ObsHandler
 	
 	public Double getNumericResult(Message message, int orderRep, int obxRep);
 	
-	public Concept getCodedResult(Message message, int orderRep, int obxRep,
-			Logger logger,String pIdentifierString,String obsvID,
-			String obsValueType,Logger conceptNotFoundLogger);
+	public Concept getCodedResult(Message message, int orderRep, int obxRep,String pIdentifierString,String obsvID,
+			String obsValueType);
 	
 	public ArrayList<Obs> getObs(Message message, Patient patient) throws HL7Exception;
 

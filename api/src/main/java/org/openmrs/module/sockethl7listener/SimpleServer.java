@@ -26,7 +26,6 @@
 
 package org.openmrs.module.sockethl7listener;
 
-import org.apache.log4j.Logger;
 import ca.uhn.hl7v2.app.Connection;
 import ca.uhn.hl7v2.llp.LowerLayerProtocol;
 import ca.uhn.hl7v2.parser.Parser;
@@ -46,9 +45,7 @@ import ca.uhn.hl7v2.parser.Parser;
  */
 public class SimpleServer extends ca.uhn.hl7v2.app.SimpleServer {
 
-	private static final Logger log = Logger.getLogger("SimpleServer");
 	private static String ADT = "ADT";
-    private PatientHandler patientHandler = null;
     private HL7SocketHandler socketHandler = null;
     
 
@@ -61,7 +58,6 @@ public class SimpleServer extends ca.uhn.hl7v2.app.SimpleServer {
     		PatientHandler patientHandler,
     		HL7SocketHandler socketHandler){
         super(port, llp, parser);
-        this.patientHandler = patientHandler;
         this.socketHandler = socketHandler;
     }
     

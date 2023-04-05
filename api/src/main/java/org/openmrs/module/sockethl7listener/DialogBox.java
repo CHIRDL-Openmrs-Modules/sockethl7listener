@@ -3,7 +3,9 @@ package org.openmrs.module.sockethl7listener;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,17 +19,16 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import ca.uhn.hl7v2.app.HL7ServerTestHelper;
-import java.io.BufferedReader;
-import java.io.FileReader;
 
 
 public class DialogBox 
 {
 
-	private static final Logger LOGGER = Logger.getLogger("DialogBox");
+	private static final Logger log =  LoggerFactory.getLogger("SocketHandlerLogger");
 
 	private static Socket socket = null;
 	private static OutputStream os = null;
@@ -104,9 +105,7 @@ public class DialogBox
 			{
 				JButton b = (JButton) event.getSource();
 				String host = t2.getText();
-				
-			//	System.out.println("prior to parse int");
-				
+			
 				int port = Integer.parseInt(t3.getText());
 				
 				int sleep = Integer.parseInt(t4.getText());
@@ -119,7 +118,7 @@ public class DialogBox
 						File f = new File(t1.getText());
 						
 						if (f.isDirectory()) {
-							//	prefix = f.getAbsolutePath() + "\\";
+
 					    	File [] myFiles = f.listFiles();	
 					    	for(int i=0; i < myFiles.length; i++){
 					    		process(myFiles[i], host, port, sleep * 1000);
@@ -134,7 +133,7 @@ public class DialogBox
 				   	
 					
 					} catch (Exception e){
-						LOGGER.error(e);
+						log.error("Unable to process file name: {} ", t1.getText(), e);
 					}
 
 				}
@@ -166,8 +165,11 @@ public class DialogBox
 			    	}
 					
 					
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+					log.error("Failed to send message to host: {} port: {}", host, port );
 				} catch (Exception e) {
-					LOGGER.error(e);
+					log.error("Error sending message from file: {}", file, e);
 				} finally {
 					closeSocket();
 				}
@@ -180,11 +182,11 @@ public class DialogBox
 			 private void sendMessage(String theMessage) throws IOException
 			    {
 				 
-				 	String Hl7StartMessage = "\u000b";
-					String Hl7EndMessage = "\u001c";
-			        os.write( Hl7StartMessage.getBytes() );
+				 	String hl7StartMessage = "\u000b";
+					String hl7EndMessage = "\u001c";
+			        os.write( hl7StartMessage.getBytes() );
 			        os.write( theMessage.getBytes() );
-			        os.write( Hl7EndMessage.getBytes() );
+			        os.write( hl7EndMessage.getBytes() );
 			        os.write(13);
 			        os.flush();
 			        
